@@ -1,0 +1,10 @@
+.babel_cache/*
+docs/*
+OSX/*
+target/*
+
+**node_modules
+**metabase.jar
+
+.dockerignore
+Dockerfile
