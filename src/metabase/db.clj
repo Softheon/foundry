@@ -58,7 +58,8 @@
     (u/prog1 (merge {:type     (case (keyword protocol)
                                  :postgres   :postgres
                                  :postgresql :postgres
-                                 :mysql      :mysql)
+                                 :mysql      :mysql
+                                 :sqlserver :sqlserver)
                      :user     user
                      :password pass
                      :host     host
@@ -106,7 +107,13 @@
                           :port     (config/config-int :mb-db-port)
                           :dbname   (config/config-str :mb-db-dbname)
                           :user     (config/config-str :mb-db-user)
-                          :password (config/config-str :mb-db-pass)}))))
+                          :password (config/config-str :mb-db-pass)}
+               :sqlserver {:type :sqlserver
+                           :host (config/config-str :mb-db-host)
+                           :port (config/config-int :mb-db-port)
+                           :dbname (config/config-str :mb-db-dbname)
+                           :user (config/config-str :mb-db-user)
+                           :password (config/config-str :mb-db-pass)}))))
 
 (defn jdbc-details
   "Takes our own MB details map and formats them properly for connection details for JDBC."
@@ -118,7 +125,8 @@
    (case (:type db-details)
      :h2       (dbspec/h2       db-details)
      :mysql    (dbspec/mysql    (assoc db-details :db (:dbname db-details)))
-     :postgres (dbspec/postgres (assoc db-details :db (:dbname db-details))))))
+     :postgres (dbspec/postgres (assoc db-details :db (:dbname db-details)))
+     :sqlserver (dbspec/mssql (assoc db-details :db  (:dbname db-details))))))
 
 
 ;;; +----------------------------------------------------------------------------------------------------------------+
@@ -146,7 +154,8 @@
   [^Liquibase liquibase]
   (for [line  (s/split-lines (migrations-sql liquibase))
         :when (not (or (s/blank? line)
-                       (re-find #"^--" line)))]
+                       (re-find #"^--" line)
+                       (re-find #"GO" line)))]
     line))
 
 (defn- has-unrun-migrations?
@@ -246,7 +255,7 @@
 
   see https://github.com/metabase/metabase/issues/3715"
   [conn]
-  (let [liquibases-table-name (if (#{:h2 :mysql} (db-type))
+  (let [liquibases-table-name (if (#{:h2 :mysql :sqlserver} (db-type))
                                 "DATABASECHANGELOG"
                                 "databasechangelog")
         fresh-install? (jdbc/with-db-metadata [meta (jdbc-details)] ;; don't migrate on fresh install
@@ -358,7 +367,8 @@
   (db/set-default-quoting-style! (case (db-type)
                                    :postgres :ansi
                                    :h2       :h2
-                                   :mysql    :mysql))
+                                   :mysql    :mysql
+                                   :sqlserver :sqlserver))
   (db/set-default-db-connection! (connection-pool spec)))
 
 

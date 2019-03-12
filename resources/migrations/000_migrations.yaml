@@ -1,4 +1,4 @@
-databaseChangeLog:
+databaseChangeLog: 
 # The quoting strategy decides when things like column names should be quoted.
 # This is in place to deal with Liquibase not knowing about all of the new
 # reserved words in MySQL 8+. Using a column name that is a reserved word
@@ -8,7 +8,7 @@ databaseChangeLog:
   - property:
       name: quote_strategy
       value: QUOTE_ALL_OBJECTS
-      dbms: mysql,mariadb
+      dbms: mysql,mariadb,mssql
   - property:
       name: quote_strategy
       value: LEGACY
@@ -1756,6 +1756,11 @@ databaseChangeLog:
                     nullable: false
         - sql:
             sql: update metabase_database set is_sample = true where name = 'Sample Dataset'
+        - modifySql:
+            dbms: mssql
+            replace:
+              replace: true
+              with: 1
   - changeSet:
       id: 18
       author: camsaul
@@ -1785,13 +1790,14 @@ databaseChangeLog:
   - changeSet:
       id: 19
       author: camsaul
+      objectQuotingStrategy: ${quote_strategy}
       changes:
         - addColumn:
             tableName: metabase_table
             columns:
               - column:
                   name: schema
-                  type: VARCHAR(256)
+                  type: varchar(256)
   - changeSet:
       id: 20
       author: agilliland
@@ -2249,6 +2255,11 @@ databaseChangeLog:
                     nullable: false
         - sql:
             sql: update metabase_database set is_full_sync = true
+        - modifySql:
+            dbms: mssql
+            replace:
+              replace: true
+              with: 1
   - changeSet:
       id: 27
       author: agilliland
@@ -2454,6 +2465,7 @@ databaseChangeLog:
   - changeSet:
       id: 32
       author: agilliland
+      objectQuotingStrategy: ${quote_strategy}
       changes:
         - createTable:
             tableName: raw_table
@@ -2916,6 +2928,7 @@ databaseChangeLog:
   - changeSet:
       id: 40
       author: camsaul
+      objectQuotingStrategy: ${quote_strategy}
       changes:
         ############################################################ add PermissionsGroup table ############################################################
         - createTable:
@@ -3092,6 +3105,18 @@ databaseChangeLog:
         - dropForeignKeyConstraint:
             baseTableName: query_queryexecution
             constraintName: fk_queryexecution_ref_query_id
+        - dropIndex: 
+            indexName: idx_queryexecution_query_id
+            tableName: query_queryexecution
+        - dropIndex:
+            indexName: idx_dashboard_organization_id
+            tableName: report_dashboard      
+        - dropIndex:
+            indexName: idx_database_organization_id
+            tableName: metabase_database 
+        - dropIndex:
+            indexName: idx_card_organization_id
+            tableName: report_card
         - dropColumn:
             tableName: query_queryexecution
             columnName: query_id
@@ -3523,7 +3548,7 @@ databaseChangeLog:
   - property:
         name: blob.type
         value: blob
-        dbms: mysql,h2,mariadb
+        dbms: mysql,h2,mariadb,mssql
   - property:
       name: blob.type
       value: bytea
@@ -3720,7 +3745,7 @@ databaseChangeLog:
                     initiallyDeferred: false
                     nullable: false
                     references: metabase_field(id)
-                    deleteCascade: true
+                    deleteCascade: false
               - column:
                   name: name
                   type: VARCHAR(254)
@@ -3862,9 +3887,13 @@ databaseChangeLog:
       validCheckSum: '7:76d06b44a544105c2a613603b8bdf25f'
       changes:
         - sql:
-            sql: drop table if exists computation_job_result cascade
+            sql: drop table if exists computation_job_result
         - sql:
-            sql: drop table if exists computation_job cascade
+            sql: drop table if exists computation_job 
+        - modifySql:
+          dbms: h2,mysql,postgresql,mariadb
+          append:
+            value: cascade
 # NOTE Atte Keinänen 9/28/17: This was originally in changeset 65 as explained above
   - changeSet:
       id: 67
@@ -4201,6 +4230,12 @@ databaseChangeLog:
       author: senior
       comment: 'Added 0.30.0'
       changes:
+        - dropDefaultValue:
+            columnName: is_active
+            tableName: metric
+        - dropDefaultValue:
+            columnName: is_active
+            tableName: segment
         - renameColumn:
             tableName: metric
             columnDataType: boolean
@@ -4228,11 +4263,35 @@ databaseChangeLog:
               type: boolean
               remarks: 'Has this pulse been archived?'
               defaultValueBoolean: false
+        # - addColumn:
+        #     tableName: metric
+        #     columns:
+        #       name: archived
+        #       type: boolean
+        #       remarks: 'Has this metric been archived?'
+        #       defaultValueBoolean: false
+        # - addColumn:
+        #     tableName: segment
+        #     columns:
+        #       name: archived
+        #       type: boolean
+        #       remarks: 'Has this segment been archived?'
+        #       defaultValueBoolean: false 
         # Before this change, metrics/segments had opposite logic, rather than marking something as archived
         # it was marked as active. Since the column is now an archived column, flip the boolean value
         - sql:
             sql: update metric set archived = not(archived)
             sql: update segment set archived = not(archived)
+        - modifySql:
+            replace:
+              replace: not
+              with: "~"
+            dbms: mssql
+        # - sql:
+        #     sql:  ALTER TABLE segment DROP CONSTRAINT DF_segment_is_active;
+        #       ALTER TABLE metric DROP  CONSTRAINT DF_metric_is_active;
+        #       ALTER TABLE segment DROP COLUMN is_active;
+        #       ALTER TABLE metric DROP COLUMN is_active; 
   # Personal Collections, and removing Collection's unique constraint and index on slug
   - changeSet:
       id: 85
@@ -4276,11 +4335,26 @@ databaseChangeLog:
         # I don't know of an easy way to copy existing values of slug to _slug with Liquibase as we create the column so
         # just have to do it this way instead
         - sql:
-            sql: UPDATE collection SET _slug = slug
+            sql: UPDATE collection SET _slug = slug;
+        - sql:
+            dbms: mssql
+            sql: DECLARE @uniqueConstraintName nvarchar(256)
+                declare @Command  nvarchar(1000)
+                SELECT @uniqueConstraintName = name  
+                FROM sys.objects  
+                WHERE type = 'UQ' AND OBJECT_NAME(parent_object_id) = N'collection'
+                select @Command = 'ALTER TABLE dbo.collection ' +  ' DROP CONSTRAINT ' +  @uniqueConstraintName
+                EXECUTE (@Command);
+        # - sql:
+        #     dbms: postgresql,h2,mysql,mariadb
+        #     sql:  ALTER TABLE collection DROP COLUMN slug
         - addNotNullConstraint:
             tableName: collection
             columnName: _slug
             columnDataType: varchar(254)
+        - dropIndex: 
+            indexName: idx_collection_slug
+            tableName: collection
         - dropColumn:
             tableName: collection
             columnName: slug
@@ -5100,7 +5174,7 @@ databaseChangeLog:
         - onUpdateSQL: IGNORE
         - sqlCheck:
             expectedResult: 0
-            sql: SELECT count(*) FROM (SELECT count(*) FROM DATABASECHANGELOG GROUP BY ID, AUTHOR, FILENAME HAVING count(*) > 1) t1
+            sql: SELECT count(*) FROM (SELECT count(*) as t1 FROM DATABASECHANGELOG GROUP BY ID, AUTHOR, FILENAME HAVING count(*) > 1) t1
       changes:
         - addUniqueConstraint:
             columnNames: id, author, filename
