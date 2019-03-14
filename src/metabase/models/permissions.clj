@@ -18,7 +18,7 @@
              [i18n :as ui18n :refer [tru]]
              [schema :as su]]
             [schema.core :as s]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [models :as models]]))
 

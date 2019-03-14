@@ -14,7 +14,7 @@
             [metabase.sync.sync-metadata.metabase-metadata :as metabase-metadata]
             [metabase.util :as u]
             [schema.core :as s]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 ;;; ------------------------------------------------ "Crufty" Tables -------------------------------------------------
 

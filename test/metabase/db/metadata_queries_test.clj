@@ -11,7 +11,7 @@
             [metabase.query-processor-test :as qp-test]
             [metabase.test.data :refer :all]
             [metabase.test.data.datasets :as datasets]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 ;; Redshift & Crate tests are randomly failing -- see https://github.com/metabase/metabase/issues/2767
 (def ^:private ^:const metadata-queries-test-engines

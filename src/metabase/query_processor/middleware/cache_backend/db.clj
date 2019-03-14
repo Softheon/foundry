@@ -7,7 +7,7 @@
             [metabase.query-processor.middleware.cache-backend.interface :as i]
             [metabase.util.date :as du]
             [taoensso.nippy :as nippy]
-            [toucan.db :as db])
+            [metabase.toucan.db :as db])
   (:import [java.io BufferedOutputStream ByteArrayOutputStream DataOutputStream]
            java.util.zip.GZIPOutputStream))
 

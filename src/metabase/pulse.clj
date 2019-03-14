@@ -17,7 +17,7 @@
              [ui-logic :as ui]
              [urls :as urls]]
             [schema.core :as s]
-            [toucan.db :as db])
+            [metabase.toucan.db :as db])
   (:import java.util.TimeZone
            metabase.models.card.CardInstance))
 

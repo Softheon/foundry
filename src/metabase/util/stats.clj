@@ -30,7 +30,7 @@
              [segment :refer [Segment]]
              [table :refer [Table]]
              [user :refer [User]]]
-            [toucan.db :as db])
+            [metabase.toucan.db :as db])
   (:import java.util.Date))
 
 (defn- merge-count-maps

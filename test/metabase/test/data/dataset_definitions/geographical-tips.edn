@@ -72,13 +72,13 @@
      :large "http://cloudfront.net/25be5a46-88b0-4ac7-965d-196d4dbab4b8/large.jpg"}
     {:name "Market St. European Ice Cream Truck", :categories ["European" "Ice Cream Truck"], :phone "415-555-4197", :id "4ed53fe4-4bd9-4fa3-8f61-374ea75129ca"}
     {:service "facebook", :facebook-photo-id "d3717643-c5c3-4e36-8721-99c2fd65972f", :url "http://facebook.com/photos/d3717643-c5c3-4e36-8721-99c2fd65972f"}]
-   ["Haight Mexican Restaurant is a fantastic and overrated place to sip a glass of expensive wine with your pet toucan."
+   ["Haight Mexican Restaurant is a fantastic and overrated place to sip a glass of expensive wine with your pet metabase.toucan."
     {:small "http://cloudfront.net/d01af223-d655-4b62-83a9-63a03118b288/small.jpg",
      :medium "http://cloudfront.net/d01af223-d655-4b62-83a9-63a03118b288/med.jpg",
      :large "http://cloudfront.net/d01af223-d655-4b62-83a9-63a03118b288/large.jpg"}
     {:name "Haight Mexican Restaurant", :categories ["Mexican" "Restaurant"], :phone "415-758-8690", :id "a5e3f0ac-f6e8-4e71-a0a2-3f10f48b4ab1"}
     {:service "foursquare", :foursquare-photo-id "5eac8186-24ef-4369-9b46-3bbec215a9c3", :mayor "cam_saul"}]
-   ["Rasta's Mexican Sushi is a overrated and well-decorated place to watch the Warriors game with your pet toucan."
+   ["Rasta's Mexican Sushi is a overrated and well-decorated place to watch the Warriors game with your pet metabase.toucan."
     {:small "http://cloudfront.net/c807068e-1def-4902-987a-75e4e06636f9/small.jpg",
      :medium "http://cloudfront.net/c807068e-1def-4902-987a-75e4e06636f9/med.jpg",
      :large "http://cloudfront.net/c807068e-1def-4902-987a-75e4e06636f9/large.jpg"}
@@ -432,7 +432,7 @@
      :large "http://cloudfront.net/a6bddb27-880a-46da-b824-4449b2389a73/large.jpg"}
     {:name "Cam's Mexican Gastro Pub", :categories ["Mexican" "Gastro Pub"], :phone "415-320-9123", :id "bb958ac5-758e-4f42-b984-6b0e13f25194"}
     {:service "yelp", :yelp-photo-id "fd35ac16-71ef-48f8-8512-2078bda1db30", :categories ["Mexican" "Gastro Pub"]}]
-   ["Nob Hill Gluten-Free Coffee House is a fantastic and historical place to have a after-work cocktail with your pet toucan."
+   ["Nob Hill Gluten-Free Coffee House is a fantastic and historical place to have a after-work cocktail with your pet metabase.toucan."
     {:small "http://cloudfront.net/c3c254d4-4a06-472a-8373-c96d1cf13ca1/small.jpg",
      :medium "http://cloudfront.net/c3c254d4-4a06-472a-8373-c96d1cf13ca1/med.jpg",
      :large "http://cloudfront.net/c3c254d4-4a06-472a-8373-c96d1cf13ca1/large.jpg"}
@@ -1188,7 +1188,7 @@
      :large "http://cloudfront.net/9629743a-e19f-4443-966e-b3cede3cce45/large.jpg"}
     {:name "Polk St. Red White & Blue Café", :categories ["Red White & Blue" "Café"], :phone "415-986-0661", :id "6eb9d2db-5015-49f0-bd18-f4c4938b7e5a"}
     {:service "facebook", :facebook-photo-id "54f31306-b4ce-46f6-b30e-37dc2f10fc18", :url "http://facebook.com/photos/54f31306-b4ce-46f6-b30e-37dc2f10fc18"}]
-   ["SoMa Old-Fashioned Pizzeria is a groovy and amazing place to have brunch with your pet toucan."
+   ["SoMa Old-Fashioned Pizzeria is a groovy and amazing place to have brunch with your pet metabase.toucan."
     {:small "http://cloudfront.net/a29570eb-e53f-4ddd-ab61-747cf6709515/small.jpg",
      :medium "http://cloudfront.net/a29570eb-e53f-4ddd-ab61-747cf6709515/med.jpg",
      :large "http://cloudfront.net/a29570eb-e53f-4ddd-ab61-747cf6709515/large.jpg"}
@@ -1326,7 +1326,7 @@
      :large "http://cloudfront.net/1402d2a6-e94f-43dc-b66c-22621bfc0709/large.jpg"}
     {:name "Joe's Modern Coffee House", :categories ["Modern" "Coffee House"], :phone "415-331-5269", :id "cd9e3610-9ead-4f0b-ad93-cd53611d49fe"}
     {:service "foursquare", :foursquare-photo-id "7d0faa6d-0d94-4920-894a-8da7537839a7", :mayor "bob"}]
-   ["Polk St. Mexican Coffee House is a popular and historical place to catch a bite to eat with your pet toucan."
+   ["Polk St. Mexican Coffee House is a popular and historical place to catch a bite to eat with your pet metabase.toucan."
     {:small "http://cloudfront.net/a8c99e30-dc02-456c-b752-91702acb84c5/small.jpg",
      :medium "http://cloudfront.net/a8c99e30-dc02-456c-b752-91702acb84c5/med.jpg",
      :large "http://cloudfront.net/a8c99e30-dc02-456c-b752-91702acb84c5/large.jpg"}
@@ -1422,7 +1422,7 @@
      :large "http://cloudfront.net/38325411-8a54-4a10-930f-0c1a439d0f78/large.jpg"}
     {:name "Mission Soul Food Pizzeria", :categories ["Soul Food" "Pizzeria"], :phone "415-437-3479", :id "9905fe61-44cb-4626-843b-5d725c7949bb"}
     {:service "yelp", :yelp-photo-id "22c576f1-d64a-44c1-a510-85ed03cd8a9c", :categories ["Soul Food" "Pizzeria"]}]
-   ["Joe's Homestyle Eatery is a popular and underappreciated place to drink a craft beer with your pet toucan."
+   ["Joe's Homestyle Eatery is a popular and underappreciated place to drink a craft beer with your pet metabase.toucan."
     {:small "http://cloudfront.net/9d0c77a6-ac3a-4221-8125-c670c48a963a/small.jpg",
      :medium "http://cloudfront.net/9d0c77a6-ac3a-4221-8125-c670c48a963a/med.jpg",
      :large "http://cloudfront.net/9d0c77a6-ac3a-4221-8125-c670c48a963a/large.jpg"}
@@ -1434,7 +1434,7 @@
      :large "http://cloudfront.net/f1891933-8d88-4e80-92c3-76b0a10c6b45/large.jpg"}
     {:name "Market St. Gluten-Free Café", :categories ["Gluten-Free" "Café"], :phone "415-697-9776", :id "ce4947d0-071a-4491-b5ac-f8b0241bd54c"}
     {:service "flare", :username "amy"}]
-   ["Tenderloin Cage-Free Sushi is a swell and classic place to nurse a hangover with your pet toucan."
+   ["Tenderloin Cage-Free Sushi is a swell and classic place to nurse a hangover with your pet metabase.toucan."
     {:small "http://cloudfront.net/325091a5-4a50-45bd-9566-654940a8932c/small.jpg",
      :medium "http://cloudfront.net/325091a5-4a50-45bd-9566-654940a8932c/med.jpg",
      :large "http://cloudfront.net/325091a5-4a50-45bd-9566-654940a8932c/large.jpg"}
@@ -1638,7 +1638,7 @@
      :large "http://cloudfront.net/6274a518-20f4-4db9-bcad-473c4f452841/large.jpg"}
     {:name "Rasta's British Food Truck", :categories ["British" "Food Truck"], :phone "415-958-9031", :id "b6616c97-01d0-488f-a855-bcd6efe2b899"}
     {:service "flare", :username "jessica"}]
-   ["Polk St. Deep-Dish Hotel & Restaurant is a groovy and horrible place to take visiting friends and relatives with your pet toucan."
+   ["Polk St. Deep-Dish Hotel & Restaurant is a groovy and horrible place to take visiting friends and relatives with your pet metabase.toucan."
     {:small "http://cloudfront.net/c28e51fc-ac77-43ab-90d3-d660143a78fe/small.jpg",
      :medium "http://cloudfront.net/c28e51fc-ac77-43ab-90d3-d660143a78fe/med.jpg",
      :large "http://cloudfront.net/c28e51fc-ac77-43ab-90d3-d660143a78fe/large.jpg"}
@@ -1722,7 +1722,7 @@
      :large "http://cloudfront.net/dd0eb180-3e40-4ac6-becb-653a32f2d43d/large.jpg"}
     {:name "SoMa Old-Fashioned Pizzeria", :categories ["Old-Fashioned" "Pizzeria"], :phone "415-966-8856", :id "deb8997b-734d-402b-a181-bd888214bc86"}
     {:service "facebook", :facebook-photo-id "91e06ea0-df70-48e2-bb43-6acfe787d203", :url "http://facebook.com/photos/91e06ea0-df70-48e2-bb43-6acfe787d203"}]
-   ["Oakland European Liquor Store is a popular and historical place to sip Champagne with your pet toucan."
+   ["Oakland European Liquor Store is a popular and historical place to sip Champagne with your pet metabase.toucan."
     {:small "http://cloudfront.net/9c28ae3e-e583-4ec2-9646-a58af7de6e5a/small.jpg",
      :medium "http://cloudfront.net/9c28ae3e-e583-4ec2-9646-a58af7de6e5a/med.jpg",
      :large "http://cloudfront.net/9c28ae3e-e583-4ec2-9646-a58af7de6e5a/large.jpg"}
@@ -2076,7 +2076,7 @@
      :large "http://cloudfront.net/5faf0fda-041a-446d-aba4-54b7a6ceaa18/large.jpg"}
     {:name "Rasta's Paleo Café", :categories ["Paleo" "Café"], :phone "415-392-6341", :id "4f9e69be-f06c-46a0-bb8b-f3ddd8218ca1"}
     {:service "facebook", :facebook-photo-id "0fc82427-48c6-468d-8813-9dca3289e519", :url "http://facebook.com/photos/0fc82427-48c6-468d-8813-9dca3289e519"}]
-   ["Kyle's Free-Range Taqueria is a horrible and exclusive place to sip a glass of expensive wine with your pet toucan."
+   ["Kyle's Free-Range Taqueria is a horrible and exclusive place to sip a glass of expensive wine with your pet metabase.toucan."
     {:small "http://cloudfront.net/865964d4-35c0-40e2-9029-584fc6f393ce/small.jpg",
      :medium "http://cloudfront.net/865964d4-35c0-40e2-9029-584fc6f393ce/med.jpg",
      :large "http://cloudfront.net/865964d4-35c0-40e2-9029-584fc6f393ce/large.jpg"}
@@ -2298,7 +2298,7 @@
      :large "http://cloudfront.net/2e81d020-d65b-43ac-abad-32c74d5890b8/large.jpg"}
     {:name "SoMa Old-Fashioned Pizzeria", :categories ["Old-Fashioned" "Pizzeria"], :phone "415-966-8856", :id "deb8997b-734d-402b-a181-bd888214bc86"}
     {:service "twitter", :mentions ["@soma_old_fashioned_pizzeria"], :tags ["#old-fashioned" "#pizzeria"], :username "bob"}]
-   ["Marina Homestyle Pop-Up Food Stand is a groovy and great place to conduct a business meeting with your pet toucan."
+   ["Marina Homestyle Pop-Up Food Stand is a groovy and great place to conduct a business meeting with your pet metabase.toucan."
     {:small "http://cloudfront.net/2cf13084-184a-4a3b-9c64-9732b00b2410/small.jpg",
      :medium "http://cloudfront.net/2cf13084-184a-4a3b-9c64-9732b00b2410/med.jpg",
      :large "http://cloudfront.net/2cf13084-184a-4a3b-9c64-9732b00b2410/large.jpg"}
@@ -2364,7 +2364,7 @@
      :large "http://cloudfront.net/f3fb00c6-96fe-4b76-ba66-118e26328fd6/large.jpg"}
     {:name "Lucky's Afgan Sushi", :categories ["Afgan" "Sushi"], :phone "415-188-3506", :id "4a47d0d2-0123-4bb9-b941-38702f0697e9"}
     {:service "facebook", :facebook-photo-id "97487fd1-61b3-4492-9d4f-45ceba863252", :url "http://facebook.com/photos/97487fd1-61b3-4492-9d4f-45ceba863252"}]
-   ["Market St. Homestyle Pop-Up Food Stand is a overrated and wonderful place to drink a craft beer with your pet toucan."
+   ["Market St. Homestyle Pop-Up Food Stand is a overrated and wonderful place to drink a craft beer with your pet metabase.toucan."
     {:small "http://cloudfront.net/af633118-4ae8-450f-b48b-d02d86913e22/small.jpg",
      :medium "http://cloudfront.net/af633118-4ae8-450f-b48b-d02d86913e22/med.jpg",
      :large "http://cloudfront.net/af633118-4ae8-450f-b48b-d02d86913e22/large.jpg"}
@@ -2400,7 +2400,7 @@
      :large "http://cloudfront.net/8a2fc34f-49ce-4705-85f7-94d0f5847656/large.jpg"}
     {:name "Kyle's Japanese Hotel & Restaurant", :categories ["Japanese" "Hotel & Restaurant"], :phone "415-337-5387", :id "eced4f41-b627-4553-a297-888871038b69"}
     {:service "facebook", :facebook-photo-id "e6a59e30-0ffd-4a6f-b4bc-f45ba8c214cf", :url "http://facebook.com/photos/e6a59e30-0ffd-4a6f-b4bc-f45ba8c214cf"}]
-   ["Mission Soul Food Pizzeria is a swell and swell place to pitch an investor with your pet toucan."
+   ["Mission Soul Food Pizzeria is a swell and swell place to pitch an investor with your pet metabase.toucan."
     {:small "http://cloudfront.net/108c11d1-e973-45c2-8c99-86ae460dfb1d/small.jpg",
      :medium "http://cloudfront.net/108c11d1-e973-45c2-8c99-86ae460dfb1d/med.jpg",
      :large "http://cloudfront.net/108c11d1-e973-45c2-8c99-86ae460dfb1d/large.jpg"}
@@ -2862,13 +2862,13 @@
      :large "http://cloudfront.net/c9e18865-81de-4444-93fa-dd77ff19977e/large.jpg"}
     {:name "SoMa Taquería Diner", :categories ["Taquería" "Diner"], :phone "415-947-9521", :id "f97ede4a-074f-4e24-babc-5c44f2be9c36"}
     {:service "flare", :username "bob"}]
-   ["Cam's Soul Food Ice Cream Truck is a acceptable and fantastic place to people-watch with your pet toucan."
+   ["Cam's Soul Food Ice Cream Truck is a acceptable and fantastic place to people-watch with your pet metabase.toucan."
     {:small "http://cloudfront.net/f38cd426-8b7f-4481-96b2-cb44095a0709/small.jpg",
      :medium "http://cloudfront.net/f38cd426-8b7f-4481-96b2-cb44095a0709/med.jpg",
      :large "http://cloudfront.net/f38cd426-8b7f-4481-96b2-cb44095a0709/large.jpg"}
     {:name "Cam's Soul Food Ice Cream Truck", :categories ["Soul Food" "Ice Cream Truck"], :phone "415-270-8888", :id "f474e587-1801-43ea-93d5-4c4fd96460b8"}
     {:service "flare", :username "lucky_pigeon"}]
-   ["Tenderloin Cage-Free Sushi is a delicious and delicious place to have breakfast with your pet toucan."
+   ["Tenderloin Cage-Free Sushi is a delicious and delicious place to have breakfast with your pet metabase.toucan."
     {:small "http://cloudfront.net/45dc5a3b-a0c5-4f69-afc8-711cfc5f84b5/small.jpg",
      :medium "http://cloudfront.net/45dc5a3b-a0c5-4f69-afc8-711cfc5f84b5/med.jpg",
      :large "http://cloudfront.net/45dc5a3b-a0c5-4f69-afc8-711cfc5f84b5/large.jpg"}
@@ -2892,7 +2892,7 @@
      :large "http://cloudfront.net/1707f0ac-6df5-4340-a5ef-c31609c4ead0/large.jpg"}
     {:name "Chinatown American Bakery", :categories ["American" "Bakery"], :phone "415-658-7393", :id "cf55cdbd-c614-4be1-8496-0e11b195d16f"}
     {:service "twitter", :mentions ["@chinatown_american_bakery"], :tags ["#american" "#bakery"], :username "amy"}]
-   ["Pacific Heights Red White & Blue Bar & Grill is a swell and acceptable place to take visiting friends and relatives with your pet toucan."
+   ["Pacific Heights Red White & Blue Bar & Grill is a swell and acceptable place to take visiting friends and relatives with your pet metabase.toucan."
     {:small "http://cloudfront.net/37a5f9f6-b1bd-405f-bec2-fad8a476cf62/small.jpg",
      :medium "http://cloudfront.net/37a5f9f6-b1bd-405f-bec2-fad8a476cf62/med.jpg",
      :large "http://cloudfront.net/37a5f9f6-b1bd-405f-bec2-fad8a476cf62/large.jpg"}

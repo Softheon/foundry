@@ -4,7 +4,7 @@
             [metabase.models.field :refer [Field]]
             [metabase.query-processor.store :as qp.store]
             [metabase.util :as u]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (defn- resolve-fields-with-ids! [field-ids]
   (let [fetched-fields (db/select (apply vector Field qp.store/field-columns-to-fetch) :id [:in (set field-ids)])]

@@ -23,7 +23,7 @@
              [schema :as su]
              [urls :as urls]]
             [schema.core :as s]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [hydrate :refer [hydrate]]])
   (:import java.io.ByteArrayInputStream))

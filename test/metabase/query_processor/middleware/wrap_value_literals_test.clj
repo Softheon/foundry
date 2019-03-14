@@ -5,7 +5,7 @@
             [metabase.query-processor.test-util :as qp.test-util]
             [metabase.test.data :as data]
             [metabase.util.date :as du]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (defn- wrap-value-literals {:style/indent 0} [inner-query]
   (qp.test-util/with-everything-store

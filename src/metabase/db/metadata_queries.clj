@@ -8,7 +8,7 @@
             [metabase.query-processor.interface :as qpi]
             [metabase.util.schema :as su]
             [schema.core :as s]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (defn- qp-query [db-id mbql-query]
   {:pre [(integer? db-id)]}

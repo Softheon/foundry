@@ -6,7 +6,7 @@
              [util :as u]]
             [metabase.mbql.normalize :as normalize]
             [metabase.util.honeysql-extensions :as hx]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [models :as models]]))
 

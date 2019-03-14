@@ -17,8 +17,8 @@
             [metabase.test.data.users :as users]
             [metabase.test.mock.util :as mutil]
             [metabase.util.encryption :as encrypt]
-            [toucan.db :as db]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as tt]))
 
 (defn- native-query [sql]
   {:database (data/id)

@@ -19,8 +19,8 @@
              [datasets :refer [expect-with-engine]]
              [interface :refer [def-database-definition]]]
             [metabase.util.date :as du]
-            [toucan.db :as db]
-            [toucan.util.test :as tt])
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as tt])
   (:import metabase.driver.mysql.MySQLDriver))
 
 ;; MySQL allows 0000-00-00 dates, but JDBC does not; make sure that MySQL is converting them to NULL when returning

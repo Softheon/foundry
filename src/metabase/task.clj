@@ -61,6 +61,8 @@
     ;; than the Standard JDBC one we define in `quartz.properties`
     (when (= type :postgres)
       (System/setProperty "org.quartz.jobStore.driverDelegateClass" "org.quartz.impl.jdbcjobstore.PostgreSQLDelegate"))
+    (when (= type :sqlserver)
+      (System/setProperty "org.quartz.jobStore.driverDelegateClass" "org.quartz.impl.jdbcjobstore.MSSQLDelegate"))
     ;; set other properties like URL, user, and password so Quartz knows how to connect
     (doseq [[k, ^String v] {:driver   classname
                             :URL      (str "jdbc:" subprotocol \: subname)

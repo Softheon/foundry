@@ -10,7 +10,7 @@
              [permissions-group :as group :refer [PermissionsGroup]]
              [permissions-group-membership :refer [PermissionsGroupMembership]]]
             [metabase.util.schema :as su]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [hydrate :refer [hydrate]]]))
 

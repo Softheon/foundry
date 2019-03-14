@@ -35,7 +35,7 @@
              [i18n :refer [tru]]
              [schema :as su]]
             [schema.core :as s]
-            [toucan.db :as db])
+            [metabase.toucan.db :as db])
   (:import com.google.api.client.googleapis.auth.oauth2.GoogleCredential
            com.google.api.client.http.HttpRequestInitializer
            [com.google.api.services.bigquery Bigquery Bigquery$Builder BigqueryScopes]

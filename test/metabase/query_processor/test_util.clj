@@ -5,7 +5,7 @@
              [field :refer [Field]]
              [table :refer [Table]]]
             [metabase.query-processor.store :as qp.store]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (defn do-with-everything-store
   "Impl for `with-everything-store`."

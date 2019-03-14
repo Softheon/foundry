@@ -11,7 +11,7 @@
             [metabase.test
              [automagic-dashboards :refer :all]
              [data :as data]]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 (def ^:private segment
   (delay

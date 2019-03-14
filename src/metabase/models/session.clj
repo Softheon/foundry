@@ -1,7 +1,7 @@
 (ns metabase.models.session
   (:require [metabase.util :as u]
             [metabase.util.date :as du]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [models :as models]]))
 

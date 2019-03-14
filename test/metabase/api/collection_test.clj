@@ -19,8 +19,8 @@
              [pulse-channel-recipient :refer [PulseChannelRecipient]]]
             [metabase.test.data.users :refer [user->client user->id]]
             [metabase.test.util :as tu]
-            [toucan.db :as db]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as tt]))
 
 ;;; +----------------------------------------------------------------------------------------------------------------+
 ;;; |                                                GET /collection                                                 |

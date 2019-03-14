@@ -25,8 +25,8 @@
              [datasets :as datasets]
              [users :refer :all]]
             [metabase.test.util.log :as tu.log]
-            [toucan.db :as db]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as tt]))
 
 ;; HELPER FNS
 

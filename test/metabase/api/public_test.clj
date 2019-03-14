@@ -21,8 +21,8 @@
              [data :as data]
              [util :as tu]]
             [metabase.test.data.users :as test-users]
-            [toucan.db :as db]
-            [toucan.util.test :as tt])
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as tt])
   (:import java.io.ByteArrayInputStream
            java.util.UUID))
 

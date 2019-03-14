@@ -6,8 +6,8 @@
             [metabase.test.util :as tu]
             [metabase.util :as u]
             [metabase.util.date :as du]
-            [toucan.db :as db]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as tt]))
 
 (def ^:private default-task-history
   {:id true, :db_id true, :started_at true, :ended_at true, :duration 10, :task_details nil})

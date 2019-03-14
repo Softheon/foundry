@@ -3,7 +3,7 @@
   (:require [metabase.models.interface :as i]
             [metabase.util :as u]
             [metabase.util.date :as du]
-            [toucan.models :as models]))
+            [metabase.toucan.models :as models]))
 
 (models/defmodel ViewLog :view_log)
 

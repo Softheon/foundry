@@ -4,7 +4,7 @@
   actions can take place or be prevented when something changes."
   (:require [clojure.set :as set]
             [metabase.util.date :as du]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [models :as models]]))
 

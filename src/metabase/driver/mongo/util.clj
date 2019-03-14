@@ -9,7 +9,7 @@
             [monger
              [core :as mg]
              [credentials :as mcred]]
-            [toucan.db :as db])
+            [metabase.toucan.db :as db])
   (:import [com.mongodb MongoClientOptions MongoClientOptions$Builder MongoClientURI]))
 
 (def ^:const ^:private connection-timeout-ms

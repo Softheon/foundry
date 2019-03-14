@@ -9,10 +9,10 @@
              [data :refer :all]
              [util :as tu]]
             [metabase.test.data.users :refer :all]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [hydrate :refer [hydrate]]]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 ;; Test out our predicate functions
 

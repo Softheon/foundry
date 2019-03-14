@@ -3,7 +3,7 @@
             [metabase.util
              [date :as du]
              [i18n :refer [tru]]]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [models :as models]]))
 

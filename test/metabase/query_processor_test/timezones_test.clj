@@ -10,7 +10,7 @@
              [datasets :refer [*driver* *engine* expect-with-engine expect-with-engines]]
              [generic-sql :as generic-sql]
              [interface :as i]]
-            [toucan.db :as db])
+            [metabase.toucan.db :as db])
   (:import metabase.driver.mysql.MySQLDriver))
 
 (def ^:private mysql-driver (MySQLDriver.))

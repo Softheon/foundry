@@ -6,10 +6,10 @@
              [card :refer [Card]]
              [field :refer [Field]]]
             [metabase.test.data :as data]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [hydrate :refer [hydrate]]]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 ;;; ---------------------------------------------- name_field hydration ----------------------------------------------
 

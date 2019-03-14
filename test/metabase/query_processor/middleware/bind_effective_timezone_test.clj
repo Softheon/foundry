@@ -5,7 +5,7 @@
             [metabase.test.util :as tu]
             [metabase.util :as u]
             [metabase.util.date :as du]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 (expect
   "US/Hawaii"

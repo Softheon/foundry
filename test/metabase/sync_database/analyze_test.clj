@@ -19,8 +19,8 @@
              [data :as data]
              [util :as tu]]
             [metabase.test.data.users :refer :all]
-            [toucan.db :as db]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as tt]))
 
 ;; distinct-values
 ;; (#2332) check that if field values are long we skip over them

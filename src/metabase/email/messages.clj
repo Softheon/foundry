@@ -20,7 +20,7 @@
             [stencil
              [core :as stencil]
              [loader :as stencil-loader]]
-            [toucan.db :as db])
+            [metabase.toucan.db :as db])
   (:import [java.io File IOException]))
 
 (alter-meta! #'stencil.core/render-file assoc :style/indent 1)

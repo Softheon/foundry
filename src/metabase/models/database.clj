@@ -9,7 +9,7 @@
              [interface :as i]
              [permissions :as perms]
              [permissions-group :as perm-group]]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [models :as models]]))
 

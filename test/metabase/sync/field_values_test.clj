@@ -12,7 +12,7 @@
             [metabase.sync.util-test :as sut]
             [metabase.test.data :as data]
             [metabase.test.data.one-off-dbs :as one-off-dbs]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 ;; Test that when we delete FieldValues syncing the Table again will cause them to be re-created
 (defn- venues-price-field-values []

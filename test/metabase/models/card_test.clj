@@ -9,8 +9,8 @@
              [data :as data]
              [util :as tu]]
             [metabase.util :as u]
-            [toucan.db :as db]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as tt]))
 
 ;; Check that the :dashboard_count delay returns the correct count of Dashboards a Card is in
 (expect

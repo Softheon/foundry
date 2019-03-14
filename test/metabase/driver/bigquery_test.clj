@@ -19,7 +19,7 @@
              [data :as data]
              [util :as tu]]
             [metabase.test.data.datasets :refer [expect-with-engine]]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 ;; Test native queries
 (expect-with-engine :bigquery

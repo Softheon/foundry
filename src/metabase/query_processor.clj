@@ -51,7 +51,7 @@
              [date :as du]
              [i18n :refer [tru]]]
             [schema.core :as s]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 ;;; +----------------------------------------------------------------------------------------------------------------+
 ;;; |                                                QUERY PROCESSOR                                                 |

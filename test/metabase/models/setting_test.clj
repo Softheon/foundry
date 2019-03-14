@@ -12,7 +12,7 @@
              [encryption-test :as encryption-test]
              [i18n :refer [tru]]]
             [puppetlabs.i18n.core :as i18n]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 ;; ## TEST SETTINGS DEFINITIONS
 ;; TODO! These don't get loaded by `lein ring server` unless this file is touched

@@ -17,7 +17,7 @@
             [metabase.util :as u]
             [puppetlabs.i18n.core :refer [tru]]
             [schema.core :as s]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 
 ;;; +----------------------------------------------------------------------------------------------------------------+

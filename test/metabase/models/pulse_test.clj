@@ -19,10 +19,10 @@
             [metabase.test.data.users :refer :all]
             [metabase.test.mock.util :refer [pulse-channel-defaults]]
             [metabase.util :as u]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [hydrate :refer [hydrate]]]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 (defn- user-details
   [username]

@@ -10,7 +10,7 @@
              [i18n :refer [tru]]
              [schema :as su]]
             [schema.core :as s]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (s/defn ^:private check-card-read-perms
   "Check that the current user has permissions to read Card with `card-id`, or throw an Exception. "

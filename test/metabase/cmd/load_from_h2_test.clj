@@ -2,7 +2,7 @@
   (:require [expectations :refer :all]
             metabase.cmd.load-from-h2
             [metabase.util :as u]
-            [toucan.models :as models]))
+            [metabase.toucan.models :as models]))
 
 ;; Check to make sure we're migrating all of our entities.
 ;; This fetches the `metabase.cmd.load-from-h2/entities` and compares it all existing entities

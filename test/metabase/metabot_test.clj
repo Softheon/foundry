@@ -3,7 +3,7 @@
             [metabase.metabot :as metabot]
             [metabase.models.card :refer [Card]]
             [metabase.util.date :as du]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 ;; test that if we're not the MetaBot based on Settings, our function to check is working correctly
 (expect

@@ -16,8 +16,8 @@
             [metabase.test.data
              [datasets :as datasets]
              [interface :as i]]
-            [toucan.db :as db]
-            [toucan.util.test :as tt])
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as tt])
   (:import metabase.driver.mongo.MongoDriver
            org.bson.types.ObjectId
            org.joda.time.DateTime))

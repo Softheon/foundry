@@ -15,7 +15,7 @@
             [metabase.test.data.users :as users]
             [metabase.test.util.log :as tu.log]
             [metabase.util :as u]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 ;;; ---------------------------------------------- Permissions Checking ----------------------------------------------
 

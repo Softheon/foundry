@@ -9,7 +9,7 @@
              [i18n :as ui18n :refer [trs]]
              [schema :as su]]
             [schema.core :as s]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [hydrate :refer [hydrate]]]))
 

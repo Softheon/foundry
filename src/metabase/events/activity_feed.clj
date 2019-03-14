@@ -12,7 +12,7 @@
              [dashboard :refer [Dashboard]]
              [table :as table]]
             [metabase.util.i18n :refer [tru]]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (def ^:private activity-feed-topics
   "The `Set` of event topics which are subscribed to for use in the Metabase activity feed."

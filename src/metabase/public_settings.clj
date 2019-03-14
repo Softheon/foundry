@@ -10,7 +10,7 @@
             [metabase.util
              [i18n :refer [available-locales-with-names set-locale tru]]
              [password :as password]]
-            [toucan.db :as db])
+            [metabase.toucan.db :as db])
   (:import [java.util TimeZone UUID]))
 
 (defsetting check-for-updates

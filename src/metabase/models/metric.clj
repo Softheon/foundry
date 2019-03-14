@@ -11,7 +11,7 @@
              [dependency :as dependency]
              [interface :as i]
              [revision :as revision]]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [hydrate :refer [hydrate]]
              [models :as models]]))

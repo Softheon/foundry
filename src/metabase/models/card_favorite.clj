@@ -1,6 +1,6 @@
 (ns metabase.models.card-favorite
   (:require [metabase.util :as u]
-            [toucan.models :as models]))
+            [metabase.toucan.models :as models]))
 
 (models/defmodel CardFavorite :report_cardfavorite)
 

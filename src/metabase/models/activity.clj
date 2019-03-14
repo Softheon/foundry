@@ -10,7 +10,7 @@
              [pulse :refer [Pulse]]
              [segment :refer [Segment]]]
             [metabase.util.date :as du]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [models :as models]]))
 

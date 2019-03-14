@@ -6,8 +6,8 @@
             [metabase.models.table :refer [Table]]
             [metabase.sync.analyze.table-row-count :as table-row-count]
             [metabase.test.data :as data]
-            [toucan.db :as db]
-            [toucan.util.test :as tt]
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as tt]
             [metabase.test.data.datasets :as datasets]))
 
 ;; test that syncing table row counts works

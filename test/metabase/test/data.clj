@@ -21,7 +21,7 @@
              [dataset-definitions :as defs]
              [datasets :refer [*driver*]]
              [interface :as i]]
-            [toucan.db :as db])
+            [metabase.toucan.db :as db])
   (:import [metabase.test.data.interface DatabaseDefinition TableDefinition]))
 
 (declare get-or-create-database!)

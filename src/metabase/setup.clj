@@ -1,6 +1,6 @@
 (ns metabase.setup
   (:require [metabase.models.setting :refer [Setting defsetting]]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (defsetting ^:private setup-token
   "A token used to signify that an instance has permissions to create the initial User. This is created upon the first

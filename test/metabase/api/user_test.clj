@@ -12,8 +12,8 @@
              [util :as tu :refer [random-name]]]
             [metabase.test.data.users :as test-users]
             [metabase.models.collection-test :as collection-test]
-            [toucan.db :as db]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as tt]))
 
 ;; ## /api/user/* AUTHENTICATION Tests
 ;; We assume that all endpoints for a given context are enforced by the same middleware, so we don't run the same

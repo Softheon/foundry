@@ -20,7 +20,7 @@
             [ring.core.protocols :as protocols]
             [ring.util.response :as response]
             [schema.core :as s]
-            [toucan.db :as db])
+            [metabase.toucan.db :as db])
   (:import java.io.OutputStream))
 
 (declare check-403 check-404)

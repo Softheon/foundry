@@ -17,7 +17,7 @@
              [honeysql-extensions :as hx]
              [i18n :refer [tru]]
              [ssh :as ssh]]
-            [toucan.db :as db])
+            [metabase.toucan.db :as db])
   (:import java.sql.Time))
 
 (defn- connection-details->spec

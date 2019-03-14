@@ -15,7 +15,7 @@
              [store :as qp.store]]
             [metabase.util.schema :as su]
             [schema.core :as s]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (defn- both-args-are-field-id-clauses? [[_ x y]]
   (and

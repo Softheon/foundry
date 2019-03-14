@@ -41,7 +41,7 @@
             [metabase.util.i18n :refer [trs tru] :as ui18n]
             [ring.util.codec :as codec]
             [schema.core :as s]
-            [toucan.db :as db])
+            [metabase.toucan.db :as db])
   (:import java.util.TimeZone))
 
 (def ^:private public-endpoint "/auto/dashboard/")

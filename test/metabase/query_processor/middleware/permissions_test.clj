@@ -11,7 +11,7 @@
             [metabase.query-processor.middleware.permissions :refer [check-query-permissions]]
             [metabase.test.data.users :as users]
             [metabase.util :as u]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 (def ^:private ^{:arglists '([query]), :style/indent 0} check-perms (check-query-permissions identity))
 

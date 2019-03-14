@@ -5,7 +5,7 @@
             [metabase.util.i18n :refer [tru]]
             [metabase.mbql.schema :as mbql.s]
             [schema.core :as s]
-            [toucan.models :as models]))
+            [metabase.toucan.models :as models]))
 
 (models/defmodel QueryExecution :query_execution)
 

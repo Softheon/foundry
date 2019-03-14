@@ -8,7 +8,7 @@
             [metabase.models.metric :refer [Metric]]
             [metabase.test.data :as data]
             [metabase.test.data.datasets :as datasets :refer [*driver* *engine*]]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 ;; sum, *
 (datasets/expect-with-engines (non-timeseries-engines-with-feature :expression-aggregations)

@@ -181,6 +181,22 @@
     (reënable-db-constraints:mysql! target-db-conn)
     (println-ok)))
 
+; (defn- disable-db-constraints:sqlserver! [target-db-conn]
+; (jdbc/execute! target-db-conn ["EXEC sp_msforeachtable \"ALTER TABLE ? NOCHECK CONSTRAINT all\""]))
+
+; (defn- reenable-db-constraints:sqlserver! [target-db-conn]
+; (jdbc/execute! target-db-conn ["EXEC sp_msforeachtable \"ALTER TABLE ? WITH CHECK CHECK CONSTRAINT all\""]))
+
+; (defn- reënable-db-constraints-if-needed! [target-db-conn]
+; (when (= (mdb/db-type) :mysql)
+;   (println (u/format-color 'blue "Reënabling DB constraints..."))
+;   (reënable-db-constraints:mysql! target-db-conn)
+;   (println-ok))
+; (when (= (mdb/db-type) :sqlserver)
+;   (println (u/format-color 'blue "Reënabling DB constraints..."))
+;   (reenable-db-constraints:sqlserver! target-db-conn)
+;   (println-ok)))
+
 
 ;;; ---------------------------------------- Fixing Postgres Sequence Values -----------------------------------------
 

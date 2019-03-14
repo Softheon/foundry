@@ -16,10 +16,10 @@
              [data :as data]
              [util :as tu]]
             [metabase.test.data.one-off-dbs :as one-off-dbs]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [hydrate :refer [hydrate]]]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 ;;; +----------------------------------------------------------------------------------------------------------------+
 ;;; |                                         Dropping & Undropping Columns                                          |

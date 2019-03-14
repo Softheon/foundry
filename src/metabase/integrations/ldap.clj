@@ -9,7 +9,7 @@
              [user :as user :refer [User]]]
             [metabase.util :as u]
             [metabase.util.i18n :refer [tru]]
-            [toucan.db :as db])
+            [metabase.toucan.db :as db])
   (:import [com.unboundid.ldap.sdk LDAPConnectionPool LDAPException]))
 
 (def ^:private filter-placeholder

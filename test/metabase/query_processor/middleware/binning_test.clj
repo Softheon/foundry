@@ -5,7 +5,7 @@
             [metabase.query-processor.test-util :as qp.test-util]
             [metabase.test.data :as data]
             [metabase.util :as u]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 (expect
   {}

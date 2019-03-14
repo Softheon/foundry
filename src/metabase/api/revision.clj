@@ -8,7 +8,7 @@
              [dashboard :refer [Dashboard]]
              [revision :as revision :refer [Revision]]]
             [schema.core :as s]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (def ^:private ^:const name->entity
   {"card"      Card

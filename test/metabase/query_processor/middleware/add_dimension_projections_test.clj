@@ -1,7 +1,7 @@
 (ns metabase.query-processor.middleware.add-dimension-projections-test
   (:require [expectations :refer [expect]]
             [metabase.query-processor.middleware.add-dimension-projections :as add-dim-projections]
-            [toucan.hydrate :as hydrate]))
+            [metabase.toucan.hydrate :as hydrate]))
 
 ;;; ----------------------------------------- add-fk-remaps (pre-processing) -----------------------------------------
 

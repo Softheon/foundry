@@ -18,8 +18,8 @@
              [util :as tu]]
             [metabase.test.data.users :as users]
             [metabase.util :as u]
-            [toucan.db :as db]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as tt]))
 
 ;; ## Dashboard Revisions
 

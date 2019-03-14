@@ -11,7 +11,7 @@
             [metabase.models.setting :as setting]
             [metabase.util :as u]
             [metabase.util.i18n :as ui18n :refer [trs tru]]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [models :as models]]))
 

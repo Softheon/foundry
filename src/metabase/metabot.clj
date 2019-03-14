@@ -27,7 +27,7 @@
              [i18n :refer [trs tru]]
              [urls :as urls]]
             [throttle.core :as throttle]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (defsetting metabot-enabled
   (tru "Enable MetaBot, which lets you search for and view your saved questions directly via Slack.")

@@ -3,7 +3,7 @@
             [metabase.query-processor.store :as qp.store]
             [metabase.models.database :as database :refer [Database]]
             [metabase.util.i18n :refer [tru]]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (defn- resolve-database* [{database-id :database, :as query}]
   (u/prog1 query

@@ -19,7 +19,7 @@
              [honeysql-extensions :as hx]
              [ssh :as ssh]]
             [schema.core :as s]
-            [toucan.db :as db])
+            [metabase.toucan.db :as db])
   (:import [clojure.lang Keyword PersistentVector]
            com.mchange.v2.c3p0.ComboPooledDataSource
            honeysql.types.SqlCall

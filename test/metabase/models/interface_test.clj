@@ -3,12 +3,12 @@
             [expectations :refer [expect]]
             [metabase.mbql.normalize :as normalize]
             [metabase.test.util.log :as tu.log]
-            [toucan.models :as t.models]))
+            [metabase.toucan.models :as t.models]))
 
 ;; let's make sure the `:metabase-query`/`:metric-segment-definition`/`:parameter-mappings` normalization functions
 ;; respond gracefully to invalid stuff when pulling them out of the Database. See #8914
 
-(defn- type-fn [toucan-type in-or-out]
+(defn- type-fn [metabase.toucan-type in-or-out]
   (-> @@#'t.models/type-fns toucan-type in-or-out))
 
 ;; an empty template tag like the one below is invalid. Rather than potentially destroy an entire API response because

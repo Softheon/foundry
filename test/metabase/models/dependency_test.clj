@@ -4,10 +4,10 @@
             [metabase.test.data :refer :all]
             [metabase.util :as u]
             [metabase.util.date :as du]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [models :as models]]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 (models/defmodel ^:private Mock :mock)
 

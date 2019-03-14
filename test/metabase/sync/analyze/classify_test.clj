@@ -7,7 +7,7 @@
             [metabase.sync.interface :as i]
             [metabase.util :as u]
             [metabase.util.date :as du]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 ;; Check that only the right Fields get classified
 (expect

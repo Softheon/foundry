@@ -9,10 +9,10 @@
              [database :refer [Database]]
              [field :refer [Field]]
              [table :refer [Table]]]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [hydrate :refer [hydrate]]]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 ;;; ---------------------------------------------------- Tooling -----------------------------------------------------
 

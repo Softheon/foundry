@@ -7,7 +7,7 @@
             [metabase.test.data :refer :all]
             [metabase.test.data.users :refer :all]
             [metabase.util :as u]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 (defn- user-details
   [username]

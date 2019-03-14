@@ -17,7 +17,7 @@
              [schema :as su]]
             [redux.core :as redux]
             [schema.core :as s]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (s/defn ^:private save-fingerprint!
   [field :- i/FieldInstance, fingerprint :- (s/maybe i/Fingerprint)]

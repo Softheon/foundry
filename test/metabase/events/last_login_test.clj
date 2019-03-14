@@ -2,7 +2,7 @@
   (:require [expectations :refer :all]
             [metabase.events.last-login :refer [process-last-login-event]]
             [metabase.models.user :refer [User]]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 ;; `:user-login` event
 (expect

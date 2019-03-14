@@ -36,7 +36,7 @@
              [i18n :refer [trs tru]]
              [schema :as su]]
             [schema.core :as s]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [hydrate :refer [hydrate]]])
   (:import java.util.UUID

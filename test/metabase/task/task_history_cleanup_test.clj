@@ -7,8 +7,8 @@
             [metabase.task.task-history-cleanup :as cleanup-task]
             [metabase.test.util :as tu]
             [metabase.util :as u]
-            [toucan.db :as db]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as tt]))
 
 ;; Basic run of the cleanup task when it needs to remove rows. Should also add a TaskHistory row once complete
 (let [task-2 (tu/random-name)

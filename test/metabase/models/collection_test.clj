@@ -15,10 +15,10 @@
             [metabase.test.data.users :as test-users]
             [metabase.test.util :as tu]
             [metabase.util :as u]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [hydrate :refer [hydrate]]]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 (defn force-create-personal-collections!
   "Force the creation of the Personal Collections for our various test users. They are eventually going to get

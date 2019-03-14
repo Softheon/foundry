@@ -4,7 +4,7 @@
             [metabase.events :as events]
             [metabase.models.user :refer [User]]
             [metabase.util.date :as du]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (def ^:const last-login-topics
   "The `Set` of event topics which are subscribed to for use in last login tracking."

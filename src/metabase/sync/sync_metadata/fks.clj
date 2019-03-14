@@ -11,7 +11,7 @@
              [util :as sync-util]]
             [metabase.util :as u]
             [schema.core :as s]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (def ^:private FKRelationshipObjects
   "Relevant objects for a foreign key relationship."

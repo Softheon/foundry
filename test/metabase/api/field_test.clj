@@ -15,10 +15,10 @@
             [metabase.test.data.users :refer [user->client]]
             [metabase.timeseries-query-processor-test.util :as tqpt]
             [ring.util.codec :as codec]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [hydrate :refer [hydrate]]]
-            [toucan.util.test :as tt]
+            [metabase.toucan.util.test :as tt]
             [metabase.util :as u]
             [metabase.test.util.log :as tu.log]))
 

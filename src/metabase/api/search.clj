@@ -19,7 +19,7 @@
              [honeysql-extensions :as hx]
              [schema :as su]]
             [schema.core :as s]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (def ^:private default-columns
   [:id :name :description :archived])

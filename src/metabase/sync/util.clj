@@ -25,7 +25,7 @@
             [ring.util.codec :as codec]
             [schema.core :as s]
             [taoensso.nippy :as nippy]
-            [toucan.db :as db])
+            [metabase.toucan.db :as db])
   (:import org.joda.time.DateTime))
 
 ;;; +----------------------------------------------------------------------------------------------------------------+

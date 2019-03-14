@@ -12,7 +12,7 @@
             [metabase.query-processor.middleware.expand-macros :as expand-macros :refer :all]
             [metabase.test.data :as data]
             [metabase.test.data.datasets :as datasets]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 (defn- mbql-query [inner-query]
   {:database 1, :type :query, :query (merge {:source-table 1}

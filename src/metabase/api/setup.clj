@@ -18,7 +18,8 @@
              [i18n :refer [tru]]
              [schema :as su]]
             [schema.core :as s]
-            [toucan.db :as db]))
+            [clojure.tools.logging :as log]
+            [metabase.toucan.db :as db]))
 
 (def ^:private SetupToken
   "Schema for a string that matches the instance setup token."
@@ -42,14 +43,17 @@
    allow_tracking (s/maybe (s/cond-pre s/Bool su/BooleanString))
    schedules      (s/maybe database-api/ExpandedSchedulesMap)}
   ;; Now create the user
+  (log/info "new user creating xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
   (let [session-id (str (java.util.UUID/randomUUID))
         new-user   (db/insert! User
-                     :email        email
-                     :first_name   first_name
-                     :last_name    last_name
-                     :password     (str (java.util.UUID/randomUUID))
-                     :is_superuser true)]
+                               :email        email
+                               :first_name   first_name
+                               :last_name    last_name
+                               :password     (str (java.util.UUID/randomUUID))
+                               :is_superuser true)]
     ;; this results in a second db call, but it avoids redundant password code so figure it's worth it
+    (log/info "new user joined xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+    (log/info (identity new-user))
     (user/set-password! (:id new-user) password)
     ;; set a couple preferences
     (public-settings/site-name site_name)
@@ -61,22 +65,22 @@
     ;; setup database (if needed)
     (when (driver/is-engine? engine)
       (let [db (db/insert! Database
-                 (merge
-                  {:name         name
-                   :engine       engine
-                   :details      details
-                   :is_on_demand (boolean is_on_demand)
-                   :is_full_sync (or (nil? is_full_sync) ; default to `true` is `is_full_sync` isn't specified
-                                     is_full_sync)}
-                  (when schedules
-                    (database-api/schedule-map->cron-strings schedules))))]
+                           (merge
+                            {:name         name
+                             :engine       engine
+                             :details      details
+                             :is_on_demand (boolean is_on_demand)
+                             :is_full_sync (or (nil? is_full_sync) ; default to `true` is `is_full_sync` isn't specified
+                                               is_full_sync)}
+                            (when schedules
+                              (database-api/schedule-map->cron-strings schedules))))]
         (events/publish-event! :database-create db)))
     ;; clear the setup token now, it's no longer needed
     (setup/clear-token!)
     ;; then we create a session right away because we want our new user logged in to continue the setup process
     (db/insert! Session
-      :id      session-id
-      :user_id (:id new-user))
+                :id      session-id
+                :user_id (:id new-user))
     ;; notify that we've got a new user in the system AND that this user logged in
     (events/publish-event! :user-create {:user_id (:id new-user)})
     (events/publish-event! :user-login {:user_id (:id new-user), :session_id session-id, :first_login true})

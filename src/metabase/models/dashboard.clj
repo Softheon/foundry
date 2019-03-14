@@ -22,7 +22,7 @@
             [metabase.models.revision.diff :refer [build-sentence]]
             [metabase.query-processor.interface :as qpi]
             [metabase.util.i18n :as ui18n]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [hydrate :refer [hydrate]]
              [models :as models]]))

@@ -14,8 +14,8 @@
             [metabase.test.data.users :as test-users :refer [user->id]]
             [metabase.test.util :as tu]
             [metabase.util.password :as upass]
-            [toucan.db :as db]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as tt]))
 
 ;;; Tests for permissions-set
 

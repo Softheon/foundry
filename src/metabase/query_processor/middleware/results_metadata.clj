@@ -13,7 +13,7 @@
              [encryption :as encryption]
              [i18n :refer [tru]]]
             [ring.util.codec :as codec]
-            [toucan.db :as db]
+            [metabase.toucan.db :as db]
             [metabase.util :as u]))
 
 ;; TODO - is there some way we could avoid doing this every single time a Card is ran? Perhaps by passing the current

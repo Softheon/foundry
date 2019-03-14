@@ -14,7 +14,7 @@
              [pulse-card :refer [PulseCard]]
              [segment :refer [Segment]]
              [user :refer [User]]]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (def ^:const notifications-topics
   "The `Set` of event topics which are subscribed to for use in notifications tracking."

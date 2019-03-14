@@ -35,7 +35,7 @@
             [ring.util
              [io :as rui]
              [response :as rr]]
-            [toucan.db :as db])
+            [metabase.toucan.db :as db])
   (:import [java.io BufferedWriter OutputStream OutputStreamWriter]
            [java.nio.charset Charset StandardCharsets]
            org.eclipse.jetty.server.Server

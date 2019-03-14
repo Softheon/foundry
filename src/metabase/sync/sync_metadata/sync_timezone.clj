@@ -4,7 +4,7 @@
             [metabase.models.database :refer [Database]]
             [metabase.sync.interface :as i]
             [schema.core :as s]
-            [toucan.db :as db])
+            [metabase.toucan.db :as db])
   (:import org.joda.time.DateTime))
 
 (defn- extract-time-zone [^DateTime dt]

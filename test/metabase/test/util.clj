@@ -38,8 +38,8 @@
              [dataset-definitions :as defs]
              [datasets :refer [*driver*]]]
             [metabase.util.date :as du]
-            [toucan.db :as db]
-            [toucan.util.test :as test])
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as test])
   (:import com.mchange.v2.c3p0.PooledDataSource
            java.util.TimeZone
            org.apache.log4j.Logger

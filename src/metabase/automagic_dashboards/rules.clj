@@ -344,7 +344,7 @@
          ~@body))))
 
 (def ^:private rules (delay
-                      (with-resource [path (-> rules-dir io/resource .toURI)]
+                      (with-resource [path (-> rules-dir io/resource .toURI .toURL)]
                         (into {} (load-rule-dir path)))))
 
 (defn get-rules

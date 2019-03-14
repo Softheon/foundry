@@ -11,7 +11,7 @@
              [i18n :refer [tru]]]
             [schema.core :as s]
             [taoensso.nippy :as nippy]
-            [toucan
+            [metabase.toucan
              [models :as models]
              [util :as toucan-util]])
   (:import [java.io BufferedInputStream ByteArrayInputStream DataInputStream]

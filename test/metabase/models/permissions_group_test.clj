@@ -8,8 +8,8 @@
              [user :refer [User]]]
             [metabase.test.data.users :as test-users]
             [metabase.util.honeysql-extensions :as hx]
-            [toucan.db :as db]
-            [toucan.util.test :as tt])
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as tt])
   (:import metabase.models.permissions_group.PermissionsGroupInstance))
 
 ;;; -------------------------------- Check that the root entry for Admin was created ---------------------------------

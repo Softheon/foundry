@@ -6,7 +6,7 @@
              [sync :as sync]
              [util :as u]]
             [metabase.models.database :refer [Database]]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (def ^:private ^:const ^String sample-dataset-name     "Sample Dataset")
 (def ^:private ^:const ^String sample-dataset-filename "sample-dataset.db.mv.db")

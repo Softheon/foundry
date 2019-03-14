@@ -11,7 +11,7 @@
              [util :as tu]]
             [metabase.test.data.datasets :as datasets]
             [metabase.test.util.log :as tu.log]
-            [toucan.db :as db]
+            [metabase.toucan.db :as db]
             [clojure.string :as str])
   (:import metabase.driver.presto.PrestoDriver))
 

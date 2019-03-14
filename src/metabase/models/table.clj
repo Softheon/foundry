@@ -11,7 +11,7 @@
              [metric :refer [Metric retrieve-metrics]]
              [permissions :as perms :refer [Permissions]]
              [segment :refer [retrieve-segments Segment]]]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [models :as models]]))
 

@@ -18,7 +18,7 @@
             [metabase.util
              [date :as du]
              [i18n :as ui18n :refer [tru]]]
-            [toucan.db :as db])
+            [metabase.toucan.db :as db])
   (:import com.fasterxml.jackson.core.JsonGenerator
            java.sql.SQLException))
 

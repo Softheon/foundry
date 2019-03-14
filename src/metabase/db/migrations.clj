@@ -31,7 +31,7 @@
             [metabase.util
              [date :as du]
              [i18n :refer [trs]]]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [models :as models]])
   (:import java.util.UUID))
@@ -265,7 +265,7 @@
 (defmigration ^{:author "camsaul", :added "0.29.0"} mark-category-fields-as-list
   (db/update-where! Field {:has_field_values nil
                            :special_type     (mdb/isa :type/Category)
-                           :active           true}
+                           :active           1}
     :has_field_values "list"))
 
 ;; In v0.30.0 we switiched to making standard SQL the default for BigQuery; up until that point we had been using
@@ -305,7 +305,7 @@
 ;; disable passwords for Google authenticated users
 (defmigration ^{:author "senior", :added "0.30.0"} clear-ldap-user-local-passwords
   (db/transaction
-    (doseq [user (db/select [User :id :password_salt] :ldap_auth [:= true])]
+    (doseq [user (db/select [User :id :password_salt] :ldap_auth [:= 1])]
       (db/update! User (u/get-id user) :password (creds/hash-bcrypt (str (:password_salt user) (UUID/randomUUID)))))))
 
 

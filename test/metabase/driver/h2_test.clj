@@ -8,7 +8,7 @@
             [metabase.models.database :refer [Database]]
             [metabase.test.data.datasets :refer [expect-with-engine]]
             [metabase.test.util :as tu]
-            [toucan.db :as db])
+            [metabase.toucan.db :as db])
   (:import metabase.driver.h2.H2Driver))
 
 ;; Check that the functions for exploding a connection string's options work as expected

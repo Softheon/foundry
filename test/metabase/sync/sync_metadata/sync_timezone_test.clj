@@ -8,7 +8,7 @@
              [util :as tu]]
             [metabase.test.data.datasets :as datasets]
             [metabase.util :as u]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (defn- db-timezone [db-or-id]
   (db/select-one-field :timezone Database :id (u/get-id db-or-id)))

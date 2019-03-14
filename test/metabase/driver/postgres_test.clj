@@ -24,8 +24,8 @@
             [metabase.test.data
              [datasets :refer [expect-with-engine]]
              [interface :as i]]
-            [toucan.db :as db]
-            [toucan.util.test :as tt])
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as tt])
   (:import metabase.driver.postgres.PostgresDriver))
 
 (def ^:private ^PostgresDriver pg-driver (PostgresDriver.))

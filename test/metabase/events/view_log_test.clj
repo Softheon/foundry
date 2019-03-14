@@ -5,8 +5,8 @@
              [dashboard :refer [Dashboard]]
              [user :refer [User]]
              [view-log :refer [ViewLog]]]
-            [toucan.db :as db]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as tt]))
 
 ;; `:card-create` event
 (tt/expect-with-temp [User [user]

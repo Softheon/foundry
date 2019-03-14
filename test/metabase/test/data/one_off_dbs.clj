@@ -12,7 +12,7 @@
             [metabase.test
              [data :as data]
              [util :as tu]]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 (def ^:dynamic *conn*
   "Bound to a JDBC connection spec when using one of the `with-db` macros below."

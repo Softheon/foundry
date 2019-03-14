@@ -5,7 +5,7 @@
              [i18n :refer [trs]]
              [schema :as su]]
             [schema.core :as s]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [models :as models]]))
 

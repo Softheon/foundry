@@ -17,7 +17,7 @@
              [date :as du]
              [i18n :refer [trs]]]
             [schema.core :as s]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 ;; How does analysis decide which Fields should get analyzed?
 ;;

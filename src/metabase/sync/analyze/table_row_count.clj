@@ -8,7 +8,7 @@
              [util :as sync-util]]
             [metabase.util :as u]
             [schema.core :as s]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (s/defn ^:private table-row-count :- (s/maybe s/Int)
   "Determine the count of rows in TABLE by running a simple structured MBQL query."

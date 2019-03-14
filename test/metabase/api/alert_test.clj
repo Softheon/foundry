@@ -21,8 +21,8 @@
              [util :as tu]]
             [metabase.test.data.users :as users :refer :all]
             [metabase.test.mock.util :refer [pulse-channel-defaults]]
-            [toucan.db :as db]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as tt]))
 
 ;;; +----------------------------------------------------------------------------------------------------------------+
 ;;; |                                              Helper Fns & Macros                                               |

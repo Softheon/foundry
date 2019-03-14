@@ -27,10 +27,10 @@
              [users :refer [user->client]]]
             [metabase.test.mock.util :as mutil]
             [metabase.timeseries-query-processor-test.util :as tqpt]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [hydrate :as hydrate]]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 ;; ## /api/org/* AUTHENTICATION Tests
 ;; We assume that all endpoints for a given context are enforced by the same middleware, so we don't run the same

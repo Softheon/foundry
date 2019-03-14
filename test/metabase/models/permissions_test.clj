@@ -10,8 +10,8 @@
             [metabase.test.data :as data]
             [metabase.test.data.users :as test-users]
             [metabase.util :as u]
-            [toucan.db :as db]
-            [toucan.util.test :as tt])
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as tt])
   (:import clojure.lang.ExceptionInfo))
 
 ;;; ----------------------------------------------- valid-object-path? -----------------------------------------------

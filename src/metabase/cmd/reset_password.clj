@@ -2,7 +2,7 @@
   (:require [metabase.db :as mdb]
             [metabase.models.user :refer [User] :as user]
             [metabase.util.i18n :refer [trs]]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (defn- set-reset-token!
   "Set and return a new `reset_token` for the user with EMAIL-ADDRESS."

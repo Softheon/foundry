@@ -20,7 +20,7 @@
             [metabase.models.query.permissions :as query-perms]
             [metabase.query-processor.util :as qputil]
             [metabase.util.i18n :as ui18n :refer [tru]]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [models :as models]]
             [metabase.mbql.normalize :as normalize]))

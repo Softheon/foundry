@@ -13,7 +13,7 @@
             [metabase.test.data
              [dataset-definitions :as defs]
              [datasets :as datasets]]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (qp-expect-with-all-engines
   {:rows        [["20th Century Cafe" 12 "Café Sweets"]

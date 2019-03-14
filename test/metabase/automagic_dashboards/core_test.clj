@@ -25,8 +25,8 @@
              [util :as tu]]
             [metabase.util.date :as date]
             [puppetlabs.i18n.core :as i18n :refer [tru]]
-            [toucan.db :as db]
-            [toucan.util.test :as tt]
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as tt]
             [metabase.util :as u]))
 
 ;;; ------------------- `->reference` -------------------

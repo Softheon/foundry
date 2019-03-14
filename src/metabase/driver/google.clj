@@ -6,7 +6,7 @@
              [util :as u]]
             [metabase.models.database :refer [Database]]
             [ring.util.codec :as codec]
-            [toucan.db :as db])
+            [metabase.toucan.db :as db])
   (:import [com.google.api.client.googleapis.auth.oauth2 GoogleAuthorizationCodeFlow
             GoogleAuthorizationCodeFlow$Builder GoogleCredential GoogleCredential$Builder GoogleTokenResponse]
            com.google.api.client.googleapis.javanet.GoogleNetHttpTransport

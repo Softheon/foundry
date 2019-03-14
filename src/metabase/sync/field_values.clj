@@ -10,7 +10,7 @@
             [metabase.util :as u]
             [metabase.util.i18n :refer [trs]]
             [schema.core :as s]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (s/defn ^:private clear-field-values-for-field! [field :- i/FieldInstance]
   (when (db/exists? FieldValues :field_id (u/get-id field))

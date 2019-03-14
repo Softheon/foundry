@@ -6,8 +6,8 @@
              [dashboard-card :refer :all]
              [dashboard-card-series :refer [DashboardCardSeries]]]
             [metabase.test.data.users :refer :all]
-            [toucan.db :as db]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as tt]))
 
 (defn remove-ids-and-timestamps [m]
   (let [f (fn [v]

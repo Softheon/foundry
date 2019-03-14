@@ -4,7 +4,7 @@
             [metabase.models.query-cache :refer [QueryCache]]
             [metabase.query-processor.middleware.cache :as cache]
             [metabase.test.util :as tu]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (def ^:private mock-results
   {:row_count 8

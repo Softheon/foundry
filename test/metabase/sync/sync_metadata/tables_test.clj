@@ -4,7 +4,7 @@
             [metabase.models.table :refer [Table]]
             [metabase.test.data :as data]
             [metabase.test.data.interface :as i]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (i/def-database-definition ^:const ^:private db-with-some-cruft
   [["acquired_toucans"

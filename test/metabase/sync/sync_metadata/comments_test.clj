@@ -11,7 +11,7 @@
             [metabase.test.data
              [datasets :as ds]
              [interface :as i]]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 
 ;; Tests for field comments: ------------------

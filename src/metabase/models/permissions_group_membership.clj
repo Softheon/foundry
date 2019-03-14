@@ -2,7 +2,7 @@
   (:require [metabase.models.permissions-group :as group]
             [metabase.util :as u]
             [metabase.util.i18n :as ui18n :refer [tru]]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [models :as models]]))
 

@@ -19,7 +19,7 @@
              [util :as sync-util]]
             [metabase.util.schema :as su]
             [schema.core :as s]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (def ^:private KeypathComponents
   {:table-name su/NonBlankString

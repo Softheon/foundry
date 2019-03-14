@@ -31,7 +31,7 @@
              [text-fingerprint :as text-fingerprint]]
             [metabase.util :as u]
             [schema.core :as s]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 ;;; +----------------------------------------------------------------------------------------------------------------+
 ;;; |                                         CLASSIFYING INDIVIDUAL FIELDS                                          |

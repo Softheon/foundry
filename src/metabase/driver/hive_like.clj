@@ -9,7 +9,7 @@
              [table :refer [Table]]]
             [metabase.util :as u]
             [metabase.util.honeysql-extensions :as hx]
-            [toucan.db :as db])
+            [metabase.toucan.db :as db])
   (:import java.util.Date))
 
 (def column->base-type

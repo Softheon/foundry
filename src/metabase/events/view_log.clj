@@ -3,7 +3,7 @@
             [clojure.tools.logging :as log]
             [metabase.events :as events]
             [metabase.models.view-log :refer [ViewLog]]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (def ^:private ^:const view-counts-topics
   "The `Set` of event topics which we subscribe to for view counting."

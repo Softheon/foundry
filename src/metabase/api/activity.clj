@@ -8,7 +8,7 @@
              [dashboard :refer [Dashboard]]
              [interface :as mi]
              [view-log :refer [ViewLog]]]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [hydrate :refer [hydrate]]]))
 

@@ -7,7 +7,7 @@
              [pulse-channel-recipient :refer [PulseChannelRecipient]]
              [user :refer [User]]]
             [metabase.util :as u]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [models :as models]]))
 

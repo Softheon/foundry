@@ -7,7 +7,7 @@
             [metabase.util :as u]
             [metabase.util.i18n :refer [trs tru]]
             [schema.core :as s]
-            [toucan.db :as db]
+            [metabase.toucan.db :as db]
             [metabase.mbql.normalize :as normalize]))
 
 (defn- trim-query

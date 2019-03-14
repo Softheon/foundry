@@ -10,8 +10,8 @@
             [metabase.test.util.log :as tu.log]
             [metabase.util :as u]
             [metabase.util.date :as du]
-            [toucan.db :as db]
-            [toucan.util.test :as tt])
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as tt])
   (:import [metabase.task.sync_databases SyncAndAnalyzeDatabase UpdateFieldValues]))
 
 (defn- replace-trailing-id-with-<id> [s]

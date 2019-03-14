@@ -13,7 +13,7 @@
              [data :as data]
              [util :as tu]]
             [metabase.test.mock.util :as mutil]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 (defn- column->name-keyword [field-or-column-metadata]
   (-> field-or-column-metadata

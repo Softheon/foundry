@@ -7,7 +7,7 @@
             [metabase.test.data :as data]
             [metabase.test.data.users :as test-users]
             [metabase.util :as u]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 ;; GET /permissions/group
 ;; Should *not* include inactive users in the counts.

@@ -7,7 +7,7 @@
              [i18n :as ui18n :refer [tru]]
              [schema :as su]]
             [schema.core :as s]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (defn- check-valid-limit [limit offset]
   (when (and offset (not limit))

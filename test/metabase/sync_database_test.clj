@@ -15,8 +15,8 @@
              [table :refer [Table]]]
             [metabase.test.mock.util :as mock-util]
             [metabase.test.util :as tu]
-            [toucan.db :as db]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as tt]))
 
 ;;; +----------------------------------------------------------------------------------------------------------------+
 ;;; |                                        End-to-end 'MovieDB' Sync Tests                                         |

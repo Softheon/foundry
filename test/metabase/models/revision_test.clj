@@ -5,8 +5,8 @@
              [revision :refer :all :as revision]]
             [metabase.test.data.users :refer :all]
             [metabase.util :as u]
-            [toucan.models :as models]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.models :as models]
+            [metabase.toucan.util.test :as tt]))
 
 (def ^:private reverted-to
   (atom nil))

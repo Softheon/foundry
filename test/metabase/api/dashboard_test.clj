@@ -22,8 +22,8 @@
              [revision :refer [Revision]]]
             [metabase.test.data.users :refer :all]
             [metabase.test.util :as tu]
-            [toucan.db :as db]
-            [toucan.util.test :as tt])
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as tt])
   (:import java.util.UUID))
 
 ;;; +----------------------------------------------------------------------------------------------------------------+

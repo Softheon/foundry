@@ -9,7 +9,7 @@
             [metabase.task :as task]
             [metabase.util.date :as du]
             [puppetlabs.i18n.core :refer [trs]]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (def ^:private job-name    "task-history-cleanup")
 (def ^:private job-key     (format "metabase.task.%s.job" job-name))

@@ -11,7 +11,7 @@
              [datasets :as datasets]
              [users :as test-users]]
             [metabase.util :as u]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 ;;; --------------------------------------- GET /api/preview_embed/card/:token ---------------------------------------
 

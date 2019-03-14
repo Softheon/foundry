@@ -23,7 +23,7 @@
              [schema :as su]]
             [schema.core :as s]
             [throttle.core :as throttle]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (defn- create-session!
   "Generate a new `Session` for a given `User`. Returns the newly generated session ID."

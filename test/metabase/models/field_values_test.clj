@@ -11,8 +11,8 @@
              [field :refer [Field]]
              [field-values :refer :all]
              [table :refer [Table]]]
-            [toucan.db :as db]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as tt]))
 
 ;;; ---------------------------------------- field-should-have-field-values? -----------------------------------------
 

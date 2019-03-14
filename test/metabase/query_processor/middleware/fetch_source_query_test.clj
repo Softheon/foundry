@@ -6,7 +6,7 @@
             [metabase.query-processor.middleware.fetch-source-query :as fetch-source-query]
             [metabase.test.data :as data]
             [metabase.util :as u]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 (def ^:private ^{:arglists '([query])} fetch-source-query (fetch-source-query/fetch-source-query identity))
 

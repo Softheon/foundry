@@ -28,7 +28,7 @@
              [date :as du]
              [i18n :refer [trs tru]]]
             [schema.core :as s]
-            [toucan.db :as db])
+            [metabase.toucan.db :as db])
   (:import clojure.lang.Keyword
            java.text.SimpleDateFormat
            org.joda.time.DateTime

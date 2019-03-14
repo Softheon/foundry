@@ -18,7 +18,7 @@
             [metabase.test.data.users :refer :all]
             [metabase.test.util :as tu]
             [metabase.util :as u]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 (def default-search-row
   {:description nil, :id true, :collection_id false,

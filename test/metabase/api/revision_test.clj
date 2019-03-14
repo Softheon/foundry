@@ -7,8 +7,8 @@
              [revision :refer [push-revision! Revision revisions]]]
             [metabase.test.data :refer :all]
             [metabase.test.data.users :refer :all]
-            [toucan.db :as db]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as tt]))
 
 (def ^:private rasta-revision-info
   (delay {:id (user->id :rasta), :common_name "Rasta Toucan", :first_name "Rasta", :last_name "Toucan"}))

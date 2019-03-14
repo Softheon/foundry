@@ -459,7 +459,8 @@
   (cond
     (map? object-or-id)     (recur (:id object-or-id))
     (integer? object-or-id) object-or-id
-    :else                   (throw (Exception. (str "Not something with an ID: " object-or-id)))))
+    :else                   (throw (Exception. (str "Not something with an ID: " object-or-id)))
+))
 
 (def metabase-namespace-symbols
   "Delay to a vector of symbols of all Metabase namespaces, excluding test namespaces.

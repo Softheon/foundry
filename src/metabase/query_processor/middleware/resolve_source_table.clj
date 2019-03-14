@@ -4,7 +4,7 @@
             [metabase.models.table :refer [Table]]
             [metabase.query-processor.store :as qp.store]
             [metabase.util.i18n :refer [trs]]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (defn- resolve-source-table* [query]
   (when-let [source-table-id (mbql.u/query->source-table-id query)]

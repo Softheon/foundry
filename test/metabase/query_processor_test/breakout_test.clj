@@ -18,8 +18,8 @@
              [dataset-definitions :as defs]
              [datasets :as datasets]]
             [metabase.test.util.log :as tu.log]
-            [toucan.db :as db]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as tt]))
 
 ;;; single column
 (qp-expect-with-all-engines

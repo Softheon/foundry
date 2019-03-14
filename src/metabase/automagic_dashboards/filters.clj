@@ -5,7 +5,7 @@
             [metabase.util :as u]
             [metabase.util.schema :as su]
             [schema.core :as s]
-            [toucan.db :as db]
+            [metabase.toucan.db :as db]
             [metabase.mbql.util :as mbql.u]))
 
 (def ^:private FieldReference

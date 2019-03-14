@@ -26,8 +26,8 @@
              [generic-sql :as sql.test]
              [datasets :as datasets]
              [users :refer [create-users-if-needed! user->client]]]
-            [toucan.db :as db]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as tt]))
 
 (defn- rows+cols
   "Return the `:rows` and relevant parts of `:cols` from the RESULTS.

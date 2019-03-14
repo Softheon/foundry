@@ -13,8 +13,8 @@
             [metabase.test.data :as data :refer :all]
             [metabase.test.data.users :refer :all]
             [metabase.util :as u]
-            [toucan.db :as db]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.db :as db]
+            [metabase.toucan.util.test :as tt]))
 
 (defn- card-properties
   "Some default properties for `Cards` for use in tests in this namespace."

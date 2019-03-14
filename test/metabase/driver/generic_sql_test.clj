@@ -9,7 +9,7 @@
             [metabase.test.data.datasets :as datasets]
             [metabase.test.util.log :as tu.log]
             [metabase.util.date :as du]
-            [toucan.db :as db])
+            [metabase.toucan.db :as db])
   (:import metabase.driver.h2.H2Driver))
 
 (def ^:private users-table      (delay (Table :name "USERS")))

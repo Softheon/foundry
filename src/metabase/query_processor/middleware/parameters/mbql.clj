@@ -9,7 +9,7 @@
             [metabase.query-processor.middleware.parameters.dates :as date-params]
             [metabase.util.schema :as su]
             [schema.core :as s]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (s/defn ^:private parse-param-value-for-type
   "Convert `param-value` to a type appropriate for `param-type`.

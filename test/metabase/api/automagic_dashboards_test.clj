@@ -13,7 +13,7 @@
              [data :as data]
              [util :as tu]]
             [metabase.test.data.users :as test-users]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 (defn- api-call
   ([template args] (api-call template args (constantly true)))

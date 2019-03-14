@@ -12,10 +12,10 @@
             [metabase.sync.sync-metadata :as sync-metadata]
             [metabase.test.mock.toucanery :as toucanery]
             [metabase.test.util :as tu]
-            [toucan
+            [metabase.toucan
              [db :as db]
              [hydrate :refer [hydrate]]]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 (defn- remove-nonsense
   "Remove fields that aren't really relevant in the output for TABLES and their FIELDS.
@@ -55,7 +55,7 @@
   (tt/with-temp* [Database [db {:engine :toucanery}]]
     ;; do the initial sync
     (sync-metadata/sync-db-metadata! db)
-    ;; delete our entry for the `transactions.toucan.details.age` field
+    ;; delete our entry for the `transactions.metabase.toucan.details.age` field
     (let [transactions-table-id (u/get-id (db/select-one-id Table :db_id (u/get-id db), :name "transactions"))
           toucan-field-id       (u/get-id (db/select-one-id Field :table_id transactions-table-id, :name "toucan"))
           details-field-id      (u/get-id (db/select-one-id Field :table_id transactions-table-id, :name "details", :parent_id toucan-field-id))
@@ -72,7 +72,7 @@
   (tt/with-temp* [Database [db {:engine :toucanery}]]
     ;; do the initial sync
     (sync-metadata/sync-db-metadata! db)
-    ;; delete our entry for the `transactions.toucan.details.age` field
+    ;; delete our entry for the `transactions.metabase.toucan.details.age` field
     (let [transactions-table-id (u/get-id (db/select-one-id Table :db_id (u/get-id db), :name "transactions"))
           toucan-field-id       (u/get-id (db/select-one-id Field :table_id transactions-table-id, :name "toucan"))
           details-field-id      (u/get-id (db/select-one-id Field :table_id transactions-table-id, :name "details", :parent_id toucan-field-id))
@@ -88,7 +88,7 @@
   (tt/with-temp* [Database [db {:engine :toucanery}]]
     ;; do the initial sync
     (sync-metadata/sync-db-metadata! db)
-    ;; delete our entry for the `transactions.toucan.details.age` field
+    ;; delete our entry for the `transactions.metabase.toucan.details.age` field
     (let [transactions-table-id (u/get-id (db/select-one-id Table :db_id (u/get-id db), :name "transactions"))
           toucan-field-id       (u/get-id (db/select-one-id Field :table_id transactions-table-id, :name "toucan"))
           details-field-id      (u/get-id (db/select-one-id Field :table_id transactions-table-id, :name "details", :parent_id toucan-field-id))
@@ -106,7 +106,7 @@
   (tt/with-temp* [Database [db {:engine :toucanery}]]
     ;; do the initial sync
     (sync-metadata/sync-db-metadata! db)
-    ;; Add an entry for a `transactions.toucan.details.gender` field
+    ;; Add an entry for a `transactions.metabase.toucan.details.gender` field
     (let [transactions-table-id (u/get-id (db/select-one-id Table :db_id (u/get-id db), :name "transactions"))
           toucan-field-id       (u/get-id (db/select-one-id Field :table_id transactions-table-id, :name "toucan"))
           details-field-id      (u/get-id (db/select-one-id Field :table_id transactions-table-id, :name "details", :parent_id toucan-field-id))
@@ -130,7 +130,7 @@
   (tt/with-temp* [Database [db {:engine :toucanery}]]
     ;; do the initial sync
     (sync-metadata/sync-db-metadata! db)
-    ;; Add an entry for a `transactions.toucan.details.gender` field
+    ;; Add an entry for a `transactions.metabase.toucan.details.gender` field
     (let [transactions-table-id (u/get-id (db/select-one-id Table :db_id (u/get-id db), :name "transactions"))
           toucan-field-id       (u/get-id (db/select-one-id Field :table_id transactions-table-id, :name "toucan"))
           details-field-id      (u/get-id (db/select-one-id Field :table_id transactions-table-id, :name "details", :parent_id toucan-field-id))

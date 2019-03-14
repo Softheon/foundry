@@ -15,7 +15,7 @@
             [metabase.util
              [i18n :refer [tru]]
              [infer-spaces :refer [infer-spaces]]]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (def ^:private ^:const acronyms
   #{"id" "url" "ip" "uid" "uuid" "guid"})

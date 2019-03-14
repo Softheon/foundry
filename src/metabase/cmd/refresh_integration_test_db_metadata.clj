@@ -8,7 +8,7 @@
             [metabase.models
              [database :refer [Database]]
              [field :refer [Field]]]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (defn- test-fixture-db-path
   "Get the path to the test fixture DB that we'll use for `MB_DB_FILE`. Throw an Exception if the file doesn't exist."

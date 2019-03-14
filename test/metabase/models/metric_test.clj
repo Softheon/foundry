@@ -7,7 +7,7 @@
             [metabase.test.data :refer :all]
             [metabase.test.data.users :refer [user->id fetch-user]]
             [metabase.util :as u]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 (def ^:private ^:const metric-defaults
   {:description             nil

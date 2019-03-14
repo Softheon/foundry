@@ -13,8 +13,8 @@
              [data :as data :refer :all]
              [util :as tu]]
             [metabase.test.data.users :refer :all]
-            [toucan.hydrate :refer [hydrate]]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.hydrate :refer [hydrate]]
+            [metabase.toucan.util.test :as tt]))
 
 ;; ## Helper Fns
 

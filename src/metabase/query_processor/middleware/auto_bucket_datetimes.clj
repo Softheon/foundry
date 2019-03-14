@@ -11,7 +11,7 @@
             [metabase.util.schema :as su]
             [metabase.mbql.schema.helpers :as mbql.s.helpers]
             [schema.core :as s]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 (def ^:private FieldTypeInfo
   {:base_type                     (s/maybe su/FieldType)

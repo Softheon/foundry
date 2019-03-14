@@ -6,7 +6,7 @@
              [data :as data]
              [util :as tu]]
             [metabase.util :as u]
-            [toucan.db :as db]))
+            [metabase.toucan.db :as db]))
 
 ;; let's make sure this acutally works right!
 (expect

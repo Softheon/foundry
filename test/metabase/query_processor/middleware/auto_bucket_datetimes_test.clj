@@ -4,7 +4,7 @@
             [metabase.query-processor.middleware.auto-bucket-datetimes :as auto-bucket-datetimes]
             [metabase.test.data :as data]
             [metabase.util :as u]
-            [toucan.util.test :as tt]))
+            [metabase.toucan.util.test :as tt]))
 
 (defn- auto-bucket [query]
   ((auto-bucket-datetimes/auto-bucket-datetimes identity)
