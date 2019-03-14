@@ -4287,11 +4287,6 @@ databaseChangeLog:
               replace: not
               with: "~"
             dbms: mssql
-        # - sql:
-        #     sql:  ALTER TABLE segment DROP CONSTRAINT DF_segment_is_active;
-        #       ALTER TABLE metric DROP  CONSTRAINT DF_metric_is_active;
-        #       ALTER TABLE segment DROP COLUMN is_active;
-        #       ALTER TABLE metric DROP COLUMN is_active; 
   # Personal Collections, and removing Collection's unique constraint and index on slug
   - changeSet:
       id: 85
@@ -4307,9 +4302,18 @@ databaseChangeLog:
               constraints:
                 references: core_user(id)
                 foreignKeyName: fk_collection_personal_owner_id
-                unique: true
-                uniqueConstraintName: unique_collection_personal_owner_id
+                # unique: true
+                # uniqueConstraintName: unique_collection_personal_owner_id
                 deleteCascade: true
+        - sql:
+            dbms: mssql
+            sql: 
+              CREATE UNIQUE NONCLUSTERED INDEX unique_collection_personal_owner_id
+              ON collection(personal_owner_id)
+              WHERE personal_owner_id IS NOT NULL;
+        - sql:
+            dbms: h2,mysql,postgresql,mariadb
+            sql: ALTER TABLE collection ADD CONSTRAINT unique_collection_personal_owner_id UNIQUE (personal_owner_id)
         # Needed so we can efficiently look up the Collection belonging to a User, and so we can efficiently enforce the
         # unique constraint
         - createIndex:

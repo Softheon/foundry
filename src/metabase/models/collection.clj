@@ -895,7 +895,6 @@
     ;; manually specify ID here so if one was somehow inserted in the meantime in the fraction of a second since we
     ;; called `check-revision-numbers` the PK constraint will fail and the transaction will abort
     (db/insert! CollectionRevision
-      :id     (inc current-revision)
       :before  old
       :after   new
       :user_id *current-user-id*)))

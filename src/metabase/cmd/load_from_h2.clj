@@ -104,6 +104,13 @@
   (let [h2-filename (or h2-connection-string-or-nil @metabase.db/db-file)]
     (mdb/jdbc-details {:type :h2, :db (str h2-filename ";IFEXISTS=TRUE")})))
 
+; (defn- keys-filter
+;   [entity, keys]
+;   (if (or (= "Table" (:name entity))
+;           (= "Field" (:name entity)))
+;     (filter #(not (or (= :raw_column_id %)
+;                       (= :raw_table_id %))) keys)
+;     keys))
 
 (defn- insert-entity! [target-db-conn entity objs]
   (print (u/format-color 'blue "Transfering %d instances of %s..." (count objs) (:name entity))) ; TODO - I don't think the print+flush is working as intended :/
@@ -114,7 +121,8 @@
         ;; 2) Need to wrap the column names in quotes because Postgres automatically lowercases unquoted identifiers
         quote-char (case (config/config-kw :mb-db-type)
                      :postgres \"
-                     :mysql    \`)
+                     :mysql    \`
+                     :sqlserver \")
         cols       (for [k ks]
                      (str quote-char (name (case k
                                              :sizex :sizeX
@@ -134,14 +142,24 @@
           (throw e)))))
   (println-ok))
 
+(defn- identity-property?
+  [target-db-conn table-name]
+  (not (empty? (jdbc/query target-db-conn [(format "select is_identity from sys.identity_columns where OBJECT_NAME(object_id) = '%s'" table-name)]))))
 
 (defn- load-data! [target-db-conn h2-connection-string-or-nil]
-  (jdbc/with-db-connection [h2-conn (h2-details h2-connection-string-or-nil)]
-    (doseq [e     entities
-            :let  [rows (for [row (jdbc/query h2-conn [(str "SELECT * FROM " (name (:table e)))])]
-                          (m/map-vals u/jdbc-clob->str row))]
-            :when (seq rows)]
-      (insert-entity! target-db-conn e rows))))
+(jdbc/with-db-connection [h2-conn (h2-details h2-connection-string-or-nil)]
+  (doseq [e     entities
+          :let  [rows (for [row (jdbc/query h2-conn [(str "SELECT * FROM " (name (:table e)))])]
+                        (m/map-vals u/jdbc-clob->str row))]
+          :when (seq rows)]
+        (let [table-name (name (:table e))
+              has-identity-property (identity-property? target-db-conn table-name)]
+              (when has-identity-property
+                (jdbc/db-do-commands target-db-conn [(format "SET IDENTITY_INSERT %s ON" table-name)]))
+              (insert-entity! target-db-conn e rows)
+              (when has-identity-property
+                (jdbc/db-do-commands target-db-conn [(format "SET IDENTITY_INSERT %s OFF" table-name)]))))))
+
 
 
 ;;; ---------------------------------------- Enabling / Disabling Constraints ----------------------------------------
@@ -167,36 +185,31 @@
 (defn- reënable-db-constraints:mysql! [target-db-conn]
   (jdbc/execute! target-db-conn ["SET FOREIGN_KEY_CHECKS=1"]))
 
+(defn- disable-db-constraints:sqlserver! [target-db-conn]
+  (jdbc/execute! target-db-conn ["EXEC sp_msforeachtable \"ALTER TABLE ? NOCHECK CONSTRAINT all\""]))
+
+(defn- reenable-db-constraints:sqlserver! [target-db-conn]
+  (jdbc/execute! target-db-conn ["EXEC sp_msforeachtable \"ALTER TABLE ? WITH CHECK CHECK CONSTRAINT all\""]))
 
 (defn- disable-db-constraints! [target-db-conn]
   (println (u/format-color 'blue "Temporarily disabling DB constraints..."))
   ((case (mdb/db-type)
-      :postgres disable-db-constraints:postgres!
-      :mysql    disable-db-constraints:mysql!) target-db-conn)
+     :postgres disable-db-constraints:postgres!
+     :mysql    disable-db-constraints:mysql!
+     :sqlserver disable-db-constraints:sqlserver!) target-db-conn)
   (println-ok))
 
 (defn- reënable-db-constraints-if-needed! [target-db-conn]
-  (when (= (mdb/db-type) :mysql)
-    (println (u/format-color 'blue "Reënabling DB constraints..."))
-    (reënable-db-constraints:mysql! target-db-conn)
-    (println-ok)))
-
-; (defn- disable-db-constraints:sqlserver! [target-db-conn]
-; (jdbc/execute! target-db-conn ["EXEC sp_msforeachtable \"ALTER TABLE ? NOCHECK CONSTRAINT all\""]))
-
-; (defn- reenable-db-constraints:sqlserver! [target-db-conn]
-; (jdbc/execute! target-db-conn ["EXEC sp_msforeachtable \"ALTER TABLE ? WITH CHECK CHECK CONSTRAINT all\""]))
-
-; (defn- reënable-db-constraints-if-needed! [target-db-conn]
-; (when (= (mdb/db-type) :mysql)
-;   (println (u/format-color 'blue "Reënabling DB constraints..."))
-;   (reënable-db-constraints:mysql! target-db-conn)
-;   (println-ok))
-; (when (= (mdb/db-type) :sqlserver)
-;   (println (u/format-color 'blue "Reënabling DB constraints..."))
-;   (reenable-db-constraints:sqlserver! target-db-conn)
-;   (println-ok)))
-
+  (println (u/format-color 'blue "Reënabling DB constraints..."))
+  ((case (mdb/db-type)
+     :mysql reënable-db-constraints:mysql!
+     :sqlserver reenable-db-constraints:sqlserver!) target-db-conn)
+  (println-ok))
+  ; (when (= (mdb/db-type) :mysql)
+  ;   (println (u/format-color 'blue "Reënabling DB constraints..."))
+  ;   (reënable-db-constraints:mysql! target-db-conn)
+  ;   (println-ok))
+  
 
 ;;; ---------------------------------------- Fixing Postgres Sequence Values -----------------------------------------
 
