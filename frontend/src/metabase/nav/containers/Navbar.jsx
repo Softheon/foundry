@@ -46,7 +46,7 @@ const AdminNavItem = ({ name, path, currentPath }) => (
       to={path}
       data-metabase-event={`NavBar;${name}`}
       className={cx("NavItem py1 px2 no-decoration", {
-        "is--selected": currentPath.startsWith(path),
+        "is--selected": currentPath && currentPath.startsWith(path) || false,
       })}
     >
       {name}

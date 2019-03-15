@@ -160,6 +160,9 @@ export function getXValues(datas) {
 }
 
 export function getFriendlyName(column) {
+  if(!column.name){
+    return null;
+  }
   if (column.display_name && column.display_name !== column.name) {
     return column.display_name;
   } else {

@@ -13,7 +13,7 @@ export default class SettingsUpdatesForm extends Component {
   };
 
   removeVersionPrefixIfNeeded(versionLabel) {
-    return versionLabel.startsWith("v")
+    return versionLabel && versionLabel.startsWith("v")
       ? versionLabel.substring(1)
       : versionLabel;
   }

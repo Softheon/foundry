@@ -189,8 +189,13 @@ let MetabaseUtils = {
         .map(c => SPECIAL_COMPONENTS[c] || parseInt(c, 10));
     // [1, 2, 3, -2, 1]
 
-    let aComponents = getComponents(aVersion);
-    let bComponents = getComponents(bVersion);
+    let aComponents = aVersion ? getComponents(aVersion) : undefined;
+    let bComponents = bVersion ?  getComponents(bVersion): undefined;
+    if(bComponents == undefined){
+      return -1;
+    }else if(aComponents == undefined){
+      return 1;
+    }
     
     for (let i = 0; i < Math.max(aComponents.length, bComponents.length); i++) {
       let a = aComponents[i];
