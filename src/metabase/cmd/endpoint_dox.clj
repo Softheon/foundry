@@ -7,9 +7,9 @@
              [util :as u]]))
 
 (defn- dox
-  "Generate a Markdown string containing documentation for all Metabase API endpoints."
+  "Generate a Markdown string containing documentation for all Foundry API endpoints."
   []
-  (str "# API Documentation for Metabase "
+  (str "# API Documentation for Foundry "
        (config/mb-version-info :tag)
        "\n\n"
        (str/join "\n\n\n" (for [ns-symb     @u/metabase-namespace-symbols

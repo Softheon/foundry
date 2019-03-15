@@ -102,10 +102,10 @@
   []
   (api/check-superuser)
   (let [response (email/send-message!
-                   :subject      "Metabase Test Email"
+                   :subject      "Foundry Test Email"
                    :recipients   [(:email @api/*current-user*)]
                    :message-type :text
-                   :message      "Your Metabase emails are working — hooray!")]
+                   :message      "Your Foundry emails are working — hooray!")]
     (if (= :SUCCESS (:error response))
       {:ok true}
       {:status 500

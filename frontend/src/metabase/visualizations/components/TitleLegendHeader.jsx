@@ -34,7 +34,7 @@ export const TitleLegendHeader = ({
         series={titleHeaderSeries}
         description={settings["card.description"]}
         actionButtons={actionButtons}
-        // If a dashboard card is composed of multiple questions, its custom card title
+        // If a dashboard card is composed of multiple queries, its custom card title
         // shouldn't act as a link as it's ambiguous that which question it should open
         onChangeCardAndRun={
           isComposedOfMultipleQuestions ? null : onChangeCardAndRun

@@ -59,7 +59,7 @@
     :type         :string
     :placeholder  "Paste the contents of an ssh private key here"}
    #_{:name         "tunnel-private-key-file-name"
-    :display-name "Path on the Metabase server to a SSH private key file to connect to the tunnel"
+    :display-name "Path on the Foundry server to a SSH private key file to connect to the tunnel"
     :type         :string
     :placeholder  "/home/YOUR-USERNAME/.ssh/id_rsa"}])
 

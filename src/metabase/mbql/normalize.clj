@@ -589,7 +589,7 @@
 ;; TODO - should have this validate against the MBQL schema afterwards, right? Maybe once we get closer to making this
 ;; all mergable
 (def ^{:arglists '([outer-query])} normalize
-  "Normalize the tokens in a Metabase query (i.e., make them all `lisp-case` keywords), rewrite deprecated clauses as
+  "Normalize the tokens in a Foundry query (i.e., make them all `lisp-case` keywords), rewrite deprecated clauses as
   up-to-date MBQL 2000, and remove empty clauses."
   (comp remove-empty-clauses
         perform-whole-query-transformations

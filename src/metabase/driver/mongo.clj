@@ -106,7 +106,7 @@
 (s/defn ^:private ^Class most-common-object-type :- (s/maybe Class)
   "Given a sequence of tuples like [Class <number-of-occurances>] return the Class with the highest number of
   occurances. The basic idea here is to take a sample of values for a Field and then determine the most common type
-  for its values, and use that as the Metabase base type. For example if we have a Field called `zip_code` and it's a
+  for its values, and use that as the Foundry base type. For example if we have a Field called `zip_code` and it's a
   number 90% of the time and a string the other 10%, we'll just call it a `:type/Number`."
   [field-types :- [(s/pair (s/maybe Class) "Class", s/Int "Int")]]
   (->> field-types

@@ -216,7 +216,7 @@ export default class AddSeriesModal extends Component {
     if (!error && cards) {
       filteredCards = this.filteredCards();
       if (filteredCards.length === 0) {
-        error = new Error("Whoops, no compatible questions match your search.");
+        error = new Error("Whoops, no compatible queries match your search.");
       }
       // SQL cards at the bottom
       filteredCards.sort((a, b) => {

@@ -28,7 +28,7 @@
   executed. See documentation for `mbql->native` and [issue #2386](https://github.com/metabase/metabase/issues/2386)
   for more information."
   ^String [{{:keys [executed-by query-hash query-type], :as info} :info}]
-  (str "Metabase" (when info
+  (str "Foundry" (when info
                     (assert (instance? (Class/forName "[B") query-hash))
                     (format ":: userID: %s queryType: %s queryHash: %s"
                             executed-by query-type (codecs/bytes->hex query-hash)))))

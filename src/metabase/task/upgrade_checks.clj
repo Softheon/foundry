@@ -1,5 +1,5 @@
 (ns metabase.task.upgrade-checks
-  "Contains a Metabase task which periodically checks for the availability of new Metabase versions."
+  "Contains a Foundry task which periodically checks for the availability of new Foundry versions."
   (:require [cheshire.core :as json]
             [clj-http.client :as http]
             [clojure.tools.logging :as log]
@@ -29,7 +29,7 @@
 (jobs/defjob CheckForNewVersions
   [ctx]
   (when (public-settings/check-for-updates)
-    (log/debug "Checking for new Metabase version info.")
+    (log/debug "Checking for new Foundry version info.")
     (try
       ;; TODO: add in additional request params if anonymous tracking is enabled
       (when-let [version-info (get-version-info)]

@@ -11,7 +11,7 @@ type Props = {
 
 const LogoBadge = ({ dark }: Props) => (
   <a
-    href="http://www.metabase.com/"
+    href="http://www.softheon-foundry.com/"
     target="_blank"
     className="h4 flex text-bold align-center no-decoration"
   >
@@ -19,7 +19,7 @@ const LogoBadge = ({ dark }: Props) => (
     <span className="text-small">
       <span className="ml1 text-medium">Powered by</span>{" "}
       <span className={cx({ "text-brand": !dark }, { "text-white": dark })}>
-        Metabase
+      Foundry
       </span>
     </span>
   </a>

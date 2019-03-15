@@ -37,7 +37,7 @@
 
 ;;; ------------------------------------- Deciding which instance is the MetaBot -------------------------------------
 
-;; Close your eyes, and imagine a scenario: someone is running multiple Metabase instances in a horizontal cluster.
+;; Close your eyes, and imagine a scenario: someone is running multiple Foundry instances in a horizontal cluster.
 ;; Good for them, but how do we make sure one, and only one, of those instances, replies to incoming MetaBot commands?
 ;; It would certainly be too much if someone ran, say, 4 instances, and typing `metabot kanye` into Slack gave them 4
 ;; Kanye West quotes, wouldn't it?
@@ -50,7 +50,7 @@
 
 ;; How do we uniquiely identify each instance?
 ;;
-;; `local-process-uuid` is randomly-generated upon launch and used to identify this specific Metabase instance during
+;; `local-process-uuid` is randomly-generated upon launch and used to identify this specific Foundry instance during
 ;; this specifc run. Restarting the server will change this UUID, and each server in a hortizontal cluster will have
 ;; its own ID, making this different from the `site-uuid` Setting. The local process UUID is used to differentiate
 ;; different horizontally clustered MB instances so we can determine which of them will handle MetaBot duties.
@@ -61,7 +61,7 @@
   (str (java.util.UUID/randomUUID)))
 
 (defsetting ^:private metabot-instance-uuid
-  "UUID of the active MetaBot instance (the Metabase process currently handling MetaBot duties.)"
+  "UUID of the active MetaBot instance (the Foundry process currently handling MetaBot duties.)"
   ;; This should be cached because we'll be checking it fairly often, basically every 2 seconds as part of the
   ;; websocket monitor thread to see whether we're MetaBot (the thread won't open the WebSocket unless that instance
   ;; is handling MetaBot duties)

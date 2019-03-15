@@ -114,7 +114,7 @@
   (POST :chat.postMessage
     :channel     channel-id
     :username    "MetaBot"
-    :icon_url    "http://static.metabase.com/metabot_slack_avatar_whitebg.png"
+    :icon_url    "http://static.softheon-foundry.com/metabot_slack_avatar_whitebg.png"
     :text        text-or-nil
     :attachments (when (seq attachments)
                    (json/generate-string attachments))))

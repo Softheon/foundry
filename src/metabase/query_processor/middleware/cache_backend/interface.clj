@@ -13,7 +13,7 @@
 
 
 (defprotocol IQueryProcessorCacheBackend
-  "Protocol that different Metabase cache backends must implement.
+  "Protocol that different Foundry cache backends must implement.
 
    QUERY-HASH as passed below is a byte-array representing a 256-byte SHA3 hash; encode this as needed for use as a
    cache entry key. RESULTS are passed (and should be returned) as a Clojure object, and individual backends are free

@@ -56,7 +56,7 @@
 
 
 ;; HoneySQL 0.7.0+ parameterizes numbers to fix issues with NaN and infinity -- see
-;; https://github.com/jkk/honeysql/pull/122. However, this broke some of Metabase's behavior, specifically queries
+;; https://github.com/jkk/honeysql/pull/122. However, this broke some of Foundry's behavior, specifically queries
 ;; with calculated columns with numeric literals -- some SQL databases can't recognize that a calculated field in a
 ;; SELECT clause and a GROUP BY clause is the same thing if the calculation involves parameters. Go ahead an use the
 ;; old behavior so we can keep our HoneySQL dependency up to date.

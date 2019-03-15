@@ -168,7 +168,7 @@
   [{:keys [id] :as pulse} results {:keys [recipients] :as channel}]
   (log/debug (format "Sending Pulse (%d: %s) via Channel :email" id name))
   (let [condition-kwd    (messages/pulse->alert-condition-kwd pulse)
-        email-subject    (format "Metabase alert: %s has %s"
+        email-subject    (format "Foundry alert: %s has %s"
                                  (first-question-name pulse)
                                  (get alert-notification-condition-text condition-kwd))
         email-recipients (filterv u/email? (map :email recipients))

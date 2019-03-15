@@ -1,5 +1,5 @@
 (ns metabase.task.follow-up-emails
-  "Tasks which follow up with Metabase users."
+  "Tasks which follow up with Foundry users."
   (:require [clj-time
              [coerce :as c]
              [core :as t]]
@@ -47,7 +47,7 @@
   :internal? true)
 
 (defn- instance-creation-timestamp
-  "The date this Metabase instance was created. We use the `:date_joined` of the first `User` to determine this."
+  "The date this Foundry instance was created. We use the `:date_joined` of the first `User` to determine this."
   ^java.sql.Timestamp []
   (db/select-one-field :date_joined User, {:order-by [[:date_joined :asc]]}))
 
@@ -111,7 +111,7 @@
 
 
 (defn- send-follow-up-email!
-  "Send an email to the instance admin following up on their experience with Metabase thus far."
+  "Send an email to the instance admin following up on their experience with Foundry thus far."
   []
   ;; we need access to email AND the instance must be opted into anonymous tracking. Make sure email hasn't been sent yet
   (when (and (email/email-configured?)
@@ -129,7 +129,7 @@
 
 
 (defn- send-abandonment-email!
-  "Send an email to the instance admin about why Metabase usage has died down."
+  "Send an email to the instance admin about why Foundry usage has died down."
   []
   ;; grab the oldest admins email address, that's who we'll send to
   (when-let [admin (User :is_superuser true, {:order-by [:date_joined]})]

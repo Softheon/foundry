@@ -4,7 +4,7 @@
 
   Currently, this is only used by the Sample Dataset, but theoretically in the future we could add additional sample
   datasets and preconfigure them by populating this Table; or 3rd-party applications or users can add this table to
-  their database for an enhanced Metabase experience out-of-the box."
+  their database for an enhanced Foundry experience out-of-the box."
   (:require [clojure.string :as str]
             [clojure.tools.logging :as log]
             [metabase
@@ -58,9 +58,9 @@
 
 (s/defn ^:private sync-metabase-metadata-table!
   "Databases may include a table named `_metabase_metadata` (case-insentive) which includes descriptions or other
-  metadata about the `Tables` and `Fields` it contains. This table is *not* synced normally, i.e. a Metabase `Table`
+  metadata about the `Tables` and `Fields` it contains. This table is *not* synced normally, i.e. a Foundry `Table`
   is not created for it. Instead, *this* function is called, which reads the data it contains and updates the relevant
-  Metabase objects.
+  Foundry objects.
 
   The table should have the following schema:
 
@@ -87,9 +87,9 @@
   (= "_metabase_metadata" (str/lower-case (:name table))))
 
 (s/defn sync-metabase-metadata!
-  "Sync the `_metabase_metadata` table, a special table with Metabase metadata, if present.
+  "Sync the `_metabase_metadata` table, a special table with Foundry metadata, if present.
    This table contains information about type information, descriptions, and other properties that
-   should be set for Metabase objects like Tables and Fields."
+   should be set for Foundry objects like Tables and Fields."
   [database :- i/DatabaseInstance]
   (sync-util/with-error-handling (format "Error syncing _metabase_metadata table for %s"
                                          (sync-util/name-for-logging database))

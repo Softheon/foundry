@@ -27,7 +27,7 @@
      (some-> (env :metastore-dev-server-url)
              ;; remove trailing slashes
              (str/replace  #"/$" "")))
-   "https://store.metabase.com"))
+   "https://store.softheon-foundry.com"))
 
 
 ;;; +----------------------------------------------------------------------------------------------------------------+
@@ -138,7 +138,7 @@
       #{})))
 
 (defn hide-embed-branding?
-  "Should we hide the 'Powered by Metabase' attribution on the embedding pages? `true` if we have a valid premium
+  "Should we hide the 'Powered by Foundry' attribution on the embedding pages? `true` if we have a valid premium
    embedding token."
   []
   (boolean ((token-features) "embedding")))

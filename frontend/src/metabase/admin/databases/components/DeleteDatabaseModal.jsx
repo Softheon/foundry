@@ -60,10 +60,10 @@ export default class DeleteDatabaseModal extends Component {
       >
         <div className="mb4">
           {database.is_sample && (
-            <p className="text-paragraph">{jt`${headsUp} without the Sample Dataset, the Query Builder tutorial won't work. You can always restore the Sample Dataset, but any questions you've saved using this data will be lost.`}</p>
+            <p className="text-paragraph">{jt`${headsUp} without the Sample Dataset, the Query Builder tutorial won't work. You can always restore the Sample Dataset, but any queries you've saved using this data will be lost.`}</p>
           )}
           <p className="text-paragraph">
-            {t`All saved questions, metrics, and segments that rely on this database will be lost.`}{" "}
+            {t`All saved queries, metrics, and segments that rely on this database will be lost.`}{" "}
             <strong>{t`This cannot be undone.`}</strong>
           </p>
           <p className="text-paragraph">

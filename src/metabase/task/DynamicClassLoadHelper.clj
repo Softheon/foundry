@@ -27,7 +27,7 @@
       (str/replace #"\.\w+$" "")))
 
 (defn- require-task-namespace
-  "Since Metabase tasks are defined in Clojure-land we need to make sure we `require` the namespaces where they are
+  "Since Foundry tasks are defined in Clojure-land we need to make sure we `require` the namespaces where they are
   defined before we try to load the task classes."
   [class-name]
   ;; only try to `require` metabase.task classes; don't do this for other stuff that gets shuffled thru here like

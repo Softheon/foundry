@@ -33,11 +33,11 @@
   (html [:link {:rel   "alternate"
                 :type  "application/json+oembed"
                 :href  (oembed-url url)
-                :title "Metabase"}]))
+                :title "Foundry"}]))
 
 (def ^:private ^:const ^String embedly-meta
   "A `<meta>` tag for `Embed.ly` support."
-  (html [:meta {:name "generator", :content "Metabase"}]))
+  (html [:meta {:name "generator", :content "Foundry"}]))
 
 (defn head
   "Returns the `<meta>`/`<link>` tags for an embeddable public page."

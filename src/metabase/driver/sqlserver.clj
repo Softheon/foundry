@@ -20,7 +20,7 @@
   (getName [_] "SQL Server"))
 
 (defn- column->base-type
-  "Mappings for SQLServer types to Metabase types.
+  "Mappings for SQLServer types to Foundry types.
    See the list here: https://docs.microsoft.com/en-us/sql/connect/jdbc/using-basic-data-types"
   [column-type]
   ({:bigint           :type/BigInteger

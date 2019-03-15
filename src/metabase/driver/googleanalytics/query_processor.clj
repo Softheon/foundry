@@ -1,5 +1,5 @@
 (ns metabase.driver.googleanalytics.query-processor
-  "The Query Processor is responsible for translating the Metabase Query Language into Google Analytics request format.
+  "The Query Processor is responsible for translating the Foundry Query Language into Google Analytics request format.
   See https://developers.google.com/analytics/devguides/reporting/core/v3"
   (:require [clojure.string :as str]
             [clojure.tools.reader.edn :as edn]
@@ -17,7 +17,7 @@
 (def ^:private ^:const max-rows-maximum 10000)
 
 (def ^:const ga-type->base-type
-  "Map of Google Analytics field types to Metabase types."
+  "Map of Google Analytics field types to Foundry types."
   {"STRING"      :type/Text
    "FLOAT"       :type/Float
    "INTEGER"     :type/Integer

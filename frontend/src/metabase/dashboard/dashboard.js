@@ -135,7 +135,7 @@ export const markNewCardSeen = createAction(MARK_NEW_CARD_SEEN);
 export const setDashboardAttributes = createAction(SET_DASHBOARD_ATTRIBUTES);
 export const setDashCardAttributes = createAction(SET_DASHCARD_ATTRIBUTES);
 
-// TODO: consolidate with questions reducer
+// TODO: consolidate with queries reducer
 export const fetchCards = createThunkAction(FETCH_CARDS, function(
   filterMode = "all",
 ) {
@@ -786,9 +786,9 @@ export const deletePublicLink = createAction(
  * User-triggered events that are handled here:
  *     - clicking a dashcard legend:
  *         * question title legend (only for single-question cards)
- *         * series legend (multi-aggregation, multi-breakout, multiple questions)
+ *         * series legend (multi-aggregation, multi-breakout, multiple queries)
  *     - clicking the visualization inside dashcard
- *         * drill-through (single series, multi-aggregation, multi-breakout, multiple questions)
+ *         * drill-through (single series, multi-aggregation, multi-breakout, multiple queries)
  *         * (not in 0.24.2 yet: drag on line/area/bar visualization)
  *     - those all can be applied without or with a dashboard filter
  */
@@ -854,7 +854,7 @@ const isEditing = handleActions(
   false,
 );
 
-// TODO: consolidate with questions reducer
+// TODO: consolidate with queries reducer
 const cards = handleActions(
   {
     [FETCH_CARDS]: {

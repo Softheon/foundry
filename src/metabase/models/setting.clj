@@ -111,7 +111,7 @@
 
 ;; CACHE SYNCHRONIZATION
 ;;
-;; When running multiple Metabase instances (horizontal scaling), it is of course possible for one instance to update
+;; When running multiple Foundry instances (horizontal scaling), it is of course possible for one instance to update
 ;; a Setting, and, since Settings are cached (to avoid tons of DB calls), for the other instances to then have an
 ;; out-of-date cache. Thus we need a way for instances to know when their caches are out of date, so they can update
 ;; them accordingly. Here is our solution:
@@ -135,13 +135,13 @@
   (log/debug (trs "Updating value of settings-last-updated in DB..."))
   ;; for MySQL, cast(current_timestamp AS char); for H2 & Postgres, cast(current_timestamp AS text)
 ;(if (= (mdb/db-type) :mysql) :char :text)
-  (let [current-timestamp-as-string-honeysql (hx/cast (case (name (mdb/db-type))
-                                                        "mysql" :char
-                                                        "sqlserver" :date
-                                                        :text)
-                                                  (hsql/raw "current_timestamp"))]
+  (let [current-timestamp-as-string-honeysql (hx/cast (if (= (mdb/db-type) :mysql) :char :text)
+                                                      (hsql/raw "current_timestamp"))
+        current-timestamp-as-string-honeysql-mssql (when (= (mdb/db-type) :sqlserver)
+                                                     (hsql/raw "(SELECT CONVERT(VARCHAR(19), GETDATE(), 120))"))]
     ;; attempt to UPDATE the existing row. If no row exists, `update-where!` will return false...
-    (or (db/update-where! Setting {:key settings-last-updated-key} :value current-timestamp-as-string-honeysql)
+    (or (db/update-where! Setting {:key settings-last-updated-key} :value (or current-timestamp-as-string-honeysql-mssql
+                                                                              current-timestamp-as-string-honeysql))
         ;; ...at which point we will try to INSERT a new row. Note that it is entirely possible two instances can both
         ;; try to INSERT it at the same time; one instance would fail because it would violate the PK constraint on
         ;; `key`, and throw a SQLException. As long as one instance updates the value, we are fine, so we can go ahead

@@ -45,7 +45,7 @@
 
 ;; These are convenience functions for accessing config values that ensures a specific return type
 ;; TODO - These names are bad. They should be something like  `int`, `boolean`, and `keyword`, respectively.
-;; See https://github.com/metabase/metabase/wiki/Metabase-Clojure-Style-Guide#dont-repeat-namespace-alias-in-function-names for discussion
+;; See https://github.com/metabase/metabase/wiki/Foundry-Clojure-Style-Guide#dont-repeat-namespace-alias-in-function-names for discussion
 (defn ^Integer config-int  "Fetch a configuration key and parse it as an integer." [k] (some-> k config-str Integer/parseInt))
 (defn ^Boolean config-bool "Fetch a configuration key and parse it as a boolean."  [k] (some-> k config-str Boolean/parseBoolean))
 (defn ^Keyword config-kw   "Fetch a configuration key and parse it as a keyword."  [k] (some-> k config-str keyword))
@@ -56,7 +56,7 @@
 
 
 ;;; Version stuff
-;; Metabase version is of the format `GIT-TAG (GIT-SHORT-HASH GIT-BRANCH)`
+;; Foundry version is of the format `GIT-TAG (GIT-SHORT-HASH GIT-BRANCH)`
 
 (defn- version-info-from-shell-script []
   (try
@@ -78,7 +78,7 @@
                    [(keyword k) v]))))))
 
 (def mb-version-info
-  "Information about the current version of Metabase.
+  "Information about the current version of Foundry.
    This comes from `resources/version.properties` for prod builds and is fetched from `git` via the `./bin/version` script for dev.
 
      mb-version-info -> {:tag: \"v0.11.1\", :hash: \"afdf863\", :branch: \"about_metabase\", :date: \"2015-10-05\"}"
@@ -93,10 +93,10 @@
     (format "%s (%s %s)" tag hash branch)))
 
 (def ^String mb-app-id-string
-  "A formatted version string including the word 'Metabase' appropriate for passing along
-   with database connections so admins can identify them as Metabase ones.
-   Looks something like `Metabase v0.25.0.RC1`."
-  (str "Metabase " (mb-version-info :tag)))
+  "A formatted version string including the word 'Foundry' appropriate for passing along
+   with database connections so admins can identify them as Foundry ones.
+   Looks something like `Foundry v0.25.0.RC1`."
+  (str "Foundry " (mb-version-info :tag)))
 
 
 ;; This only affects dev:

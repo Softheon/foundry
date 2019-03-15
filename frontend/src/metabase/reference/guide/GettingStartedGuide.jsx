@@ -318,7 +318,7 @@ export default class GettingStartedGuide extends Component {
                   {guide.contact &&
                     (guide.contact.name || guide.contact.email) && [
                       <SectionHeader key={"contactTitle"}>
-                        {t`Have questions?`}
+                        {t`Have queries?`}
                       </SectionHeader>,
                       <div className="mb4 pb4" key={"contactDetails"}>
                         {guide.contact.name && (

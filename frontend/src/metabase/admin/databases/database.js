@@ -77,7 +77,7 @@ export const reset = createAction(RESET);
 // selectEngine (uiControl)
 export const selectEngine = createAction(SELECT_ENGINE);
 
-// Migrates old "Enable in-depth database analysis" option to new "Let me choose when Metabase syncs and scans" option
+// Migrates old "Enable in-depth database analysis" option to new "Let me choose when Foundry syncs and scans" option
 // Migration is run as a separate action because that makes it easy to track in tests
 const migrateDatabaseToNewSchedulingSettings = database => {
   return async function(dispatch, getState) {
@@ -233,7 +233,7 @@ export const updateDatabase = function(database) {
 // NOTE Atte Keinänen 7/26/17: Original monolithic saveDatabase was broken out to smaller actions
 // but `saveDatabase` action creator is still left here for keeping the interface for React components unchanged
 export const saveDatabase = function(database, details) {
-  // If we don't let user control the scheduling settings, let's override them with Metabase defaults
+  // If we don't let user control the scheduling settings, let's override them with Foundry defaults
   // TODO Atte Keinänen 8/15/17: Implement engine-specific scheduling defaults
   const letUserControlScheduling = details["let-user-control-scheduling"];
   const overridesIfNoUserControl = letUserControlScheduling

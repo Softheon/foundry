@@ -4263,22 +4263,6 @@ databaseChangeLog:
               type: boolean
               remarks: 'Has this pulse been archived?'
               defaultValueBoolean: false
-        # - addColumn:
-        #     tableName: metric
-        #     columns:
-        #       name: archived
-        #       type: boolean
-        #       remarks: 'Has this metric been archived?'
-        #       defaultValueBoolean: false
-        # - addColumn:
-        #     tableName: segment
-        #     columns:
-        #       name: archived
-        #       type: boolean
-        #       remarks: 'Has this segment been archived?'
-        #       defaultValueBoolean: false 
-        # Before this change, metrics/segments had opposite logic, rather than marking something as archived
-        # it was marked as active. Since the column is now an archived column, flip the boolean value
         - sql:
             sql: update metric set archived = not(archived)
             sql: update segment set archived = not(archived)
@@ -4302,8 +4286,6 @@ databaseChangeLog:
               constraints:
                 references: core_user(id)
                 foreignKeyName: fk_collection_personal_owner_id
-                # unique: true
-                # uniqueConstraintName: unique_collection_personal_owner_id
                 deleteCascade: true
         - sql:
             dbms: mssql
@@ -5198,6 +5180,27 @@ databaseChangeLog:
               name: settings
               type: text
               remarks: 'Serialized JSON FE-specific settings like formatting, etc. Scope of what is stored here may increase in future.'
+        - addColumn:
+            tableName: setting
+            columns:
+              name: _value
+              type: varchar(max)
+        - sql:
+            dbms: mysql,postgresql,h2,mariadb 
+            sql: UPDATE setting SET _value = value;
+        - sql:
+            dbms: mssql
+            sql: SET ANSI_WARNINGS  OFF
+                UPDATE setting SET _value = value
+                SET ANSI_WARNINGS  OFF;
+        - dropColumn:
+            tableName: setting
+            columnName: value
+        - renameColumn:
+            tableName: setting
+            oldColumnName: _value
+            newColumnName: value
+            columnDataType: varchar(max)
 #
 # Change MySQL/Maria's blob type to LONGBLOB to more closely match what H2 and PostgreSQL support for size limits
 #

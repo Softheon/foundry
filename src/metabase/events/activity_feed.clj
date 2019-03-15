@@ -15,7 +15,7 @@
             [metabase.toucan.db :as db]))
 
 (def ^:private activity-feed-topics
-  "The `Set` of event topics which are subscribed to for use in the Metabase activity feed."
+  "The `Set` of event topics which are subscribed to for use in the Foundry activity feed."
   #{:alert-create
     :alert-delete
     :card-create

@@ -72,7 +72,7 @@ export default class RecentViews extends Component {
               className="p3 text-centered text-light"
               style={{ maxWidth: "100%" }}
             >
-              {t`You haven't looked at any dashboards or questions recently`}
+              {t`You haven't looked at any dashboards or queries recently`}
             </p>
           </div>
         )}

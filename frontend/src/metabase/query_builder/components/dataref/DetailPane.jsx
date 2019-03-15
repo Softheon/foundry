@@ -30,7 +30,7 @@ const DetailPane = ({
     ) : null}
     {usefulQuestions && usefulQuestions.length > 0 ? (
       <div className="py1">
-        <p className="text-bold">{t`Potentially useful questions`}</p>
+        <p className="text-bold">{t`Potentially useful queries`}</p>
         <ul>
           {usefulQuestions.map((item, index) => (
             <li className="border-row-divider" key={index}>

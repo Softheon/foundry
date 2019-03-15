@@ -70,7 +70,7 @@
 
 (defsetting ldap-group-mappings
   ;; Should be in the form: {"cn=Some Group,dc=...": [1, 2, 3]} where keys are LDAP groups and values are lists of MB groups IDs
-  (tru "JSON containing LDAP to Metabase group mappings.")
+  (tru "JSON containing LDAP to Foundry group mappings.")
   :type    :json
   :default {})
 
@@ -206,7 +206,7 @@
       (ldap/bind? conn (:dn user-info) password))))
 
 (defn fetch-or-create-user!
-  "Using the `user-info` (from `find-user`) get the corresponding Metabase user, creating it if necessary."
+  "Using the `user-info` (from `find-user`) get the corresponding Foundry user, creating it if necessary."
   [{:keys [first-name last-name email groups]} password]
   (let [user (or (db/select-one [User :id :last_login] :email email)
                  (user/create-new-ldap-auth-user! {:first_name first-name

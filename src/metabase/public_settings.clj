@@ -14,22 +14,22 @@
   (:import [java.util TimeZone UUID]))
 
 (defsetting check-for-updates
-  (tru "Identify when new versions of Metabase are available.")
+  (tru "Identify when new versions of Foundry are available.")
   :type    :boolean
   :default true)
 
 (defsetting version-info
-  (tru "Information about available versions of Metabase.")
+  (tru "Information about available versions of Foundry")
   :type    :json
   :default {})
 
 (defsetting site-name
-  (tru "The name used for this instance of Metabase.")
-  :default "Metabase")
+  (tru "The name used for this instance of Foundry")
+  :default "Foundry")
 
 (defsetting site-uuid
   ;; Don't i18n this docstring because it's not user-facing! :)
-  "Unique identifier used for this instance of Metabase. This is set once and only once the first time it is fetched via
+  "Unique identifier used for this instance of Foundry. This is set once and only once the first time it is fetched via
   its magic getter. Nice!"
   :internal? true
   :setter    (fn [& _]
@@ -44,14 +44,14 @@
 ;; This value is *guaranteed* to never have a trailing slash :D
 ;; It will also prepend `http://` to the URL if there's not protocol when it comes in
 (defsetting site-url
-  (tru "The base URL of this Metabase instance, e.g. \"http://metabase.my-company.com\".")
+  (tru "The base URL of this Foundry instance, e.g. \"http://metabase.my-company.com\".")
   :setter (fn [new-value]
             (setting/set-string! :site-url (when new-value
                                              (cond->> (str/replace new-value #"/$" "")
                                                (not (str/starts-with? new-value "http")) (str "http://"))))))
 
 (defsetting site-locale
-  (str  (tru "The default language for this Metabase instance.")
+  (str  (tru "The default language for this Foundry instance.")
         (tru "This only applies to emails, Pulses, etc. Users'' browsers will specify the language used in the user interface."))
   :type    :string
   :setter  (fn [new-value]
@@ -63,7 +63,7 @@
   (tru "The email address users should be referred to if they encounter a problem."))
 
 (defsetting anon-tracking-enabled
-  (tru "Enable the collection of anonymous usage data in order to help Metabase improve.")
+  (tru "Enable the collection of anonymous usage data in order to help Foundry improve.")
   :type   :boolean
   :default true)
 
@@ -120,7 +120,7 @@
   :default (* 60 60 24 100)) ; 100 days
 
 (defsetting query-caching-min-ttl
-  (tru "Metabase will cache all saved questions with an average query execution time longer than this many seconds:")
+  (tru "Foundry will cache all saved questions with an average query execution time longer than this many seconds:")
   :type    :integer
   :default 60)
 

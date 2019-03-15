@@ -23,7 +23,7 @@ type Props = {
  * QuestionLoader
  *
  * Load either a saved or ad-hoc question depending on which is needed. Use
- * this component if you need to moved between saved and ad-hoc questions
+ * this component if you need to moved between saved and ad-hoc queries
  * as part of the same experience in the same part of the app.
  *
  * @example

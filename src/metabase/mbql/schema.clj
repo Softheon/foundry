@@ -279,7 +279,7 @@
 ;; Metrics are just 'macros' (placeholders for other aggregations with optional filter and breakout clauses) that get
 ;; expanded to other aggregations/etc. in the expand-macros middleware
 ;;
-;; METRICS WITH STRING IDS, e.g. `[:metric "ga:sessions"]`, are Google Analytics metrics, not Metabase metrics! They
+;; METRICS WITH STRING IDS, e.g. `[:metric "ga:sessions"]`, are Google Analytics metrics, not Foundry metrics! They
 ;; pass straight thru to the GA query processor.
 (defclause ^:sugar metric, metric-id (s/cond-pre su/IntGreaterThanZero su/NonBlankString))
 
@@ -676,7 +676,7 @@
    s/Any                          s/Any})
 
 
-;;; --------------------------------------------- Metabase [Outer] Query ---------------------------------------------
+;;; --------------------------------------------- Foundry [Outer] Query ---------------------------------------------
 
 (def Query
   "Schema for an [outer] query, e.g. the sort of thing you'd pass to the query processor or save in
@@ -723,6 +723,6 @@
 ;;; --------------------------------------------------- Validators ---------------------------------------------------
 
 (def ^{:arglists '([query])} validate-query
-  "Compiled schema validator for an [outer] Metabase query. (Pre-compling a validator is more efficient; use this
+  "Compiled schema validator for an [outer] Foundry query. (Pre-compling a validator is more efficient; use this
   instead of calling `(s/validate Query query)` or similar."
   (s/validator Query))

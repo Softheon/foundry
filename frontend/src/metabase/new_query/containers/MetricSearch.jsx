@@ -107,11 +107,11 @@ const MetricEmptyState = fitViewPort(({ fitClassNames }) => (
     className={fitClassNames}
   >
     <EmptyState
-      message={t`Defining common metrics for your team makes it even easier to ask questions`}
+      message={t`Defining common metrics for your team makes it even easier to ask queries`}
       title={t`No metrics`}
       image="app/img/metrics_illustration"
       action={t`How to create metrics`}
-      link="http://www.metabase.com/docs/latest/administration-guide/07-segments-and-metrics.html"
+      link="http://www.softheon-foundry.com/docs/latest/administration-guide/07-segments-and-metrics.html"
       className="mt2"
       imageClassName="mln2"
     />

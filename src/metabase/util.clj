@@ -20,9 +20,9 @@
 
 ;; This is the very first log message that will get printed.
 ;; It's here because this is one of the very first namespaces that gets loaded, and the first that has access to the logger
-;; It shows up a solid 10-15 seconds before the "Starting Metabase in STANDALONE mode" message because so many other namespaces need to get loaded
+;; It shows up a solid 10-15 seconds before the "Starting Foundry in STANDALONE mode" message because so many other namespaces need to get loaded
 (when-not *compile-files*
-  (log/info (trs "Loading Metabase...")))
+  (log/info (trs "Loading Foundry...")))
 
 ;; Log the maximum memory available to the JVM at launch time as well since it is very handy for debugging things
 (when-not *compile-files*
@@ -107,7 +107,7 @@
 
 
 (defn url?
-  "Is STRING a valid HTTP/HTTPS URL? (This only handles `localhost` and domains like `metabase.com`; URLs containing
+  "Is STRING a valid HTTP/HTTPS URL? (This only handles `localhost` and domains like `softheon-foundry.com`; URLs containing
   IP addresses will return `false`.)"
   ^Boolean [^String s]
   (boolean (when (seq s)
@@ -269,7 +269,7 @@
 
 (defprotocol ^:private IFilteredStacktrace
   (filtered-stacktrace [this]
-    "Get the stack trace associated with E and return it as a vector with non-metabase frames after the last Metabase
+    "Get the stack trace associated with E and return it as a vector with non-metabase frames after the last Foundry
     frame filtered out."))
 
 ;; These next two functions are a workaround for this bug https://dev.clojure.org/jira/browse/CLJ-1790
@@ -301,7 +301,7 @@
   IFilteredStacktrace
   {:filtered-stacktrace
    (fn [this]
-     ;; keep all the frames before the last Metabase frame, but then filter out any other non-Metabase frames after
+     ;; keep all the frames before the last Foundry frame, but then filter out any other non-Foundry frames after
      ;; that
      (let [[frames-after-last-mb other-frames]     (split-with (complement metabase-frame?)
                                                                (map str (seq this)))
@@ -463,13 +463,13 @@
 ))
 
 (def metabase-namespace-symbols
-  "Delay to a vector of symbols of all Metabase namespaces, excluding test namespaces.
+  "Delay to a vector of symbols of all Foundry namespaces, excluding test namespaces.
    This is intended for use by various routines that load related namespaces, such as task and events initialization.
    Using `ns-find/find-namespaces` is fairly slow, and can take as much as half a second to iterate over the thousand
-   or so namespaces that are part of the Metabase project; use this instead for a massive performance increase."
+   or so namespaces that are part of the Foundry project; use this instead for a massive performance increase."
   ;; We want to give JARs in the ./plugins directory a chance to load. At one point we have this as a future so it
   ;; start looking for things in the background while other stuff is happening but that meant plugins couldn't
-  ;; introduce new Metabase namespaces such as drivers.
+  ;; introduce new Foundry namespaces such as drivers.
   (delay (vec (for [ns-symb (ns-find/find-namespaces (classpath/system-classpath))
                     :when   (and (.startsWith (name ns-symb) "metabase.")
                                  (not (.contains (name ns-symb) "test")))]

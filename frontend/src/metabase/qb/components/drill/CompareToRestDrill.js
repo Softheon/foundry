@@ -15,7 +15,7 @@ export default ({ question, clicked }: ClickActionProps): ClickAction[] => {
     return [];
   }
 
-  // questions with a breakout
+  // queries with a breakout
   const dimensions = (clicked && clicked.dimensions) || [];
   if (
     !clicked ||

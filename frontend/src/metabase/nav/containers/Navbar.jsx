@@ -192,7 +192,7 @@ export default class Navbar extends Component {
         <div className="sm-pl4 flex align-center pr1">
           <div className="NavTitle flex align-center">
             <Icon name={"gear"} className="AdminGear" size={22} />
-            <span className="NavItem-text ml1 hide sm-show text-bold">{t`Metabase Admin`}</span>
+            <span className="NavItem-text ml1 hide sm-show text-bold">{t`Foundry Admin`}</span>
           </div>
 
           <ul className="sm-ml4 flex flex-full">
@@ -296,9 +296,9 @@ export default class Navbar extends Component {
               to={Urls.newQuestion()}
               mx={2}
               className="hide sm-show"
-              data-metabase-event={`NavBar;New Question`}
+              data-metabase-event={`NavBar;New Queries`}
             >
-              <Button medium>{t`Ask a question`}</Button>
+              <Button medium>{t`Ask a query`}</Button>
             </Link>
           )}
           <EntityMenu

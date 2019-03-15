@@ -76,7 +76,7 @@
                  (not (:sslmode <>)))
         (log/warn (trs "Warning: Postgres connection string with `ssl=true` detected.")
                   (trs "You may need to add `?sslmode=require` to your application DB connection string.")
-                  (trs "If Metabase fails to launch, please add it and try again.")
+                  (trs "If Foundry fails to launch, please add it and try again.")
                   (trs "See https://github.com/metabase/metabase/issues/8908 for more details."))))))
 
 (def ^:private connection-string-details
@@ -84,14 +84,14 @@
            (parse-connection-string uri))))
 
 (defn db-type
-  "The type of backing DB used to run Metabase. `:h2`, `:mysql`, or `:postgres`."
+  "The type of backing DB used to run Foundry. `:h2`, `:mysql`, or `:postgres`."
   ^clojure.lang.Keyword []
   (or (:type @connection-string-details)
       (config/config-kw :mb-db-type)))
 
 (def db-connection-details
-  "Connection details that can be used when pretending the Metabase DB is itself a `Database` (e.g., to use the Generic
-  SQL driver functions on the Metabase DB itself)."
+  "Connection details that can be used when pretending the Foundry DB is itself a `Database` (e.g., to use the Generic
+  SQL driver functions on the Foundry DB itself)."
   (delay (or @connection-string-details
              (case (db-type)
                :h2       {:type     :h2                               ; TODO - we probably don't need to specifc `:type` here since we can just call (db-type)
@@ -380,25 +380,25 @@
   (atom false))
 
 (defn db-is-setup?
-  "True if the Metabase DB is setup and ready."
+  "True if the Foundry DB is setup and ready."
   ^Boolean []
   @setup-db-has-been-called?)
 
 (def ^:dynamic *allow-potentailly-unsafe-connections*
   "We want to make *every* database connection made by the drivers safe -- read-only, only connect if DB file exists,
   etc.  At the same time, we'd like to be able to use driver functionality like `can-connect-with-details?` to check
-  whether we can connect to the Metabase database, in which case we'd like to allow connections to databases that
+  whether we can connect to the Foundry database, in which case we'd like to allow connections to databases that
   don't exist.
 
-  So we need some way to distinguish the Metabase database from other databases. We could add a key to the details
-  map specifying that it's the Metabase DB, but what if some shady user added that key to another database?
+  So we need some way to distinguish the Foundry database from other databases. We could add a key to the details
+  map specifying that it's the Foundry DB, but what if some shady user added that key to another database?
 
   We could check if a database details map matched `db-connection-details` above, but what if a shady user went
-  Meta-Metabase and added the Metabase DB to Metabase itself? Then when they used it they'd have potentially unsafe
+  Meta-Foundry and added the Foundry DB to Foundry itself? Then when they used it they'd have potentially unsafe
   access.
 
   So this is where dynamic variables come to the rescue. We'll make this one `true` when we use `can-connect?` for the
-  Metabase DB, in which case we'll allow connection to non-existent H2 (etc.) files, and leave it `false` happily and
+  Foundry DB, in which case we'll allow connection to non-existent H2 (etc.) files, and leave it `false` happily and
   forever after, making all other connnections \"safe\"."
   false)
 
@@ -412,14 +412,14 @@
    (assert (binding [*allow-potentailly-unsafe-connections* true]
              (require 'metabase.driver)
              ((resolve 'metabase.driver/can-connect-with-details?) engine details))
-     (format "Unable to connect to Metabase %s DB." (name engine)))
+     (format "Unable to connect to Foundry %s DB." (name engine)))
    (log/info (trs "Verify Database Connection ... ") (u/emoji "✅"))))
 
 
 (def ^:dynamic ^Boolean *disable-data-migrations*
   "Should we skip running data migrations when setting up the DB? (Default is `false`).
   There are certain places where we don't want to do this; for example, none of the migrations should be ran when
-  Metabase is launched via `load-from-h2`.  That's because they will end up doing things like creating duplicate
+  Foundry is launched via `load-from-h2`.  That's because they will end up doing things like creating duplicate
   entries for the \"magic\" groups and permissions entries. "
   false)
 
@@ -429,7 +429,7 @@
   [db-details]
   (let [sql (migrate! db-details :print)]
     (log/info (str "Database Upgrade Required\n\n"
-                   "NOTICE: Your database requires updates to work with this version of Metabase.  "
+                   "NOTICE: Your database requires updates to work with this version of Foundry.  "
                    "Please execute the following sql commands on your database before proceeding.\n\n"
                    sql
                    "\n\n"
@@ -498,7 +498,7 @@
 
 
 (defn- type-keyword->descendants
-  "Return a set of descendents of Metabase `type-keyword`. This includes `type-keyword` itself, so the set will always
+  "Return a set of descendents of Foundry `type-keyword`. This includes `type-keyword` itself, so the set will always
   have at least one element.
 
      (type-keyword->descendants :type/Coordinate) ; -> #{\"type/Latitude\" \"type/Longitude\" \"type/Coordinate\"}"

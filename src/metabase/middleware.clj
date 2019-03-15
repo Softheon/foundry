@@ -1,5 +1,5 @@
 (ns metabase.middleware
-  "Metabase-specific middleware functions & configuration."
+  "Foundry-specific middleware functions & configuration."
   (:require [cheshire.generate :refer [add-encoder encode-nil encode-str]]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
@@ -285,7 +285,7 @@
     (when (mdb/db-is-setup?)
       (when-not (public-settings/site-url)
         (when-let [site-url (or origin host)]
-          (log/info "Setting Metabase site URL to" site-url)
+          (log/info "Setting Foundry site URL to" site-url)
           (public-settings/site-url site-url))))
     (handler request)))
 

@@ -1,5 +1,5 @@
 (ns metabase.sync.sync-metadata.tables
-  "Logic for updating Metabase Table models from metadata fetched from a physical DB."
+  "Logic for updating Foundry Table models from metadata fetched from a physical DB."
   (:require [clojure
              [data :as data]
              [string :as str]]
@@ -144,7 +144,7 @@
          table)))
 
 (s/defn ^:private our-metadata :- #{i/DatabaseMetadataTable}
-  "Return information about what Tables we have for this DB in the Metabase application DB."
+  "Return information about what Tables we have for this DB in the Foundry application DB."
   [database :- i/DatabaseInstance]
   (set (map (partial into {})
             (db/select [Table :name :schema :description]
@@ -152,7 +152,7 @@
               :active true))))
 
 (s/defn sync-tables!
-  "Sync the Tables recorded in the Metabase application database with the ones obtained by calling DATABASE's driver's
+  "Sync the Tables recorded in the Foundry application database with the ones obtained by calling DATABASE's driver's
   implementation of `describe-database`."
   [database :- i/DatabaseInstance]
   ;; determine what's changed between what info we have and what's in the DB

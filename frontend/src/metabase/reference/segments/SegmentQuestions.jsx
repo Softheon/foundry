@@ -32,9 +32,9 @@ import * as metadataActions from "metabase/redux/metadata";
 
 const emptyStateData = (table, segment) => {
   return {
-    message: t`Questions about this segment will appear here as they're added`,
+    message: t`Queries about this segment will appear here as they're added`,
     icon: "all",
-    action: t`Ask a question`,
+    action: t`Ask a query`,
     link: getQuestionUrl({
       dbId: table && table.db_id,
       tableId: segment.table_id,

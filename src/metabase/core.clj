@@ -99,8 +99,8 @@
       wrap-params                        ; parses GET and POST params as :query-params/:form-params and both as :params
       mb-middleware/bind-current-user    ; Binds *current-user* and *current-user-id* if :metabase-user-id is non-nil
       mb-middleware/wrap-current-user-id ; looks for :metabase-session-id and sets :metabase-user-id if Session ID is valid
-      mb-middleware/wrap-api-key         ; looks for a Metabase API Key on the request and assocs as :metabase-api-key
-      mb-middleware/wrap-session-id      ; looks for a Metabase Session ID and assoc as :metabase-session-id
+      mb-middleware/wrap-api-key         ; looks for a Foundry API Key on the request and assocs as :metabase-api-key
+      mb-middleware/wrap-session-id      ; looks for a Foundry Session ID and assoc as :metabase-session-id
       mb-middleware/maybe-set-site-url   ; set the value of `site-url` if it hasn't been set yet
       locale-negotiator                  ; Binds *locale* for i18n
       wrap-cookies                       ; Parses cookies in the request map and assocs as :cookies
@@ -123,7 +123,7 @@
                          (when-not (= 80 port) (str ":" port))
                          "/setup/")]
     (log/info (u/format-color 'green
-                  (str (trs "Please use the following URL to setup your Metabase installation:")
+                  (str (trs "Please use the following URL to setup your Foundry installation:")
                        "\n\n"
                        setup-url
                        "\n\n")))))
@@ -131,15 +131,15 @@
 (defn- destroy!
   "General application shutdown function which should be called once at application shuddown."
   []
-  (log/info (trs "Metabase Shutting Down ..."))
+  (log/info (trs "Foundry Shutting Down ..."))
   (task/stop-scheduler!)
-  (log/info (trs "Metabase Shutdown COMPLETE")))
+  (log/info (trs "Foundry Shutdown COMPLETE")))
 
 
 (defn init!
   "General application initialization function which should be run once at application startup."
   []
-  (log/info (trs "Starting Metabase version {0} ..." config/mb-version-string))
+  (log/info (trs "Starting Foundry version {0} ..." config/mb-version-string))
   (log/info (trs "System timezone is ''{0}'' ..." (System/getProperty "user.timezone")))
   (init-status/set-progress! 0.1)
 
@@ -158,7 +158,7 @@
   (init-status/set-progress! 0.4)
 
   ;; startup database.  validates connection & runs any necessary migrations
-  (log/info (trs "Setting up and migrating Metabase DB. Please sit tight, this may take a minute..."))
+  (log/info (trs "Setting up and migrating Foundry DB. Please sit tight, this may take a minute..."))
   (mdb/setup-db! :auto-migrate (config/config-bool :mb-db-automigrate))
   (init-status/set-progress! 0.5)
 
@@ -195,7 +195,7 @@
   (set-locale (setting/get :site-locale))
 
   (init-status/set-complete!)
-  (log/info (trs "Metabase Initialization COMPLETE")))
+  (log/info (trs "Foundry Initialization COMPLETE")))
 
 
 ;;; ## ---------------------------------------- Jetty (Web) Server ----------------------------------------
@@ -238,7 +238,7 @@
 ;;; -------------------------------------------------- Normal Start --------------------------------------------------
 
 (defn- start-normally []
-  (log/info (trs "Starting Metabase in STANDALONE mode"))
+  (log/info (trs "Starting Foundry in STANDALONE mode"))
   (try
     ;; launch embedded webserver async
     (start-jetty!)
@@ -248,7 +248,7 @@
     (when (config/config-bool :mb-jetty-join)
       (.join ^Server @jetty-instance))
     (catch Throwable e
-      (log/error e (trs "Metabase Initialization FAILED"))
+      (log/error e (trs "Foundry Initialization FAILED"))
       (System/exit 1))))
 
 (defn- run-cmd [cmd args]
@@ -259,8 +259,8 @@
 ;;; ------------------------------------------------ App Entry Point -------------------------------------------------
 
 (defn -main
-  "Launch Metabase in standalone mode."
+  "Launch Foundry in standalone mode."
   [& [cmd & args]]
   (if cmd
     (run-cmd cmd args) ; run a command like `java -jar metabase.jar migrate release-locks` or `lein run migrate release-locks`
-    (start-normally))) ; with no command line args just start Metabase normally
+    (start-normally))) ; with no command line args just start Foundry normally

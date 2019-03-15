@@ -34,7 +34,7 @@ const emptyStateData = (table, metric) => {
   return {
     message: t`Questions about this metric will appear here as they're added`,
     icon: "all",
-    action: t`Ask a question`,
+    action: t`Ask a query`,
     link: getQuestionUrl({
       dbId: table && table.db_id,
       tableId: metric.table_id,

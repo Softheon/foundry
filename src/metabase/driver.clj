@@ -1,6 +1,6 @@
 (ns metabase.driver
-  "Metabase Drivers handle various things we need to do with connected data warehouse databases, including things like
-  introspecting their schemas and processing and running MBQL queries. Each Metabase driver lives in a namespace like
+  "Foundry Drivers handle various things we need to do with connected data warehouse databases, including things like
+  introspecting their schemas and processing and running MBQL queries. Each Foundry driver lives in a namespace like
   `metabase.driver.<driver>`, e.g. `metabase.driver.postgres`. Each driver must implement the `IDriver` protocol
   below.
 
@@ -104,7 +104,7 @@
    :display-name (tru "Additional JDBC connection string options")})
 
 (defprotocol IDriver
-  "Methods that Metabase drivers must implement. Methods marked *OPTIONAL* have default implementations in
+  "Methods that Foundry drivers must implement. Methods marked *OPTIONAL* have default implementations in
    `IDriverDefaultsMixin`. Drivers should also implement `getName` form `clojure.lang.Named`, so we can call `name` on
     them:
 

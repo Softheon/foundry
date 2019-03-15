@@ -43,7 +43,6 @@
    allow_tracking (s/maybe (s/cond-pre s/Bool su/BooleanString))
    schedules      (s/maybe database-api/ExpandedSchedulesMap)}
   ;; Now create the user
-  (log/info "new user creating xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
   (let [session-id (str (java.util.UUID/randomUUID))
         new-user   (db/insert! User
                                :email        email
@@ -52,8 +51,6 @@
                                :password     (str (java.util.UUID/randomUUID))
                                :is_superuser true)]
     ;; this results in a second db call, but it avoids redundant password code so figure it's worth it
-    (log/info "new user joined xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-    (log/info (identity new-user))
     (user/set-password! (:id new-user) password)
     ;; set a couple preferences
     (public-settings/site-name site_name)
@@ -146,7 +143,7 @@
       :triggered   (>= num-tables 20)}
      {:title       (tru "Organize questions")
       :group       (tru "Curate your data")
-      :description (tru "Have a lot of saved questions in {0}? Create collections to help manage them and add context." (tru "Metabase"))
+      :description (tru "Have a lot of saved questions in {0}? Create collections to help manage them and add context." (tru "Foundry"))
       :link        "/collection/root"
       :completed   has-collections?
       :triggered   (>= num-cards 30)}

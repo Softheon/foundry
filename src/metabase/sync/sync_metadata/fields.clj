@@ -1,7 +1,7 @@
 (ns metabase.sync.sync-metadata.fields
-  "Logic for updating Metabase Field models from metadata fetched from a physical DB.
+  "Logic for updating Foundry Field models from metadata fetched from a physical DB.
   The basic idea here is to look at the metadata we get from calling `describe-table` on a connected database, then
-  construct an identical set of metadata from what we have about that Table in the Metabase DB. Then we iterate over
+  construct an identical set of metadata from what we have about that Table in the Foundry DB. Then we iterate over
   both sets of Metadata and perform whatever steps are needed to make sure the things in the DB match the things that
   came back from `describe-table`."
   (:require [clojure.string :as str]
@@ -23,7 +23,7 @@
 (def ^:private ParentID (s/maybe su/IntGreaterThanZero))
 
 (def ^:private TableMetadataFieldWithID
-  "Schema for `TableMetadataField` with an included ID of the corresponding Metabase Field object.
+  "Schema for `TableMetadataField` with an included ID of the corresponding Foundry Field object.
   `our-metadata` is always returned in this format. (The ID is needed in certain places so we know which Fields to
   retire, and the parent ID of any nested-fields.)"
   (assoc i/TableMetadataField
@@ -81,7 +81,7 @@
          :description   field-comment}))))
 
 (s/defn ^:private ->metabase-fields! :- [i/FieldInstance]
-  "Return an active Metabase Field instance that matches NEW-FIELD-METADATA. This object will be created or
+  "Return an active Foundry Field instance that matches NEW-FIELD-METADATA. This object will be created or
   reactivated as a side effect of calling this function."
   [table :- i/TableInstance, new-field-metadata-chunk :- [i/TableMetadataField], parent-id :- ParentID]
   (let [fields-to-reactivate (matching-inactive-fields table new-field-metadata-chunk parent-id)]
@@ -100,9 +100,9 @@
         (db/select Field :id [:in new-and-updated-fields])))))
 
 (s/defn ^:private create-or-reactivate-field-chunk!
-  "Create (or reactivate) a Metabase Field object(s) for NEW-FIELD-METABASE and any nested fields."
+  "Create (or reactivate) a Foundry Field object(s) for NEW-FIELD-METABASE and any nested fields."
   [table :- i/TableInstance, new-field-metadata-chunk :- [i/TableMetadataField], parent-id :- ParentID]
-  ;; Create (or reactivate) the Metabase Field entry for NEW-FIELD-METADATA...
+  ;; Create (or reactivate) the Foundry Field entry for NEW-FIELD-METADATA...
   (let [updated-fields (->metabase-fields! table new-field-metadata-chunk parent-id)
         name->updated-field (u/key-by canonical-name updated-fields)]
     ;; ...then recursively do the same for any nested fields that belong to it.
@@ -117,7 +117,7 @@
 ;;; +----------------------------------------------------------------------------------------------------------------+
 
 (s/defn ^:private update-field-metadata-if-needed!
-  "Update the metadata for a Metabase Field as needed if any of the info coming back from the DB has changed."
+  "Update the metadata for a Foundry Field as needed if any of the info coming back from the DB has changed."
   [table :- i/TableInstance, metabase-field :- TableMetadataFieldWithID, field-metadata :- i/TableMetadataField]
   (let [{old-database-type :database-type,
          old-base-type     :base-type,
@@ -199,7 +199,7 @@
       updated-count)))
 
 (s/defn ^:private sync-field-instances!
-  "Make sure the instances of Metabase Field are in-sync with the DB-METADATA."
+  "Make sure the instances of Foundry Field are in-sync with the DB-METADATA."
   [table :- i/TableInstance, db-metadata :- #{i/TableMetadataField}, our-metadata :- #{TableMetadataFieldWithID}
    parent-id :- ParentID]
   (let [known-fields (u/key-by canonical-name our-metadata)]
@@ -296,7 +296,7 @@
                                                   (add-nested-fields nested-field parent-id->fields)))))))
 
 (s/defn ^:private parent-id->fields :- {ParentID #{TableMetadataFieldWithID}}
-  "Build a map of the Metabase Fields we have for TABLE, keyed by their parent id (usually `nil`)."
+  "Build a map of the Foundry Fields we have for TABLE, keyed by their parent id (usually `nil`)."
   [table :- i/TableInstance]
   (->> (for [field (db/select [Field :name :database_type :base_type :special_type :parent_id :id :description]
                      :table_id (u/get-id table)
@@ -351,7 +351,7 @@
        sync-util/calculate-hash))
 
 (s/defn sync-fields-for-table!
-  "Sync the Fields in the Metabase application database for a specific TABLE."
+  "Sync the Fields in the Foundry application database for a specific TABLE."
   ([table :- i/TableInstance]
    (sync-fields-for-table! (table/database table) table))
   ([database :- i/DatabaseInstance, {:keys [fields_hash] :as table} :- i/TableInstance]
@@ -373,7 +373,7 @@
             :total-fields   total-fields}))))))
 
 (s/defn sync-fields!
-  "Sync the Fields in the Metabase application database for all the Tables in a DATABASE."
+  "Sync the Fields in the Foundry application database for all the Tables in a DATABASE."
   [database :- i/DatabaseInstance]
   (let [tables (sync-util/db->sync-tables database)]
     (apply merge-with + (map #(sync-fields-for-table! database %) tables))))

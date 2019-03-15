@@ -25,7 +25,7 @@ export type QueryParams = {
   [key: string]: string,
 };
 
-/* Metabase API error object returned by the backend */
+/* Foundry API error object returned by the backend */
 export type ApiError = {
   status: number, // HTTP status
   // TODO: incomplete

@@ -10,7 +10,7 @@ import Ellipsified from "./Ellipsified.jsx";
 import cx from "classnames";
 import pure from "recompose/pure";
 
-//TODO: extend this to support functionality required for questions
+//TODO: extend this to support functionality required for queries
 const ListItem = ({ index, name, description, placeholder, url, icon }) => (
   <div className={cx(S.item)}>
     <div className={S.leftIcons}>

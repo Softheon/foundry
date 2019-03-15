@@ -392,7 +392,7 @@
      (re-find #"^ga(id)?:" (name id)))))
 
 (defn ga-metric-or-segment?
-  "Is this metric or segment clause not a Metabase Metric or Segment, but rather a GA one? E.g. something like `[:metric
+  "Is this metric or segment clause not a Foundry Metric or Segment, but rather a GA one? E.g. something like `[:metric
   ga:users]`. We want to ignore those because they're not the same thing at all as MB Metrics/Segments and don't
   correspond to objects in our application DB."
   [[_ id]]

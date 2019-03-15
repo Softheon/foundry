@@ -19,7 +19,7 @@ const QUERY_BUILDER_STEPS = [
         />
         <h3>{t`Welcome to the Query Builder!`}</h3>
         <p
-        >{t`The Query Builder lets you assemble questions (or "queries") to ask about your data.`}</p>
+        >{t`The Query Builder lets you assemble queries (or "queries") to ask about your data.`}</p>
         <a
           className="Button Button--primary"
           onClick={props.onNext}
@@ -215,11 +215,11 @@ const QUERY_BUILDER_STEPS = [
         />
         <h3>{t`Well done!`}</h3>
         <p>
-          {t`That's all! If you still have questions, check out our`}{" "}
+          {t`That's all! If you still have queries, check out our`}{" "}
           <a
             className="link"
             target="_blank"
-            href="http://www.metabase.com/docs/latest/users-guide/start.html"
+            href="http://www.softheon-foundry.com/docs/latest/users-guide/start.html"
           >{t`User's Guide`}</a>. {t`Have fun exploring your data!`}
         </p>
         <a className="Button Button--primary" onClick={props.onNext}>
@@ -234,7 +234,7 @@ const QUERY_BUILDER_STEPS = [
       <div className="text-centered">
         <h3>{t`Save Your Questions`}!</h3>
         <p
-        >{t`By the way, you can save your questions so you can refer to them later. Saved Questions can also be put into dashboards or Pulses.`}</p>
+        >{t`By the way, you can save your queries so you can refer to them later. Saved Questions can also be put into dashboards or Pulses.`}</p>
         <a
           className="Button Button--primary"
           onClick={props.onClose}

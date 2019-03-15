@@ -335,7 +335,7 @@
                            remarks)}))))
 
 (defn- database-type->base-type
-  "Given a `database-type` (e.g. `VARCHAR`) return the mapped Metabase type (e.g. `:type/Text`)."
+  "Given a `database-type` (e.g. `VARCHAR`) return the mapped Foundry type (e.g. `:type/Text`)."
   [driver database-type]
   (or (column->base-type driver (keyword database-type))
       (do (log/warn (format "Don't know how to map column type '%s' to a Field base_type, falling back to :type/*."

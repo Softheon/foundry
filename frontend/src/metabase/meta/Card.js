@@ -169,7 +169,7 @@ export function getParametersWithExtras(
   });
 }
 
-// NOTE Atte Keinänen 7/5/17: Still used in dashboards and public questions.
+// NOTE Atte Keinänen 7/5/17: Still used in dashboards and public queries.
 // Query builder uses `Question.getResults` which contains similar logic.
 export function applyParameters(
   card: Card,

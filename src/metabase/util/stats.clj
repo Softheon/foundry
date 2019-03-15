@@ -143,7 +143,7 @@
    :running_on           (environment-type)
    :application_database (config/config-str :mb-db-type)
    :check_for_updates    (public-settings/check-for-updates)
-   :site_name            (not= (public-settings/site-name) "Metabase")
+   :site_name            (not= (public-settings/site-name) "Foundry")
    :report_timezone      (driver/report-timezone)
    :friendly_names       (= (humanization/humanization-strategy) "advanced")
    :email_configured     (email/email-configured?)
@@ -390,7 +390,7 @@
    "os.name" "os.version"])
 
 (defn- system-metrics
-  "Metadata about the environment Metabase is running in"
+  "Metadata about the environment Foundry is running in"
   []
   (let [runtime (Runtime/getRuntime)]
     (merge
@@ -424,7 +424,7 @@
 
 
 (defn- send-stats!
-  "send stats to Metabase tracking server"
+  "send stats to Foundry tracking server"
   [stats]
    (try
       (client/post metabase-usage-url {:form-params stats, :content-type :json, :throw-entire-message? true})

@@ -87,7 +87,7 @@ export default class SettingsUpdatesForm extends Component {
     ) {
       return (
         <div className="p2 bg-brand bordered rounded border-brand text-white text-bold">
-          {jt`You're running Metabase ${this.removeVersionPrefixIfNeeded(
+          {jt`You're running Foundry ${this.removeVersionPrefixIfNeeded(
             currentVersion,
           )} which is the latest and greatest!`}
         </div>
@@ -96,7 +96,7 @@ export default class SettingsUpdatesForm extends Component {
       return (
         <div>
           <div className="p2 bg-green bordered rounded border-success flex flex-row align-center justify-between">
-            <span className="text-white text-bold">{jt`Metabase ${this.removeVersionPrefixIfNeeded(
+            <span className="text-white text-bold">{jt`Foundry ${this.removeVersionPrefixIfNeeded(
               versionInfo.latest.version,
             )} is available.  You're running ${this.removeVersionPrefixIfNeeded(
               currentVersion,
@@ -107,7 +107,7 @@ export default class SettingsUpdatesForm extends Component {
                 versionInfo.latest.version
               }
               className="Button Button--white Button--medium borderless"
-              href="http://www.metabase.com/start"
+              href="http://www.softheon-foundry.com/start"
               target="_blank"
             >{t`Update`}</a>
           </div>

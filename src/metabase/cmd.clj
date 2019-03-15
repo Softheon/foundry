@@ -1,5 +1,5 @@
 (ns metabase.cmd
-  "Functions for commands that can be ran from the command-line with `lein` or the Metabase JAR. These are ran as
+  "Functions for commands that can be ran from the command-line with `lein` or the Foundry JAR. These are ran as
   follows:
 
     <metabase> <command> <options>
@@ -37,7 +37,7 @@
      ((resolve 'metabase.cmd.load-from-h2/load-from-h2!) h2-connection-string))))
 
 (defn ^:command profile
-  "Start Metabase the usual way and exit. Useful for profiling Metabase launch time."
+  "Start Foundry the usual way and exit. Useful for profiling Foundry launch time."
   []
   ;; override env var that would normally make Jetty block forever
   (require 'environ.core)
@@ -57,7 +57,7 @@
   ((resolve 'metabase.cmd.refresh-integration-test-db-metadata/refresh-integration-test-db-metadata)))
 
 (defn ^:command help
-  "Show this help message listing valid Metabase commands."
+  "Show this help message listing valid Foundry commands."
   []
   (println "Valid commands are:")
   (doseq [[symb varr] (sort (ns-interns 'metabase.cmd))
@@ -67,12 +67,12 @@
                     (str/replace dox #"\s+" " ")))) ; replace newlines or multiple spaces with single spaces
   (println "\nSome other commands you might find useful:\n")
   (println "java -cp metabase.jar org.h2.tools.Shell -url jdbc:h2:/path/to/metabase.db")
-  (println "\tOpen an SQL shell for the Metabase H2 DB"))
+  (println "\tOpen an SQL shell for the Foundry H2 DB"))
 
 (defn ^:command version
-  "Print version information about Metabase and the current system."
+  "Print version information about Foundry and the current system."
   []
-  (println "Metabase version:" config/mb-version-info)
+  (println "Foundry version:" config/mb-version-info)
   (println "\nOS:"
            (System/getProperty "os.name")
            (System/getProperty "os.version")
@@ -101,7 +101,7 @@
   (let [orig-fn @(resolve 'puppetlabs.i18n.core/fmt)]
     (intern 'puppetlabs.i18n.core 'fmt (comp str/reverse orig-fn)))
   (println "Ok.")
-  (println "Reloading all Metabase namespaces...")
+  (println "Reloading all Foundry namespaces...")
   (let [namespaces-to-reload (for [ns-symb @u/metabase-namespace-symbols
                                    :when (and (not (#{'metabase.cmd 'metabase.core} ns-symb))
                                               (u/ignore-exceptions

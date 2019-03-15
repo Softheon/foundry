@@ -1,6 +1,6 @@
 /**
  * Redux selectors for the new query flow
- * (used both for new questions and for adding "ad-hoc metrics" to multi-query questions)
+ * (used both for new queries and for adding "ad-hoc metrics" to multi-query queries)
  */
 
 import { getMetadata } from "metabase/selectors/metadata";

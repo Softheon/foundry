@@ -13,7 +13,7 @@ const CollectionEmptyState = ({ params }) => {
   return (
     <EmptyState
       title={t`This collection is empty, like a blank canvas`}
-      message={t`You can use collections to organize and group dashboards, questions and pulses for your team or yourself`}
+      message={t`You can use collections to organize and group dashboards, queries and pulses for your team or yourself`}
       illustrationElement={
         <RetinaImage
           src="app/img/collection-empty-state.png"

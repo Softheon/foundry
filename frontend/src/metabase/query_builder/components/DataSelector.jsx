@@ -821,7 +821,7 @@ export const TablePicker = ({
           <div className="bg-light p2 text-centered border-top">
             {t`Is a question missing?`}
             <a
-              href="http://metabase.com/docs/latest/users-guide/04-asking-questions.html#source-data"
+              href="http://softheon-foundry.com/docs/latest/users-guide/04-asking-questions.html#source-data"
               className="block link"
             >{t`Learn more about nested queries`}</a>
           </div>

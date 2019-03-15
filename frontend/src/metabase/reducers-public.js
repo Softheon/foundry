@@ -1,6 +1,6 @@
 /* @flow */
 
-// Reducers needed for public questions and dashboards
+// Reducers needed for public queries and dashboards
 
 import commonReducers from "./reducers-common";
 

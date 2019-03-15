@@ -1,5 +1,5 @@
 (ns metabase.driver.generic-sql.query-processor
-  "The Query Processor is responsible for translating the Metabase Query Language into HoneySQL SQL forms."
+  "The Query Processor is responsible for translating the Foundry Query Language into HoneySQL SQL forms."
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
             [clojure.tools.logging :as log]

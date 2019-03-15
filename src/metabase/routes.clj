@@ -30,7 +30,7 @@
 
 (defn- load-file-at-path [path]
   (slurp (or (io/resource path)
-             (throw (Exception. (str "Cannot find '" path "'. Did you remember to build the Metabase frontend?"))))))
+             (throw (Exception. (str "Cannot find '" path "'. Did you remember to build the Foundry frontend?"))))))
 
 (defn- load-template [path variables]
   (stencil/render-string (load-file-at-path path) variables))
@@ -39,8 +39,8 @@
   [locale]
   (json/generate-string {"headers" {"language" locale
                                     "plural-forms" "nplurals=2; plural=(n != 1);"}
-                         "translations" {"" {"Metabase" {"msgid" "Metabase"
-                                                         "msgstr" ["Metabase"]}}}}))
+                         "translations" {"" {"Foundry" {"msgid" "Foundry"
+                                                         "msgstr" ["Foundry"]}}}}))
 
 (defn- load-localization []
   (if (and *locale* (not= (str *locale*) "en"))
@@ -52,7 +52,7 @@
     (fallback-localization *locale*)))
 
 (defn- entrypoint
-  "Repsonse that serves up an entrypoint into the Metabase application, e.g. `index.html`."
+  "Repsonse that serves up an entrypoint into the Foundry application, e.g. `index.html`."
   [entry embeddable? {:keys [uri]}]
   (-> (if (init-status/complete?)
         (load-template (str "frontend_client/" entry ".html")
@@ -91,7 +91,7 @@
   (GET "*" [] embed))
 
 ;; Redirect naughty users who try to visit a page other than setup if setup is not yet complete
-(defroutes ^{:doc "Top-level ring routes for Metabase."} routes
+(defroutes ^{:doc "Top-level ring routes for Foundry."} routes
   ;; ^/$ -> index.html
   (GET "/" [] index)
   (GET "/favicon.ico" [] (resp/resource-response "frontend_client/favicon.ico"))
@@ -101,10 +101,10 @@
                           {:status 503, :body {:status "initializing", :progress (init-status/progress)}}))
   ;; ^/api/ -> All other API routes
   (context "/api" [] (fn [& args]
-                       ;; if Metabase is not finished initializing, return a generic error message rather than
+                       ;; if Foundry is not finished initializing, return a generic error message rather than
                        ;; something potentially confusing like "DB is not set up"
                        (if-not (init-status/complete?)
-                         {:status 503, :body "Metabase is still initializing. Please sit tight..."}
+                         {:status 503, :body "Foundry is still initializing. Please sit tight..."}
                          (apply api/routes args))))
   ;; ^/app/ -> static files under frontend_client/app
   (context "/app" []

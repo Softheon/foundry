@@ -1,5 +1,5 @@
 (ns metabase.plugins
-  "The Metabase 'plugins' system automatically adds JARs in the `./plugins/` directory (parallel to `metabase.jar`) to
+  "The Foundry 'plugins' system automatically adds JARs in the `./plugins/` directory (parallel to `metabase.jar`) to
   the classpath at runtime. This works great on Java 8, but never really worked properly on Java 9; as of 0.29.4 we're
   planning on telling people to just add extra external dependencies with `-cp` when using Java 9."
   (:require [clojure.java.io :as io]
@@ -15,7 +15,7 @@
 ;;; +----------------------------------------------------------------------------------------------------------------+
 
 (defn- plugins-dir
-  "The Metabase plugins directory. This defaults to `plugins/` in the same directory as `metabase.jar`, but can be
+  "The Foundry plugins directory. This defaults to `plugins/` in the same directory as `metabase.jar`, but can be
   configured via the env var `MB_PLUGINS_DIR`."
   ^java.io.File []
   (let [dir (io/file (or (config/config-str :mb-plugins-dir)
@@ -34,7 +34,7 @@
 
 (defn dynamically-add-jars!
   "Dynamically add any JARs in the `plugins-dir` to the classpath.
-   This is used for things like custom plugins or the Oracle JDBC driver, which cannot be shipped alongside Metabase
+   This is used for things like custom plugins or the Oracle JDBC driver, which cannot be shipped alongside Foundry
   for licensing reasons."
   []
   (when-let [^java.io.File dir (plugins-dir)]
@@ -58,12 +58,12 @@
   (when-let [plugins-dir (plugins-dir)]
     (when (seq (.listFiles plugins-dir))
       (log/info
-       (trs "It looks like you have some external dependencies in your Metabase plugins directory.")
-       (trs "With Java 9 or higher, Metabase cannot automatically add them to your classpath.")
+       (trs "It looks like you have some external dependencies in your Foundry plugins directory.")
+       (trs "With Java 9 or higher, Foundry cannot automatically add them to your classpath.")
        (trs "Instead, you should include them at launch with the -cp option. For example:")
        "\n\n    java -cp metabase.jar:plugins/* metabase.core\n\n"
-       (trs "See https://metabase.com/docs/latest/operations-guide/start.html#java-versions for more details.")
-       (trs "(If you're already running Metabase this way, you can ignore this message.)")))))
+       (trs "See https://softheon-foundry.com/docs/latest/operations-guide/start.html#java-versions for more details.")
+       (trs "(If you're already running Foundry this way, you can ignore this message.)")))))
 
 
 ;;; +----------------------------------------------------------------------------------------------------------------+
@@ -87,8 +87,8 @@
   "Look for any namespaces on the classpath with the pattern `metabase.*plugin-setup` For each matching namespace, load
   it. If the namespace has a function named `-init-plugin!`, call that function with no arguments.
 
-  This is intended as a startup hook for Metabase plugins to run any startup logic that needs to be done. This
-  function is normally called once in Metabase startup, after `load-plugins!` runs above (which simply adds JARs to
+  This is intended as a startup hook for Foundry plugins to run any startup logic that needs to be done. This
+  function is normally called once in Foundry startup, after `load-plugins!` runs above (which simply adds JARs to
   the classpath in the `plugins` directory.)"
   []
   ;; find each namespace ending in `plugin-setup`

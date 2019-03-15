@@ -160,7 +160,7 @@ export const PublicLinksQuestionListing = () => (
     type={t`Public Card Listing`}
     getUrl={({ id }) => Urls.question(id)}
     getPublicUrl={({ public_uuid }) => Urls.publicQuestion(public_uuid)}
-    noLinksMessage={t`No questions have been publicly shared yet.`}
+    noLinksMessage={t`No queries have been publicly shared yet.`}
   />
 );
 
@@ -181,7 +181,7 @@ export const EmbeddedQuestionListing = () => (
       load={CardApi.listEmbeddable}
       getUrl={({ id }) => Urls.question(id)}
       type={t`Embedded Card Listing`}
-      noLinksMessage={t`No questions have been embedded yet.`}
+      noLinksMessage={t`No queries have been embedded yet.`}
     />
   </div>
 );

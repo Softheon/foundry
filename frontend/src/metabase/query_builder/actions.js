@@ -713,9 +713,9 @@ export const setCardAndRun = (nextCard, shouldUpdateUrl = true) => {
 /**
  * User-triggered events that are handled with this action:
  *     - clicking a legend:
- *         * series legend (multi-aggregation, multi-breakout, multiple questions)
+ *         * series legend (multi-aggregation, multi-breakout, multiple queries)
  *     - clicking the visualization itself
- *         * drill-through (single series, multi-aggregation, multi-breakout, multiple questions)
+ *         * drill-through (single series, multi-aggregation, multi-breakout, multiple queries)
  *         * (not in 0.24.2 yet: drag on line/area/bar visualization)
  *     - clicking an action widget action
  *

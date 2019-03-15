@@ -14,7 +14,7 @@
 ;;; CONFIG
 ;; TODO - smtp-port should be switched to type :integer
 
-(defsetting email-from-address  (tru "Email address you want to use as the sender of Metabase.") :default "notifications@metabase.com")
+(defsetting email-from-address  (tru "Email address you want to use as the sender of Foundry.") :default "notifications@softheon-foundry.com")
 (defsetting email-smtp-host     (tru "The address of the SMTP server that handles your emails."))
 (defsetting email-smtp-username (tru "SMTP username."))
 (defsetting email-smtp-password (tru "SMTP password."))
@@ -91,8 +91,8 @@
   RECIPIENTS is a sequence of email addresses; MESSAGE-TYPE must be either `:text` or `:html` or `:attachments`.
 
      (email/send-message!
-       :subject      \"[Metabase] Password Reset Request\"
-       :recipients   [\"cam@metabase.com\"]
+       :subject      \"[Foundry] Password Reset Request\"
+       :recipients   [\"cam@softheon-foundry.com\"]
        :message-type :text
        :message      \"How are you today?\")
 

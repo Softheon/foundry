@@ -172,7 +172,7 @@ export default class QueryBuilder extends Component {
       // the browser forward/back button was pressed
       this.props.popState(nextProps.location);
       // NOTE: Tom Robinson 4/16/2018: disabled for now. this is to enable links
-      // from qb to other qb questions but it's also triggering when changing
+      // from qb to other qb queries but it's also triggering when changing
       // the display type
       // } else if (
       //   nextProps.location.action === "PUSH" &&

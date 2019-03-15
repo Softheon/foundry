@@ -159,7 +159,7 @@ export class NewQueryOptions extends Component {
                 <NewQueryOption
                   image="app/img/sql_illustration"
                   title={t`Native query`}
-                  description={t`For more complicated questions, you can write your own SQL or native query.`}
+                  description={t`For more complicated queries, you can write your own SQL or native query.`}
                   to={this.getNativeQueryUrl}
                 />
               </li>

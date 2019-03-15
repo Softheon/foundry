@@ -250,14 +250,16 @@
   [sql]
   (-> sql
       (name)
-      (s/replace #"(?i) TRUE([,\)\s])" "1$1")))
+      (s/replace #"(?i) TRUE([,\)\s])" " 1$1")
+      (s/replace #"(?i) TRUE$" " 1")))
 
 
 (defn boolean-false->0
   [sql]
   (-> sql
       (name)
-      (s/replace #"(?i) FALSE([,\)\s])" "0$1")))
+      (s/replace #"(?i) FALSE([,\)\s])" " 0$1")
+      (s/replace #"(?i) FALSE$" " 0")))
 
 (defn- convert-sql
   [sql]
@@ -293,7 +295,7 @@
     (-> honeysql-form
         (dissoc :offset)
         (dissoc :limit)
-        (assoc  :offset (hsql/raw (format "%d ROWS FETCH NEXT %ROWS ONLY" skip fetch))))))
+        (assoc  :offset (hsql/raw (format "%d ROWS FETCH NEXT %d ROWS ONLY" skip fetch))))))
 
 (defn- honeymssql-page
   [honeysql-form]

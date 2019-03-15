@@ -16,7 +16,7 @@ type State = {
 
 const STEPS = [
   {
-    title: t`Ask questions and explore`,
+    title: t`Ask queries and explore`,
     text: t`Click on charts or tables to explore, or ask a new question using the easy interface or the powerful SQL editor.`,
     image: (
       <RetinaImage

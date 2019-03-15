@@ -21,12 +21,12 @@ import * as metadataActions from "metabase/redux/metadata";
 
 const emptyStateData = {
   title: t`Segments are interesting subsets of tables`,
-  adminMessage: t`Defining common segments for your team makes it even easier to ask questions`,
+  adminMessage: t`Defining common segments for your team makes it even easier to ask queries`,
   message: t`Segments will appear here once your admins have created some`,
   image: "app/assets/img/segments-list",
   adminAction: t`Learn how to create segments`,
   adminLink:
-    "http://www.metabase.com/docs/latest/administration-guide/07-segments-and-metrics.html",
+    "http://www.softheon-foundry.com/docs/latest/administration-guide/07-segments-and-metrics.html",
 };
 
 const mapStateToProps = (state, props) => ({

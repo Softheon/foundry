@@ -10,7 +10,7 @@ const MainPane = ({ databases, show }) => (
   <div>
     <h1>{t`Data Reference`}</h1>
     <p>
-      {t`Learn more about your data structure to ask more useful questions`}.
+      {t`Learn more about your data structure to ask more useful queries`}.
     </p>
     <ul>
       {databases &&

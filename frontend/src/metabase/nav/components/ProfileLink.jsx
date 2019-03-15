@@ -68,12 +68,12 @@ export default class ProfileLink extends Component {
         icon: null,
         // HACK - for some reason if you use // react router treats the link
         // as a non local route
-        link: `//metabase.com/docs/${tag}`,
+        link: `//softheon-foundry.com/docs/${tag}`,
         externalLink: true,
         event: `Navbar;Profile Dropdown;About ${tag}`,
       },
       {
-        title: t`About Metabase`,
+        title: t`About Foundry`,
         icon: null,
         action: () => this.openModal("about"),
         event: `Navbar;Profile Dropdown;About ${tag}`,
@@ -104,7 +104,7 @@ export default class ProfileLink extends Component {
                 <LogoIcon width={48} height={48} />
               </div>
               <h2 style={{ fontSize: "1.75em" }} className="text-dark">
-                {t`Thanks for using`} Metabase!
+                {t`Thanks for using`} Foundry!
               </h2>
               <div className="pt2">
                 <h3 className="text-dark mb1">
@@ -128,11 +128,7 @@ export default class ProfileLink extends Component {
               style={{ borderWidth: "2px" }}
               className="p2 h5 text-centered text-medium border-top"
             >
-              <span className="block">
-                <span className="text-bold">Metabase</span>{" "}
-                {t`is a Trademark of`} Metabase, Inc
-              </span>
-              <span>{t`and is built with care in San Francisco, CA`}</span>
+              
             </div>
           </Modal>
         ) : modalOpen === "logs" ? (
