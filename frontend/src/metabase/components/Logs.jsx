@@ -68,7 +68,8 @@ export default class Logs extends Component {
         {() => (
           <div
             style={{
-              backgroundColor: "black",
+              backgroundColor: "darkblue",
+              color:"white",
               fontFamily: "monospace",
               fontSize: "14px",
               whiteSpace: "pre-line",

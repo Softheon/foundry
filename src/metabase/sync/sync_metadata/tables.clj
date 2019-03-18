@@ -80,7 +80,7 @@
 
 ;;; ---------------------------------------------------- Syncing -----------------------------------------------------
 
-(def ^:private db-metadata-syn-limits
+(def ^:private db-metadata-sync-limits 
   "The number of tries to get table info from a DB"
   5)
 ;; TODO - should we make this logic case-insensitive like it is for fields?

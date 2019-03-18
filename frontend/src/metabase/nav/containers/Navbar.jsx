@@ -314,14 +314,15 @@ export default class Navbar extends Component {
                 event: `NavBar;New Dashboard Click;`,
               }
               ,
-             // {/* {
+
+            ]}
+          />
+          {/* {
                 title: t`New pulse`,
                 icon: `pulse`,
                 link: Urls.newPulse(),
                 event: `NavBar;New Pulse Click;`,
-             // }, */}
-            ]}
-          />
+              }, */}
           {hasDataAccess && (
             <Tooltip tooltip={t`Reference`}>
               <Link to="reference" data-metabase-event={`NavBar;Reference`}>
