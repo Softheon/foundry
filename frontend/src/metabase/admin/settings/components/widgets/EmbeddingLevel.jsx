@@ -5,8 +5,8 @@ import SettingsInput from "./SettingInput";
 import cx from "classnames";
 
 const PREMIUM_EMBEDDING_STORE_URL =
-  "https://store.softheon-foundry.com/product/embedding";
-const PREMIUM_EMBEDDING_SETTING_KEY = "premium-embedding-token";
+  "";
+const PREMIUM_EMBEDDING_SETTING_KEY = "";
 
 class PremiumTokenInput extends Component {
   state = {
@@ -28,7 +28,7 @@ class PremiumTokenInput extends Component {
 
     return (
       <div className="mb3">
-        <h3 className={cx("mb1", { "text-danger": errorMessage })}>
+        {/* <h3 className={cx("mb1", { "text-danger": errorMessage })}>
           {message}
         </h3>
         <SettingsInput
@@ -41,7 +41,7 @@ class PremiumTokenInput extends Component {
           }}
           setting={{ value: token }}
           autoFocus={!token}
-        />
+        /> */}
       </div>
     );
   }
@@ -49,7 +49,7 @@ class PremiumTokenInput extends Component {
 
 const PremiumExplanation = ({ showEnterScreen }) => (
   <div>
-    <h2>Premium embedding</h2>
+    {/* <h2>Premium embedding</h2>
     <p className="mt1">{t`Premium embedding lets you disable "Powered by Foundry" on your embedded dashboards and queries.`}</p>
     <div className="mt2 mb3">
       <a
@@ -62,7 +62,7 @@ const PremiumExplanation = ({ showEnterScreen }) => (
       <a className="link mx1" onClick={showEnterScreen}>
         {t`Enter a token`}
       </a>
-    </div>
+    </div> */}
   </div>
 );
 
@@ -79,13 +79,13 @@ class PremiumEmbedding extends Component {
 
     return (
       <div className="text-centered text-paragraph">
-        {showEnterScreen ? (
+        {/* {showEnterScreen ? (
           <PremiumTokenInput onChangeSetting={onChangeSetting} token={token} />
         ) : (
           <PremiumExplanation
             showEnterScreen={() => this.setState({ showEnterScreen: true })}
           />
-        )}
+        )} */}
       </div>
     );
   }

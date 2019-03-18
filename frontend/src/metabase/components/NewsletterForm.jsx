@@ -35,18 +35,6 @@ export default class NewsletterForm extends Component {
 
   subscribeUser(e) {
     e.preventDefault();
-
-    let formData = new FormData();
-    formData.append("EMAIL", ReactDOM.findDOMNode(this.refs.email).value);
-    formData.append("b_869fec0e4689e8fd1db91e795_b9664113a8", "");
-
-    let req = new XMLHttpRequest();
-    req.open(
-      "POST",
-      "https://metabase.us10.list-manage.com/subscribe/post?u=869fec0e4689e8fd1db91e795&id=b9664113a8",
-    );
-    req.send(formData);
-
     this.setState({ submitted: true });
   }
 

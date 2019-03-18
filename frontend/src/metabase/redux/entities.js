@@ -20,4 +20,4 @@ export const enhanceRequestsReducer = (
     originalRequestsReducer(requestsReducer(state, action), action);
 };
 
-(window.Metabase = window.Metabase || {}).entities = entities;
+(window.Foundry = window.Foundry || {}).entities = entities;

@@ -77,7 +77,7 @@ export default class PreferencesStep extends Component {
               <a
                 className="link"
                 href={
-                  "http://www.softheon-foundry.com/docs/" +
+                  "" +
                   tag +
                   "/information-collection.html"
                 }
@@ -99,7 +99,7 @@ export default class PreferencesStep extends Component {
               </div>
             </div>
 
-            {allowTracking ? (
+            {/* {allowTracking ? (
               <div className="Form-field Form-offset">
                 <ul style={{ listStyle: "disc inside", lineHeight: "200%" }}>
                   <li>{jt`Foundry ${(
@@ -110,7 +110,7 @@ export default class PreferencesStep extends Component {
                   >{t`Collection can be turned off at any point in your admin settings.`}</li>
                 </ul>
               </div>
-            ) : null}
+            ) : null} */}
 
             <div className="Form-actions">
               <button className="Button Button--primary">{t`Next`}</button>

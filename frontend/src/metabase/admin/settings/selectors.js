@@ -98,17 +98,17 @@ const SECTIONS = [
       },
     ],
   },
-  {
-    name: t`Updates`,
-    slug: "updates",
-    settings: [
-      {
-        key: "check-for-updates",
-        display_name: t`Check for updates`,
-        type: "boolean",
-      },
-    ],
-  },
+  // {
+  //   name: t`Updates`,
+  //   slug: "updates",
+  //   settings: [
+  //     {
+  //       key: "check-for-updates",
+  //       display_name: t`Check for updates`,
+  //       type: "boolean",
+  //     },
+  //   ],
+  // },
   {
     name: t`Email`,
     slug: "email",
@@ -161,141 +161,141 @@ const SECTIONS = [
       },
     ],
   },
-  {
-    name: "Slack",
-    slug: "slack",
-    settings: [
-      {
-        key: "slack-token",
-        display_name: t`Slack API Token`,
-        description: "",
-        placeholder: t`Enter the token you received from Slack`,
-        type: "string",
-        required: false,
-        autoFocus: true,
-      },
-      {
-        key: "metabot-enabled",
-        display_name: "MetaBot",
-        type: "boolean",
-        // TODO: why do we have "defaultValue" here in addition to the "default" specified by the backend?
-        defaultValue: false,
-        required: true,
-        autoFocus: false,
-      },
-    ],
-  },
-  {
-    name: t`Single Sign-On`,
-    slug: "single_sign_on",
-    sidebar: false,
-    settings: [
-      {
-        key: "google-auth-client-id",
-      },
-      {
-        key: "google-auth-auto-create-accounts-domain",
-      },
-    ],
-  },
-  {
-    name: t`Authentication`,
-    slug: "authentication",
-    settings: [],
-  },
-  {
-    name: t`LDAP`,
-    slug: "ldap",
-    sidebar: false,
-    settings: [
-      {
-        key: "ldap-enabled",
-        display_name: t`LDAP Authentication`,
-        description: null,
-        type: "boolean",
-      },
-      {
-        key: "ldap-host",
-        display_name: t`LDAP Host`,
-        placeholder: "ldap.yourdomain.org",
-        type: "string",
-        required: true,
-        autoFocus: true,
-      },
-      {
-        key: "ldap-port",
-        display_name: t`LDAP Port`,
-        placeholder: "389",
-        type: "string",
-        validations: [["integer", t`That's not a valid port number`]],
-      },
-      {
-        key: "ldap-security",
-        display_name: t`LDAP Security`,
-        description: null,
-        type: "radio",
-        options: { none: "None", ssl: "SSL", starttls: "StartTLS" },
-        defaultValue: "none",
-      },
-      {
-        key: "ldap-bind-dn",
-        display_name: t`Username or DN`,
-        type: "string",
-      },
-      {
-        key: "ldap-password",
-        display_name: t`Password`,
-        type: "password",
-      },
-      {
-        key: "ldap-user-base",
-        display_name: t`User search base`,
-        type: "string",
-        required: true,
-      },
-      {
-        key: "ldap-user-filter",
-        display_name: t`User filter`,
-        type: "string",
-        validations: [
-          value =>
-            (value.match(/\(/g) || []).length !==
-            (value.match(/\)/g) || []).length
-              ? t`Check your parentheses`
-              : null,
-        ],
-      },
-      {
-        key: "ldap-attribute-email",
-        display_name: t`Email attribute`,
-        type: "string",
-      },
-      {
-        key: "ldap-attribute-firstname",
-        display_name: t`First name attribute`,
-        type: "string",
-      },
-      {
-        key: "ldap-attribute-lastname",
-        display_name: t`Last name attribute`,
-        type: "string",
-      },
-      {
-        key: "ldap-group-sync",
-        display_name: t`Synchronize group memberships`,
-        description: null,
-        widget: LdapGroupMappingsWidget,
-      },
-      {
-        key: "ldap-group-base",
-        display_name: t`Group search base`,
-        type: "string",
-      },
-      {
-        key: "ldap-group-mappings",
-      },
-    ],
-  },
+  // {
+  //   name: "Slack",
+  //   slug: "slack",
+  //   settings: [
+  //     {
+  //       key: "slack-token",
+  //       display_name: t`Slack API Token`,
+  //       description: "",
+  //       placeholder: t`Enter the token you received from Slack`,
+  //       type: "string",
+  //       required: false,
+  //       autoFocus: true,
+  //     },
+  //     {
+  //       key: "metabot-enabled",
+  //       display_name: "MetaBot",
+  //       type: "boolean",
+  //       // TODO: why do we have "defaultValue" here in addition to the "default" specified by the backend?
+  //       defaultValue: false,
+  //       required: true,
+  //       autoFocus: false,
+  //     },
+  //   ],
+  // },
+  // {
+  //   name: t`Single Sign-On`,
+  //   slug: "single_sign_on",
+  //   sidebar: false,
+  //   settings: [
+  //     {
+  //       key: "google-auth-client-id",
+  //     },
+  //     {
+  //       key: "google-auth-auto-create-accounts-domain",
+  //     },
+  //   ],
+  // },
+  // {
+  //   name: t`Authentication`,
+  //   slug: "authentication",
+  //   settings: [],
+  // },
+  // {
+  //   name: t`LDAP`,
+  //   slug: "ldap",
+  //   sidebar: false,
+  //   settings: [
+  //     {
+  //       key: "ldap-enabled",
+  //       display_name: t`LDAP Authentication`,
+  //       description: null,
+  //       type: "boolean",
+  //     },
+  //     {
+  //       key: "ldap-host",
+  //       display_name: t`LDAP Host`,
+  //       placeholder: "ldap.yourdomain.org",
+  //       type: "string",
+  //       required: true,
+  //       autoFocus: true,
+  //     },
+  //     {
+  //       key: "ldap-port",
+  //       display_name: t`LDAP Port`,
+  //       placeholder: "389",
+  //       type: "string",
+  //       validations: [["integer", t`That's not a valid port number`]],
+  //     },
+  //     {
+  //       key: "ldap-security",
+  //       display_name: t`LDAP Security`,
+  //       description: null,
+  //       type: "radio",
+  //       options: { none: "None", ssl: "SSL", starttls: "StartTLS" },
+  //       defaultValue: "none",
+  //     },
+  //     {
+  //       key: "ldap-bind-dn",
+  //       display_name: t`Username or DN`,
+  //       type: "string",
+  //     },
+  //     {
+  //       key: "ldap-password",
+  //       display_name: t`Password`,
+  //       type: "password",
+  //     },
+  //     {
+  //       key: "ldap-user-base",
+  //       display_name: t`User search base`,
+  //       type: "string",
+  //       required: true,
+  //     },
+  //     {
+  //       key: "ldap-user-filter",
+  //       display_name: t`User filter`,
+  //       type: "string",
+  //       validations: [
+  //         value =>
+  //           (value.match(/\(/g) || []).length !==
+  //           (value.match(/\)/g) || []).length
+  //             ? t`Check your parentheses`
+  //             : null,
+  //       ],
+  //     },
+  //     {
+  //       key: "ldap-attribute-email",
+  //       display_name: t`Email attribute`,
+  //       type: "string",
+  //     },
+  //     {
+  //       key: "ldap-attribute-firstname",
+  //       display_name: t`First name attribute`,
+  //       type: "string",
+  //     },
+  //     {
+  //       key: "ldap-attribute-lastname",
+  //       display_name: t`Last name attribute`,
+  //       type: "string",
+  //     },
+  //     {
+  //       key: "ldap-group-sync",
+  //       display_name: t`Synchronize group memberships`,
+  //       description: null,
+  //       widget: LdapGroupMappingsWidget,
+  //     },
+  //     {
+  //       key: "ldap-group-base",
+  //       display_name: t`Group search base`,
+  //       type: "string",
+  //     },
+  //     {
+  //       key: "ldap-group-mappings",
+  //     },
+  //   ],
+  // },
   {
     name: t`Maps`,
     slug: "maps",
@@ -350,62 +350,62 @@ const SECTIONS = [
       },
     ],
   },
-  {
-    name: t`Embedding in other Applications`,
-    slug: "embedding_in_other_applications",
-    settings: [
-      {
-        key: "enable-embedding",
-        description: null,
-        widget: EmbeddingLegalese,
-        getHidden: settings => settings["enable-embedding"],
-        onChanged: async (
-          oldValue,
-          newValue,
-          settingsValues,
-          onChangeSetting,
-        ) => {
-          // Generate a secret key if none already exists
-          if (
-            !oldValue &&
-            newValue &&
-            !settingsValues["embedding-secret-key"]
-          ) {
-            let result = await UtilApi.random_token();
-            await onChangeSetting("embedding-secret-key", result.token);
-          }
-        },
-      },
-      {
-        key: "enable-embedding",
-        display_name: t`Enable Embedding Foundry in other Applications`,
-        type: "boolean",
-        getHidden: settings => !settings["enable-embedding"],
-      },
-      {
-        widget: EmbeddingLevel,
-        getHidden: settings => !settings["enable-embedding"],
-      },
-      {
-        key: "embedding-secret-key",
-        display_name: t`Embedding secret key`,
-        widget: SecretKeyWidget,
-        getHidden: settings => !settings["enable-embedding"],
-      },
-      {
-        key: "-embedded-dashboards",
-        display_name: t`Embedded Dashboards`,
-        widget: EmbeddedDashboardListing,
-        getHidden: settings => !settings["enable-embedding"],
-      },
-      {
-        key: "-embedded-questions",
-        display_name: t`Embedded Questions`,
-        widget: EmbeddedQuestionListing,
-        getHidden: settings => !settings["enable-embedding"],
-      },
-    ],
-  },
+  // {
+  //   name: t`Embedding in other Applications`,
+  //   slug: "embedding_in_other_applications",
+  //   settings: [
+  //     {
+  //       key: "enable-embedding",
+  //       description: null,
+  //       widget: EmbeddingLegalese,
+  //       getHidden: settings => settings["enable-embedding"],
+  //       onChanged: async (
+  //         oldValue,
+  //         newValue,
+  //         settingsValues,
+  //         onChangeSetting,
+  //       ) => {
+  //         // Generate a secret key if none already exists
+  //         if (
+  //           !oldValue &&
+  //           newValue &&
+  //           !settingsValues["embedding-secret-key"]
+  //         ) {
+  //           let result = await UtilApi.random_token();
+  //           await onChangeSetting("embedding-secret-key", result.token);
+  //         }
+  //       },
+  //     },
+  //     {
+  //       key: "enable-embedding",
+  //       display_name: t`Enable Embedding Foundry in other Applications`,
+  //       type: "boolean",
+  //       getHidden: settings => !settings["enable-embedding"],
+  //     },
+  //     {
+  //       widget: EmbeddingLevel,
+  //       getHidden: settings => !settings["enable-embedding"],
+  //     },
+  //     {
+  //       key: "embedding-secret-key",
+  //       display_name: t`Embedding secret key`,
+  //       widget: SecretKeyWidget,
+  //       getHidden: settings => !settings["enable-embedding"],
+  //     },
+  //     {
+  //       key: "-embedded-dashboards",
+  //       display_name: t`Embedded Dashboards`,
+  //       widget: EmbeddedDashboardListing,
+  //       getHidden: settings => !settings["enable-embedding"],
+  //     },
+  //     {
+  //       key: "-embedded-questions",
+  //       display_name: t`Embedded Questions`,
+  //       widget: EmbeddedQuestionListing,
+  //       getHidden: settings => !settings["enable-embedding"],
+  //     },
+  //   ],
+  // },
   {
     name: t`Caching`,
     slug: "caching",

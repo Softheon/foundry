@@ -26,7 +26,7 @@ const emptyStateData = {
   image: "app/assets/img/metrics-list",
   adminAction: t`Learn how to create metrics`,
   adminLink:
-    "http://www.softheon-foundry.com/docs/latest/administration-guide/07-segments-and-metrics.html",
+    "",
 };
 
 const mapStateToProps = (state, props) => ({

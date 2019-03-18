@@ -285,7 +285,7 @@ export default class GettingStartedGuideEditForm extends Component {
                 collapsedTitle={t`Do you have any commonly referenced metrics?`}
                 collapsedIcon="ruler"
                 linkMessage={t`Learn how to define a metric`}
-                link="http://www.softheon-foundry.com/docs/latest/administration-guide/07-segments-and-metrics.html#creating-a-metric"
+                link=""
                 expand={() =>
                   important_metrics.addField({
                     id: null,
@@ -357,7 +357,7 @@ export default class GettingStartedGuideEditForm extends Component {
                 collapsedTitle={t`Do you have any commonly referenced segments or tables?`}
                 collapsedIcon="table2"
                 linkMessage={t`Learn how to create a segment`}
-                link="http://www.softheon-foundry.com/docs/latest/administration-guide/07-segments-and-metrics.html#creating-a-segment"
+                link=""
                 expand={() =>
                   important_segments_and_tables.addField({
                     id: null,

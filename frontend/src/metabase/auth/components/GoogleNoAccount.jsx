@@ -21,7 +21,7 @@ const GoogleNoAccount = () => (
         </div>
       </div>
     </div>
-    <AuthScene />
+    {/* <AuthScene /> */}
   </div>
 );
 

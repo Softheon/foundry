@@ -88,8 +88,8 @@ function _init(reducers, getRoutes, callback) {
     ] = MetabaseSettings.isTrackingEnabled() ? null : true;
   });
 
-  window.Metabase = window.Metabase || {};
-  window.Metabase.store = store;
+  window.Foundry = window.Foundry || {};
+  window.Foundry.store = store;
 
   if (callback) {
     callback(store);

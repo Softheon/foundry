@@ -219,7 +219,7 @@ const QUERY_BUILDER_STEPS = [
           <a
             className="link"
             target="_blank"
-            href="http://www.softheon-foundry.com/docs/latest/users-guide/start.html"
+            href=""
           >{t`User's Guide`}</a>. {t`Have fun exploring your data!`}
         </p>
         <a className="Button Button--primary" onClick={props.onNext}>

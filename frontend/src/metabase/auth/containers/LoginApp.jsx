@@ -127,7 +127,7 @@ export default class LoginApp extends Component {
             >
               <h3 className="Login-header Form-offset">{t`Sign in to Foundry`}</h3>
 
-              {Settings.ssoEnabled() && (
+              {Settings.ssoEnabled() && null && (
                 <div className="mx4 mb4 py3 border-bottom relative">
                   <SSOLoginButton provider="google" ref="ssoLoginButton" />
                   {/*<div className="g-signin2 ml1 relative z2" id="g-signin2"></div>*/}
@@ -232,7 +232,7 @@ export default class LoginApp extends Component {
             </form>
           </div>
         </div>
-        <AuthScene />
+        {/* <AuthScene /> */}
       </div>
     );
   }

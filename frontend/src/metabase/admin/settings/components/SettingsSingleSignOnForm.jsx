@@ -106,62 +106,63 @@ export default class SettingsSingleSignOnForm extends Component {
       hasClientID = this.state.clientIDValue;
 
     return (
-      <form noValidate>
-        <div className="px2" style={{ maxWidth: "585px" }}>
-          <Breadcrumbs
-            crumbs={[
-              [t`Authentication`, "/admin/settings/authentication"],
-              [t`Google Sign-In`],
-            ]}
-            className="mb2"
-          />
-          <h2>{t`Sign in with Google`}</h2>
-          <p className="text-medium">
-            {t`Allows users with existing Foundry accounts to login with a Google account that matches their email address in addition to their Foundry username and password.`}
-          </p>
-          <p className="text-medium">
-            {jt`To allow users to sign in with Google you'll need to give Foundry a Google Developers console application client ID. It only takes a few steps and instructions on how to create a key can be found ${(
-              <a
-                className="link"
-                href="https://developers.google.com/identity/sign-in/web/devconsole-project"
-                target="_blank"
-              >
-                here.
-              </a>
-            )}`}
-          </p>
-          <InputBlurChange
-            className="SettingsInput AdminInput bordered rounded h3"
-            type="text"
-            value={this.state.clientIDValue}
-            placeholder={t`Your Google client ID`}
-            onChange={event => this.updateClientID(event.target.value)}
-          />
-          <div className="py3">
-            <div className="flex align-center">
-              <p className="text-medium">{t`Allow users to sign up on their own if their Google account email address is from:`}</p>
-            </div>
-            <div className="mt1 bordered rounded inline-block">
-              <div className="inline-block px2 h2">@</div>
-              <InputBlurChange
-                className="SettingsInput inline-block AdminInput h3 border-left"
-                type="text"
-                value={this.state.domainValue}
-                onChange={event => this.updateDomain(event.target.value)}
-                disabled={!hasClientID}
-              />
-            </div>
-          </div>
+      null
+      // {/* <form noValidate>
+      //   <div className="px2" style={{ maxWidth: "585px" }}>
+      //     <Breadcrumbs
+      //       crumbs={[
+      //         [t`Authentication`, "/admin/settings/authentication"],
+      //         [t`Google Sign-In`],
+      //       ]}
+      //       className="mb2"
+      //     />
+      //     <h2>{t`Sign in with Google`}</h2>
+      //     <p className="text-medium">
+      //       {t`Allows users with existing Foundry accounts to login with a Google account that matches their email address in addition to their Foundry username and password.`}
+      //     </p>
+      //     <p className="text-medium">
+      //       {jt`To allow users to sign in with Google you'll need to give Foundry a Google Developers console application client ID. It only takes a few steps and instructions on how to create a key can be found ${(
+      //         <a
+      //           className="link"
+      //           href="https://developers.google.com/identity/sign-in/web/devconsole-project"
+      //           target="_blank"
+      //         >
+      //           here.
+      //         </a>
+      //       )}`}
+      //     </p>
+      //     <InputBlurChange
+      //       className="SettingsInput AdminInput bordered rounded h3"
+      //       type="text"
+      //       value={this.state.clientIDValue}
+      //       placeholder={t`Your Google client ID`}
+      //       onChange={event => this.updateClientID(event.target.value)}
+      //     />
+      //     <div className="py3">
+      //       <div className="flex align-center">
+      //         <p className="text-medium">{t`Allow users to sign up on their own if their Google account email address is from:`}</p>
+      //       </div>
+      //       <div className="mt1 bordered rounded inline-block">
+      //         <div className="inline-block px2 h2">@</div>
+      //         <InputBlurChange
+      //           className="SettingsInput inline-block AdminInput h3 border-left"
+      //           type="text"
+      //           value={this.state.domainValue}
+      //           onChange={event => this.updateDomain(event.target.value)}
+      //           disabled={!hasClientID}
+      //         />
+      //       </div>
+      //     </div>
 
-          <button
-            className={cx("Button mr2", { "Button--primary": hasChanges })}
-            disabled={!hasChanges}
-            onClick={this.saveChanges}
-          >
-            {this.state.recentlySaved ? t`Changes saved!` : t`Save Changes`}
-          </button>
-        </div>
-      </form>
+      //     <button
+      //       className={cx("Button mr2", { "Button--primary": hasChanges })}
+      //       disabled={!hasChanges}
+      //       onClick={this.saveChanges}
+      //     >
+      //       {this.state.recentlySaved ? t`Changes saved!` : t`Save Changes`}
+      //     </button>
+      //   </div>
+      // </form> */}
     );
   }
 }

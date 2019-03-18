@@ -46,7 +46,7 @@ export default class Setup extends Component {
         <a
           className="link"
           href={
-            "http://www.softheon-foundry.com/docs/" + tag + "/setting-up-metabase.html"
+            "" + tag + "/setting-up-metabase.html"
           }
           target="_blank"
         >{t`our getting started guide`}</a>{" "}

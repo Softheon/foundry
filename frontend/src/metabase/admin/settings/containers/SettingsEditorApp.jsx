@@ -171,14 +171,15 @@ export default class SettingsEditorApp extends Component {
           );
         } else if (this.props.params.authType === "google") {
           return (
-            <SettingsSingleSignOnForm
-              elements={
-                _.findWhere(this.props.sections, {
-                  slug: slugify("Single Sign-On"),
-                }).settings
-              }
-              updateSetting={this.updateSetting}
-            />
+            null
+            // {/* <SettingsSingleSignOnForm
+            //   elements={
+            //     _.findWhere(this.props.sections, {
+            //       slug: slugify("Single Sign-On"),
+            //     }).settings
+            //   }
+            //   updateSetting={this.updateSetting}
+            // /> */}
           );
         }
       } else {

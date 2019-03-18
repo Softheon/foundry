@@ -107,7 +107,7 @@ export default class SettingsUpdatesForm extends Component {
                 versionInfo.latest.version
               }
               className="Button Button--white Button--medium borderless"
-              href="http://www.softheon-foundry.com/start"
+              href=""
               target="_blank"
             >{t`Update`}</a>
           </div>

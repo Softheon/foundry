@@ -4,12 +4,12 @@ import { t } from "c-3po";
 
 const EmbeddingLegalese = ({ onChange }) => (
   <div className="bordered rounded text-measure p4">
-    <h3 className="text-brand">{t`Using embedding`}</h3>
+    {/* <h3 className="text-brand">{t`Using embedding`}</h3>
     <p className="text-medium" style={{ lineHeight: 1.48 }}>
       {t`By enabling embedding you're agreeing to the embedding license located at`}{" "}
       <a
         className="link"
-        href="http://www.softheon-foundry.com/license/embedding"
+        href=""
         target="_blank"
       >
         softheon-foundry.com/license/embedding
@@ -31,7 +31,7 @@ const EmbeddingLegalese = ({ onChange }) => (
       >
         {t`Enable`}
       </button>
-    </div>
+    </div> */}
   </div>
 );
 

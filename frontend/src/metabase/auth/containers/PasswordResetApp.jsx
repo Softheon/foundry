@@ -126,7 +126,7 @@ export default class PasswordResetApp extends Component {
               </div>
             </div>
           </div>
-          <AuthScene />
+          {/* <AuthScene /> */}
         </div>
       );
     } else {

@@ -114,7 +114,7 @@ export default class ForgotPasswordApp extends Component {
             </div>
           )}
         </div>
-        <AuthScene />
+        {/* <AuthScene /> */}
       </div>
     );
   }

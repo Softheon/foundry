@@ -57,7 +57,7 @@ const AdminNavItem = ({ name, path, currentPath }) => (
 const DefaultSearchColor = color(colors.brand)
   .lighten(0.07)
   .string();
-const ActiveSearchColor = color(colors.brand)
+const ActiveSearchColor = color(colors["bg-light-dark"])
   .lighten(0.1)
   .string();
 
@@ -276,12 +276,13 @@ export default class Navbar extends Component {
           mx={1}
           hover={{ backgroundColor: DefaultSearchColor }}
         >
-          <LogoIcon dark />
+            <img src="https://www.softheon.com/HTMLCache/Resources/Logo-navbar-01.png" width="150" height="40"/>
         </Link>
         <Flex
           className="absolute top left right bottom z1"
           px={4}
           align="center"
+          style={{left:150}}
         >
           <Box w={2 / 3}>
             <SearchBar

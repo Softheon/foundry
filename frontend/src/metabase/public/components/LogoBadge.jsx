@@ -11,7 +11,7 @@ type Props = {
 
 const LogoBadge = ({ dark }: Props) => (
   <a
-    href="http://www.softheon-foundry.com/"
+    href=""
     target="_blank"
     className="h4 flex text-bold align-center no-decoration"
   >
