@@ -10,6 +10,7 @@ import FormLabel from "metabase/components/form/FormLabel.jsx";
 import FormMessage from "metabase/components/form/FormMessage.jsx";
 import LogoIcon from "metabase/components/LogoIcon.jsx";
 import Icon from "metabase/components/Icon.jsx";
+import LoadingSpinner from "metabase/components/LoadingSpinner.jsx";
 
 import MetabaseSettings from "metabase/lib/settings";
 
@@ -23,12 +24,13 @@ export default class ForgotPasswordApp extends Component {
       email: props.location.query.email || null,
       sentNotification: false,
       error: null,
+      isLoading: false
     };
   }
 
   async sendResetNotification(e) {
     e.preventDefault();
-
+    this.setState({isLoading: true});
     if (!_.isEmpty(this.state.email)) {
       try {
         await SessionApi.forgot_password({ email: this.state.email });
@@ -43,7 +45,7 @@ export default class ForgotPasswordApp extends Component {
     const { sentNotification, error } = this.state;
     const valid = !_.isEmpty(this.state.email);
     const emailConfigured = MetabaseSettings.isEmailConfigured();
-
+    const isLoading = this.state.isLoading && !sentNotification;
     return (
       <div className="full-height bg-white flex flex-column flex-full md-layout-centered">
         <div className="Login-wrapper wrapper Grid Grid--full md-Grid--1of2">
@@ -114,7 +116,14 @@ export default class ForgotPasswordApp extends Component {
             </div>
           )}
         </div>
-        {/* <AuthScene /> */}
+        {isLoading && (
+          <div className="Loading spread flex flex-column layout-centered text-brand z2" style={{zIndex: 50}}>
+            <LoadingSpinner/> 
+            <h2 className="Loading-message text-brand text-uppercase my3">
+              {t`Loading...`} 
+            </h2>
+          </div>
+        )}
       </div>
     );
   }

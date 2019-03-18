@@ -14,6 +14,7 @@ import FormMessage from "metabase/components/form/FormMessage.jsx";
 import LogoIcon from "metabase/components/LogoIcon.jsx";
 import Settings from "metabase/lib/settings";
 import Utils from "metabase/lib/utils";
+import LoadingSpinner from "metabase/components/LoadingSpinner.jsx";
 
 import * as authActions from "../auth";
 
@@ -36,6 +37,7 @@ export default class LoginApp extends Component {
       credentials: {},
       valid: false,
       rememberMe: true,
+      isLoading: false,
     };
   }
 
@@ -105,13 +107,16 @@ export default class LoginApp extends Component {
 
     let { login, location } = this.props;
     let { credentials } = this.state;
-
+    this.setState({
+      isLoading: true,
+    })
     login(credentials, location.query.redirect);
   }
 
   render() {
     const { loginError } = this.props;
     const ldapEnabled = Settings.ldapEnabled();
+    const isLoading = !loginError && this.state.isLoading;
 
     return (
       <div className="full bg-white flex flex-column flex-full md-layout-centered">
@@ -223,16 +228,23 @@ export default class LoginApp extends Component {
                       ? "?email=" + this.state.credentials.username
                       : "")
                   }
-                  className="Grid-cell py2 sm-py0 md-text-right text-centered flex-full link"
+                  className="Grid-cell py2 sm-py0 md-text-center text-centered flex-full link"
                   onClick={e => {
                     window.OSX ? window.OSX.resetPassword() : null;
                   }}
-                >{t`I seem to have forgotten my password`}</Link>
+                >{t`Forgot password`}</Link>
               </div>
             </form>
           </div>
         </div>
-        {/* <AuthScene /> */}
+        {isLoading && (
+            <div className="Loading spread flex flex-column layout-centered text-brand z2" style={{zIndex: 50}}>
+              <LoadingSpinner/>
+              <h2 className="Loading-message text-brand text-uppercase my3">
+                {t`Loading ...`}
+              </h2>
+            </div>
+          )}
       </div>
     );
   }

@@ -10,6 +10,7 @@ import FormLabel from "metabase/components/form/FormLabel.jsx";
 import FormMessage from "metabase/components/form/FormMessage.jsx";
 import LogoIcon from "metabase/components/LogoIcon.jsx";
 import Icon from "metabase/components/Icon.jsx";
+import LoadingSpinner from "metabase/components/LoadingSpinner.jsx";
 
 import MetabaseSettings from "metabase/lib/settings";
 
@@ -38,6 +39,7 @@ export default class PasswordResetApp extends Component {
       credentials: {},
       valid: false,
       tokenValid: false,
+      showSpinner: false,
     };
   }
 
@@ -87,7 +89,7 @@ export default class PasswordResetApp extends Component {
 
     let { token, passwordReset } = this.props;
     let { credentials } = this.state;
-
+    this.setState({showSpinner: true})
     passwordReset(token, credentials);
   }
 
@@ -96,6 +98,7 @@ export default class PasswordResetApp extends Component {
     const passwordComplexity = MetabaseSettings.passwordComplexityDescription(
       false,
     );
+    const  isLoading = !resetSuccess && this.state.showSpinner && !resetError;
 
     const requestLink = (
       <Link to="/auth/forgot_password" className="link">
@@ -126,7 +129,14 @@ export default class PasswordResetApp extends Component {
               </div>
             </div>
           </div>
-          {/* <AuthScene /> */}
+          {isLoading && (
+            <div className="Loading spread flex flex-column layout-centered text-brand z2" style={{zIndex: 50}}>
+              <LoadingSpinner/>
+              <h2 className="Loading-message text-brand text-uppercase my3">
+                {t`Loading ...`}
+              </h2>
+            </div>
+          )}
         </div>
       );
     } else {
@@ -231,7 +241,6 @@ export default class PasswordResetApp extends Component {
               </div>
             )}
           </div>
-          {/* <AuthScene /> */}
         </div>
       );
     }
