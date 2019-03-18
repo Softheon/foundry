@@ -1,5 +1,6 @@
 /* @flow weak */
 
+import * as Q from "metabase/lib/query/query";
 import Question from "../Question";
 import Query from "./Query";
 
@@ -23,7 +24,7 @@ import type {
   DatasetQuery,
   NativeDatasetQuery,
 } from "metabase/meta/types/Card";
-import type { TemplateTags, TemplateTag } from "metabase/meta/types/Query";
+import type { TemplateTags, TemplateTag, OrderBy, OrderByClause } from "metabase/meta/types/Query";
 import type { DatabaseEngine, DatabaseId } from "metabase/meta/types/Database";
 import AtomicQuery from "metabase-lib/lib/queries/AtomicQuery";
 
@@ -215,6 +216,10 @@ export default class NativeQuery extends AtomicQuery {
     return new NativeQuery(this._originalQuestion, datasetQuery);
   }
 
+  sortTable(type, columnIndex){
+    return [columnIndex, type];
+  }
+
   /**
    * special handling for NATIVE cards to automatically detect parameters ... {{varname}}
    */
@@ -283,5 +288,21 @@ export default class NativeQuery extends AtomicQuery {
       }
     }
     return {};
+  }
+
+  /***
+   * @returns the underlying native query object
+   */
+  order_by(): ?OrderByClause {
+    return this._nativeDatasetQuery.order_by;
+  }
+
+  sorts(): OrderBy[] {
+    return Q.getNativeQueryOrderBys(this.order_by());
+  }
+
+  addOrderClause(order_by){
+  
+    this._nativeDatasetQuery.order_by =[order_by];
   }
 }

@@ -70,6 +70,7 @@ type Props = {
   clicked: ?ClickObject,
   clickActions: ?(ClickAction[]),
   onChangeCardAndRun: Object => void,
+  onChangeNativeQueryTableSortAndRun: Object => void,
   onClose: () => void,
 };
 
@@ -93,7 +94,7 @@ export default class ChartClickActions extends Component {
 
   handleClickAction = (action: ClickAction) => {
     // $FlowFixMe: dispatch provided by @connect
-    const { dispatch, onChangeCardAndRun } = this.props;
+    const { dispatch, onChangeCardAndRun, onChangeNativeQueryTableSortAndRun } = this.props;
     if (action.action) {
       const reduxAction = action.action();
       if (reduxAction) {
@@ -107,7 +108,11 @@ export default class ChartClickActions extends Component {
         getGALabelForAction(action),
       );
       this.setState({ popoverAction: action });
-    } else {
+    } else if(action.sort){
+      const sorting = action.sort();
+      onChangeNativeQueryTableSortAndRun(sorting);
+      this.close();
+    }else {
       const didPerform = performAction(action, {
         dispatch,
         onChangeCardAndRun,

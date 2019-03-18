@@ -41,6 +41,8 @@ import {
   UPDATE_ENABLE_EMBEDDING,
   UPDATE_EMBEDDING_PARAMS,
   SHOW_CHART_SETTINGS,
+  SORT_NATIVE_QUERY_TABLE_AND_RUN,
+  ADD_ORDER_BY_TO_NATIVE_QUERY_CARD,
 } from "./actions";
 
 // various ui state options
@@ -183,6 +185,7 @@ export const card = handleActions(
         embedding_params: payload.embedding_params,
       }),
     },
+    [ADD_ORDER_BY_TO_NATIVE_QUERY_CARD] : { next: (state, {payload}) => payload.card },  
   },
   null,
 );
@@ -267,6 +270,9 @@ export const queryResults = handleActions(
       next: (state, { payload }) => (payload ? [payload] : state),
     },
     [CLEAR_QUERY_RESULT]: { next: (state, { payload }) => null },
+    [SORT_NATIVE_QUERY_TABLE_AND_RUN] : {
+      next: (state, {payload}) => payload.queryResults
+    } ,
   },
   null,
 );

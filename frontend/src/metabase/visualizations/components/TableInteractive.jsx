@@ -459,21 +459,21 @@ export default class TableInteractive extends Component {
         clicked = column._dimension;
       }
     } else {
-      clicked = { column };
+      clicked = { column, columnIndex };
     }
 
     const isDraggable = !this.props.isPivoted;
     const isDragging = this.state.dragColIndex === columnIndex;
     const isClickable = this.visualizationIsClickable(clicked);
-    const isSortable = isClickable && column.source;
+    const isSortable = isClickable && (column.source || sort);
     const isRightAligned = isColumnRightAligned(column);
 
     // TODO MBQL: use query lib to get the sort field
     const isSorted =
-      sort &&
-      sort[0] &&
-      sort[0][1] &&
-      Query.getFieldTargetId(sort[0][1]) === column.id;
+    sort && 
+    sort[0] && 
+    sort[0][0] && 
+    (sort[0][0][1] === column.id || sort[0][0][1] === columnIndex);
     const isAscending = sort && sort[0] && sort[0][0] === "asc";
     return (
       <Draggable

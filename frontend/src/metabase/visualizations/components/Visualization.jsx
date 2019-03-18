@@ -541,6 +541,7 @@ export default class Visualization extends Component {
             clickActions={clickActions}
             onChangeCardAndRun={this.handleOnChangeCardAndRun}
             onClose={this.hideActions}
+            onChangeNativeQueryTableSortAndRun={this.props.sortNativeQueryTable}
           />
         )}
       </div>

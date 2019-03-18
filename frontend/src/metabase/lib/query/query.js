@@ -94,6 +94,7 @@ export const removeOrderBy = (query: SQ, index: number) =>
   setOrderByClause(query, O.removeOrderBy(query["order-by"], index));
 export const clearOrderBy = (query: SQ) =>
   setOrderByClause(query, O.clearOrderBy(query["order-by"]));
+export const getNativeQueryOrderBys =(order_by) => O.getOrderBys(order_by);
 
 // FIELD
 export const clearFields = (query: SQ) => setFieldsClause(query, null);

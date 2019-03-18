@@ -32,6 +32,7 @@ import { getEngineNativeType, formatJsonQuery } from "metabase/lib/engine";
 import { defer } from "metabase/lib/promise";
 import Question from "metabase-lib/lib/Question";
 import { cardIsEquivalent, cardQueryIsEquivalent } from "metabase/meta/Card";
+import moment from "moment";
 
 import {
   getTableMetadata,
@@ -1538,6 +1539,71 @@ export const viewPreviousObjectDetail = () => {
     dispatch(runQuestionQuery());
   };
 };
+
+export const SORT_NATIVE_QUERY_TABLE_AND_RUN =
+  "metabase/qb/SORT_NATIVE_QUERY_TABLE_AND_RUN";
+export const sortNativeQueryTableAndRun = sortingDetail => {
+  return async (dispatch, getState) => {
+    const queryResult = Utils.copy(getState().qb.queryResults[0]);
+    const original_rows = queryResult.data.rows;
+    const sortDirection = sortingDetail[1];
+    const columnIndex = sortingDetail[0];
+    let testValue = original_rows[0][columnIndex];
+    let isDate =moment(testValue, moment.ISO_8601, true).isValid();
+    let isString = typeof testValue === "string" || testValue instanceof String;
+    if (sortDirection === "ascending") {
+      original_rows.sort((a, b) => {
+        if (isDate) {
+          return Date.parse(a[columnIndex]) - Date.parse(b[columnIndex]);
+        } else if(isString) {
+          if (a[columnIndex] < b[columnIndex]) {return -1;}
+          else if( a[columnIndex] > b[columnIndex]) {return 1;}
+          else {return 0;}
+        }else {
+          return a[columnIndex] - b[columnIndex];
+        }
+      });
+    } else if (sortDirection === "descending") {
+      original_rows.sort((a, b) => {
+        if (isDate) {
+          return Date.parse(b[columnIndex]) - Date.parse(a[columnIndex]);
+        } else if (isString) {
+          if (a[columnIndex] < b[columnIndex]) {return 1;}
+          else if (a[columnIndex] > b[columnIndex]) {return -1;}
+          else {return 0;}
+        }else {
+          return b[columnIndex] - a[columnIndex];
+        }
+      });
+    }
+
+    let queryResults = [queryResult];
+    dispatch.action(SORT_NATIVE_QUERY_TABLE_AND_RUN, { queryResults });
+  };
+};
+
+export const ADD_ORDER_BY_TO_NATIVE_QUERY_CARD = "metabase/qb/ADD_ORDER_BY_TO_NATIVE_QUERY_CARD";
+export const addOrderByToNativeQueryCard = createThunkAction(
+  ADD_ORDER_BY_TO_NATIVE_QUERY_CARD,
+  (sortingDetail) => {
+    return async (dispatch, getState) =>{
+      let card = Utils.copy(getState().qb.card);
+      card.dataset_query.order_by = [[["field-id", sortingDetail[0]], sortingDetail[1]]];
+      return {card};
+    };
+  }
+);
+
+export const SORT_NATIVE_QUERY_TABLE = "metabase/qb/SORT_NATIVE_QUERY_TABLE"
+export const sortNativeQueryTable = createThunkAction(
+  SORT_NATIVE_QUERY_TABLE,
+  (sortingDetail) => {
+    return async (dispatch, getState) => {
+      dispatch(addOrderByToNativeQueryCard (sortingDetail));
+      dispatch(sortNativeQueryTableAndRun(sortingDetail));
+    };
+  },
+);
 
 export const SHOW_CHART_SETTINGS = "metabase/query_builder/SHOW_CHART_SETTINGS";
 export const showChartSettings = createAction(SHOW_CHART_SETTINGS);
