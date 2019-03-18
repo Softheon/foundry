@@ -346,7 +346,7 @@ export const initializeQB = (location, params) => {
     });
 
     // Fetch alerts for the current question if the question is saved
-    card && card.id && dispatch(fetchAlertsForQuestion(card.id));
+   //card && card.id && dispatch(fetchAlertsForQuestion(card.id));
 
     // Fetch the question metadata
     card && dispatch(loadMetadataForCard(card));
@@ -832,7 +832,7 @@ export const apiUpdateQuestion = question => {
 
     // reload the question alerts for the current question
     // (some of the old alerts might be removed during update)
-    await dispatch(fetchAlertsForQuestion(updatedQuestion.id()));
+   // await dispatch(fetchAlertsForQuestion(updatedQuestion.id()));
 
     // remove the databases in the store that are used to populate the QB databases list.
     // This is done when saving a Card because the newly saved card will be eligible for use as a source query

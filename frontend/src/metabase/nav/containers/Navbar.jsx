@@ -312,13 +312,14 @@ export default class Navbar extends Component {
                 icon: `dashboard`,
                 action: () => this.setModal(MODAL_NEW_DASHBOARD),
                 event: `NavBar;New Dashboard Click;`,
-              },
-              {
+              }
+              ,
+             // {/* {
                 title: t`New pulse`,
                 icon: `pulse`,
                 link: Urls.newPulse(),
                 event: `NavBar;New Pulse Click;`,
-              },
+             // }, */}
             ]}
           />
           {hasDataAccess && (

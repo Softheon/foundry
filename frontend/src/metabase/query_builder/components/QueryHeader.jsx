@@ -440,46 +440,46 @@ export default class QueryHeader extends Component {
       </Tooltip>,
     ]);
 
-    if (
-      !isEditing &&
-      card &&
-      question.alertType(visualizationSettings) !== null
-    ) {
-      const createAlertItem = {
-        title: t`Get alerts about this`,
-        icon: "alert",
-        action: () => this.setState({ modal: "create-alert" }),
-      };
-      const createAlertAfterSavingQuestionItem = {
-        title: t`Get alerts about this`,
-        icon: "alert",
-        action: () => this.setState({ modal: "save-question-before-alert" }),
-      };
+    // if (
+    //   !isEditing &&
+    //   card &&
+    //   question.alertType(visualizationSettings) !== null
+    // ) {
+    //   const createAlertItem = {
+    //     title: t`Get alerts about this`,
+    //     icon: "alert",
+    //     action: () => this.setState({ modal: "create-alert" }),
+    //   };
+    //   const createAlertAfterSavingQuestionItem = {
+    //     title: t`Get alerts about this`,
+    //     icon: "alert",
+    //     action: () => this.setState({ modal: "save-question-before-alert" }),
+    //   };
 
-      const updateAlertItem = {
-        title: t`Alerts are on`,
-        icon: "alert",
-        content: (toggleMenu, setMenuFreeze) => (
-          <AlertListPopoverContent
-            closeMenu={toggleMenu}
-            setMenuFreeze={setMenuFreeze}
-          />
-        ),
-      };
+    //   const updateAlertItem = {
+    //     title: t`Alerts are on`,
+    //     icon: "alert",
+    //     content: (toggleMenu, setMenuFreeze) => (
+    //       <AlertListPopoverContent
+    //         closeMenu={toggleMenu}
+    //         setMenuFreeze={setMenuFreeze}
+    //       />
+    //     ),
+    //   };
 
-      buttonSections.push([
-        <div className="mr1" style={{ marginLeft: "-15px" }}>
-          <EntityMenu
-            triggerIcon="burger"
-            items={[
-              !isNew && Object.values(questionAlerts).length > 0
-                ? updateAlertItem
-                : isNew ? createAlertAfterSavingQuestionItem : createAlertItem,
-            ]}
-          />
-        </div>,
-      ]);
-    }
+    //   buttonSections.push([
+    //     <div className="mr1" style={{ marginLeft: "-15px" }}>
+    //       <EntityMenu
+    //         triggerIcon="burger"
+    //         items={[
+    //           !isNew && Object.values(questionAlerts).length > 0
+    //             ? updateAlertItem
+    //             : isNew ? createAlertAfterSavingQuestionItem : createAlertItem,
+    //         ]}
+    //       />
+    //     </div>,
+    //   ]);
+    // }
 
     return (
       <ButtonBar
@@ -562,7 +562,7 @@ export default class QueryHeader extends Component {
           />
         </Modal>
 
-        <Modal
+        {/* <Modal
           full
           isOpen={this.state.modal === "create-alert"}
           onClose={this.onCloseModal}
@@ -571,7 +571,7 @@ export default class QueryHeader extends Component {
             onCancel={this.onCloseModal}
             onAlertCreated={this.onCloseModal}
           />
-        </Modal>
+        </Modal> */}
 
         <Modal
           isOpen={this.state.modal === "save-question-before-alert"}

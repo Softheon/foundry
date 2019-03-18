@@ -64,21 +64,6 @@ export default class ProfileLink extends Component {
         },
       ]),
       {
-        title: t`Help`,
-        icon: null,
-        // HACK - for some reason if you use // react router treats the link
-        // as a non local route
-        link: `//softheon-foundry.com/docs/${tag}`,
-        externalLink: true,
-        event: `Navbar;Profile Dropdown;About ${tag}`,
-      },
-      {
-        title: t`About Foundry`,
-        icon: null,
-        action: () => this.openModal("about"),
-        event: `Navbar;Profile Dropdown;About ${tag}`,
-      },
-      {
         title: t`Sign out`,
         icon: null,
         link: "auth/logout",

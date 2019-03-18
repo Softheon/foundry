@@ -60,7 +60,7 @@ export default class VisualizationResult extends Component {
             message={t`This may be the answer you’re looking for. If not, try removing or changing your filters to make them less specific.`}
             action={
               <div>
-                {supportsRowsPresentAlert &&
+                {supportsRowsPresentAlert && null &&
                   !isDirty && (
                     <p>
                       {jt`You can also ${(
@@ -79,7 +79,7 @@ export default class VisualizationResult extends Component {
               </div>
             }
           />
-          {showCreateAlertModal && (
+          {showCreateAlertModal && null && (
             <Modal full onClose={this.onCloseCreateAlertModal}>
               <CreateAlertModalContent
                 onCancel={this.onCloseCreateAlertModal}
