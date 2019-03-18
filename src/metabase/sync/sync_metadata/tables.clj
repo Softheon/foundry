@@ -80,6 +80,9 @@
 
 ;;; ---------------------------------------------------- Syncing -----------------------------------------------------
 
+(def ^:private db-metadata-syn-limits
+  "The number of tries to get table info from a DB"
+  5)
 ;; TODO - should we make this logic case-insensitive like it is for fields?
 
 (s/defn ^:private create-or-reactivate-tables!
@@ -151,12 +154,21 @@
               :db_id  (u/get-id database)
               :active true))))
 
+(s/defn ^:private fetch-our-metadata
+"Try a number of time to get information about what Tables we have for this DB."
+[database :- i/DatabaseInstance limit]
+(loop [x limit]
+  (let [db-metadata (db-metadata database)]
+    (if  (or (not (empty? db-metadata)) (< x 1))
+      db-metadata
+      (recur (- x 1)))))) 
+
 (s/defn sync-tables!
   "Sync the Tables recorded in the Foundry application database with the ones obtained by calling DATABASE's driver's
   implementation of `describe-database`."
   [database :- i/DatabaseInstance]
   ;; determine what's changed between what info we have and what's in the DB
-  (let [db-metadata             (db-metadata database)
+  (let [db-metadata            (fetch-our-metadata database db-metadata-sync-limits)
         our-metadata            (our-metadata database)
         strip-desc              (fn [metadata]
                                   (set (map #(dissoc % :description) metadata)))
