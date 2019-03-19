@@ -223,8 +223,8 @@
   {:pre [(map? honeysql-form)]}
   (let [[sql & args] (try (binding [hformat/*subquery?* false]
                             (hsql/format honeysql-form
-                              :quoting             (quote-style driver)
-                              :allow-dashed-names? true))
+                                         :quoting             (quote-style driver)
+                                         :allow-dashed-names? true))
                           (catch Throwable e
                             (log/error (u/format-color 'red "Invalid HoneySQL form:\n%s"
                                                        (u/pprint-to-str honeysql-form)))

@@ -261,6 +261,13 @@
       (s/replace #"(?i) FALSE([,\)\s])" " 0$1")
       (s/replace #"(?i) FALSE$" " 0")))
 
+; (defn add-as-keyword
+;   [sql]
+;   (pprint "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+;   (pprint sql)
+;   ;;    (s/replace  #"(\"source\")" " as $1")
+;   sql)
+
 (defn- convert-sql
   [sql]
   (if (= :sqlserver (quoting-style))

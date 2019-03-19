@@ -122,15 +122,29 @@
   [export-format query]
   {query         su/JSONString
    export-format ExportFormat}
-  (let [{:keys [database] :as query} (json/parse-string query keyword)]
-    (when-not (= database database/virtual-id)
-      (api/read-check Database database))
-    (as-format export-format
-      (qp/process-query-and-save-execution! (-> query
-                                                (dissoc :constraints)
-                                                (assoc-in [:middleware :skip-results-metadata?] true))
-        {:executed-by api/*current-user-id*, :context (export-format->context export-format)}))))
-
+  (if (or (= export-format "xlsx")
+          (= export-format "json")) 
+    (let [query (json/parse-string query keyword)]
+      (api/read-check Database (:database query))
+      (as-format export-format
+                 (qp/process-query-and-save-execution! (assoc (dissoc query :constraints)
+                                                              :full-query false)
+                                                              {:executed-by api/*current-user-id*
+                                                               :context (export-format->context export-format)})))
+    (let [query (json/parse-string query keyword)
+          read-check (api/read-check Database (:database query))]
+      (api/let-404 [export-conf (ex/export-formats export-format)]
+                   (if-let [input (qp/downloable-query-result-input (assoc (dissoc query :constraints)
+                                                                           :full-query true
+                                                                           :export-fn (:export-fn export-conf))
+                                                                           {:executed-by api/*current-user-id*
+                                                                            :context (export-format->context export-format)})]
+                     {:status 200
+                      :body input
+                      :headers {"Content-Type" (str (:content-type export-conf) "; charset=utf-8")
+                                "Content-Disposition" (str "attachment; filename=\"query_result_" (du/date->iso-8601) "." (:ext export-conf) "\"")}}
+                     {:status 500
+                      :body (str "somthing went wrong!")})))))
 
 ;;; ------------------------------------------------ Other Endpoints -------------------------------------------------
 

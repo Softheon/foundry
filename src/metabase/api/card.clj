@@ -34,7 +34,9 @@
             [metabase.sync.analyze.query-results :as qr]
             [metabase.util
              [i18n :refer [trs tru]]
-             [schema :as su]]
+             [schema :as su]
+             [date :as du]
+             [export :as ex]]
             [schema.core :as s]
             [metabase.toucan
              [db :as db]
@@ -566,9 +568,10 @@
 (defn run-query-for-card
   "Run the query for Card with PARAMETERS and CONSTRAINTS, and return results in the usual format."
   {:style/indent 1}
-  [card-id & {:keys [parameters constraints context dashboard-id middleware]
+  [card-id & {:keys [parameters constraints context dashboard-id middleware full-query]
               :or   {constraints qp/default-query-constraints
-                     context     :question}}]
+                     context     :question
+                     full-query false}}]
   {:pre [(u/maybe? sequential? parameters)]}
   (let [card    (api/read-check (Card card-id))
         query   (query-for-card card parameters constraints middleware)
@@ -577,7 +580,32 @@
                  :card-id      card-id
                  :dashboard-id dashboard-id}]
     (api/check-not-archived card)
-    (qp/process-query-and-save-execution! query options)))
+    (qp/process-query-and-save-execution! (assoc query :full-query full-query) options)))
+
+(defn stream-file
+  "Run the query for Card with PARAMETERS and CONSTRAINTS, and return results in the usual format."
+  {:style/indent 1}
+  [card-id  export-format & {:keys [parameters constraints context middleware dashboard-id]
+                             :or   {constraints qp/default-query-constraints
+                                    context     :question}}]
+  (let [card    (api/read-check (hydrate (Card card-id) :in_public_dashboard))
+        query   (query-for-card card parameters constraints middleware)
+        options {:executed-by  api/*current-user-id*
+                 :context      context
+                 :card-id      card-id
+                 :dashboard-id dashboard-id}]
+    (api/check-not-archived card)
+    (api/let-404 [export-conf (ex/export-formats export-format)]
+                 (if-let [input (qp/downloable-query-result-input
+                                 (assoc query :export-fn (:export-fn export-conf)
+                                        :full-query true)
+                                 options)]
+                   {:status 200
+                    :body input
+                    :headers {"Content-Type" (str (:content-type export-conf) "; charset=utf-8")
+                              "Content-Disposition" (str "attachment; filename=\"query_result_" (du/date->iso-8601) "." (:ext export-conf) "\"")}}
+                   {:status 500
+                    :body (str "something went wrong!")}))))
 
 (api/defendpoint POST "/:card-id/query"
   "Run the query associated with a Card."
@@ -593,12 +621,21 @@
   {parameters    (s/maybe su/JSONString)
    export-format dataset-api/ExportFormat}
   (binding [cache/*ignore-cached-results* true]
-    (dataset-api/as-format export-format
-      (run-query-for-card card-id
-        :parameters  (json/parse-string parameters keyword)
-        :constraints nil
-        :context     (dataset-api/export-format->context export-format)
-        :middleware  {:skip-results-metadata? true}))))
+    (if (or (= export-format "xlsx")
+            (= export-format "json"))
+      (dataset-api/as-format export-format
+                             (run-query-for-card card-id
+                                                 :parameters  (json/parse-string parameters keyword)
+                                                 :constraints nil
+                                                 :context     (dataset-api/export-format->context export-format)
+                                                 :full-query true
+                                                 :middleware {:skip-results-metadata? true}))
+      (stream-file card-id
+                   export-format
+                   :parameters  (json/parse-string parameters keyword)
+                   :constraints nil
+                   :context     (dataset-api/export-format->context export-format)
+                   :middleware {:skip-results-metadata? true}))))
 
 
 ;;; ----------------------------------------------- Sharing is Caring ------------------------------------------------

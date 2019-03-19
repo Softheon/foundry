@@ -35,3 +35,18 @@
                            (assoc query :native native-form))
             results      (qp native-query)]
         (assoc results :native_form native-form)))))
+
+(defn mbql-native-download
+  "Middleware that handles conversion of MBQL queries to native (by calling driver QP methods) so the queries
+ can be executed. For queries that are already native, this function is effectively a no-op."
+  [qp]
+  (fn [{query-type :type, {:keys [disable-mbql->native?]} :middleware, :as query}]
+  ;; disabling mbql->native is only used by the `qp/query->preprocessed` function so we can get the fully
+  ;; pre-processed query *before* we convert it to native, which might fail for one reason or another
+    (if disable-mbql->native?
+      (qp query)
+      (let [native-form  (query->native-form query)
+            native-query (if-not (= query-type :query)
+                           query
+                           (assoc query :native native-form))]
+        (qp native-query)))))

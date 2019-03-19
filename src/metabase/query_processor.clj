@@ -149,6 +149,43 @@
 ;; ▲▲▲ PRE-PROCESSING ▲▲▲ happens from BOTTOM-TO-TOP, e.g. the results of `expand-macros` are passed to
 ;; `substitute-parameters`
 
+(defn- qp-pipeline-for-downloading
+  [f]
+  (-> f
+      mbql-to-native/mbql-native-download
+      check-features/check-features
+      wrap-value-literals/wrap-value-literals
+      perms/check-query-permissions
+      resolve-joined-tables/resolve-joined-tables
+      desugar/desugar
+      resolve-fields/resolve-fields
+      add-dim/add-fk-remapping
+      implicit-clauses/add-implicit-clauses
+      reconcile-bucketing/reconcile-breakout-and-order-by-bucketing
+      bucket-datetime/auto-bucket-datetimes
+      resolve-source-table/resolve-source-table
+
+      parameters/substitute-parameters
+      expand-macros/expand-macros
+
+      add-settings/add-settings
+
+      resolve-driver/resolve-driver
+      bind-timezone/bind-effective-timezone
+      resolve-database/resolve-database
+      fetch-source-query/fetch-source-query
+      store/initialize-store
+      query-throttle/maybe-add-query-throttle
+      validate/validate-query
+      normalize/normalize
+      catch-exceptions/catch-exceptions))
+
+(defn get-inputStream-of-downable-result-set
+  "A pipeline of various QP functions (including middleware) that are used to get the inputstream of downloable result sets."
+  {:style/indent 0}
+  [query]
+  ((qp-pipeline-for-downloading execute-query) query))
+
 (def ^:private ^{:arglists '([query])} preprocess
   "Run all the preprocessing steps on a query, returning it in the shape it looks immediately before it would normally
   get executed by `execute-query`. One important thing to note: if preprocessing fails for some reason, `preprocess`
@@ -353,13 +390,28 @@
   [query, options :- mbql.s/Info]
   (run-and-save-query! (assoc-query-info query options)))
 
+(defn- run-query-and-get-stream
+  "Run QUERY and get an inputstream which is connected to an ouputstream filled with all downloable result data."
+  [query]
+  (try
+    (get-inputStream-of-downable-result-set query)
+    (catch Exception e
+      (log/info (str "run-query-and-get-stream Exception: " (.getMessage e))))))
+
+(s/defn downloable-query-result-input
+  {:style/indent 1}
+  [query, options]
+  (run-query-and-get-stream (assoc query :info (assoc options
+                                                      :query-hash (qputil/query-hash query)
+                                                      :query-type (if (qputil/mbql-query? query) "MBQL" "native")))))    
+
 (def ^:private ^:const max-results-bare-rows
   "Maximum number of rows to return specifically on :rows type queries via the API."
-  2000)
+  500)
 
 (def ^:private ^:const max-results
   "General maximum number of rows to return from an API query."
-  10000)
+  1000)
 
 (def default-query-constraints
   "Default map of constraints that we apply on dataset queries executed by the api."
