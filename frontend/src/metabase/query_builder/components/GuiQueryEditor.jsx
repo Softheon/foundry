@@ -12,7 +12,7 @@ import FilterPopover from "./filters/FilterPopover.jsx";
 import Icon from "metabase/components/Icon.jsx";
 import IconBorder from "metabase/components/IconBorder.jsx";
 import PopoverWithTrigger from "metabase/components/PopoverWithTrigger.jsx";
-import { DatabaseSchemaAndTableDataSelector } from "metabase/query_builder/components/DataSelector";
+import { DatabaseSchemaAndTableDataSelector, DatabaseFolderProfileExtensionDataSelector } from "metabase/query_builder/components/DataSelector";
 
 import cx from "classnames";
 import _ from "underscore";
@@ -321,7 +321,7 @@ export default class GuiQueryEditor extends Component {
       >
         <span className="GuiBuilder-section-label Query-label">{t`Data`}</span>
         {this.props.features.data ? (
-          <DatabaseSchemaAndTableDataSelector
+          <DatabaseFolderProfileExtensionDataSelector
             databases={databases}
             selected={sourceTableId}
             selectedDatabaseId={databaseId}

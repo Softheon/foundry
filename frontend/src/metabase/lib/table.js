@@ -8,6 +8,47 @@ export function isQueryable(table) {
   return table.visibility_type == null;
 }
 
+export function hasFolderName(tableName){
+  return tableName.includes("_Profile") ||
+  tableName.includes("_Extension") ||
+  tableName.includes("_Folder") ||
+  tableName.includes("_Task") ||
+  tableName.includes("_Flow") ||
+  tableName.includes("_File") ||
+  tableName.includes("_Note")
+}
+
+export function getFolderName (tableName) {
+  const idx = tableName.indexOf("_");
+  return tableName.substring(0, idx);
+}
+
+export function isProfileTable(tableName) {
+  return tableName.includes("_Profile");
+}
+
+export function isExtensionTable(tableName) {
+  return tableName.includes("_Extension");
+}
+
+export function isEDW(tableName) {
+  return tableName.toUpperCase().endsWith("EDW");
+}
+
+export function isFolderRelatedTable(folderName, tableName) {
+  return tableName.includes(folderName);
+}
+
+export function getFolderChildTableName(tableName, folderName, tableType) {
+  let regexString = `^${folderName}_(.*)_${tableType}`
+  let regex = new RegExp(regexString);
+  let result =  regex.exec(tableName);
+  if(result && result.length > 1){
+    return result[1].replace("_", " ");
+  }
+  return null;  
+}
+
 export async function loadTableAndForeignKeys(tableId) {
   let [table, foreignKeys] = await Promise.all([
     MetabaseApi.table_query_metadata({ tableId }),
