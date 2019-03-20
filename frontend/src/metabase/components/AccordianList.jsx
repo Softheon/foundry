@@ -438,7 +438,7 @@ export default class AccordianList extends Component {
                     >
                       <a
                         className={cx(
-                          "p1 flex-full flex align-center",
+                          "p1  flex align-center",
                           this.itemIsClickable(item)
                             ? "cursor-pointer"
                             : "cursor-default",
@@ -447,6 +447,7 @@ export default class AccordianList extends Component {
                           this.itemIsClickable(item) &&
                           this.onChange.bind(this, item)
                         }
+                        style={{wordBreak: "break-all"}}
                       >
                         <span className="flex align-center">
                           {this.renderItemIcon(item, itemIndex)}
