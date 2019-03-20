@@ -1,0 +1,44 @@
+.sidetab {
+    padding: 7px 10px 7px 10px;
+    color: #fff !important;
+    background-color: #efc23b;
+    text-decoration: none;
+    font-size: 13px;
+    line-height: 25px;
+    position: fixed;
+    right: -1000px;
+    z-index: 999997;
+    border-top-right-radius: 2px;
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+    border-top-left-radius: 2px;
+    background-clip: padding-box;
+    -webkit-transition: right .5s ease-out;
+    -ms-transition: right .5s ease-out;
+    -o-transition: right .5s ease-out;
+    -webkit-transform: rotate(-90deg);
+    -ms-transform: rotate(-90deg);
+    -o-transform: rotate(-90deg);
+  }
+  
+  .sidetab:hover {
+    text-decoration: none;
+  }
+  
+  .fast {
+    -webkit-transition: right 0.1s ease-out;
+    transition: right 0.1s ease-out;
+  }
+  
+  @media only scsreen and (max-width:1020px) {
+    .sidetab {
+      display: none
+    }
+  }
+  
+  @media print {
+    .sidetab {
+      display: none
+    }
+  }
+  

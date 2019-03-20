@@ -31,6 +31,7 @@ import Greeting from "metabase/lib/greeting";
 
 import { entityListLoader } from "metabase/entities/containers/EntityListLoader";
 
+import FeedbackSidebar from "metabase/components/FeedbackSidebar";
 const PAGE_PADDING = [1, 2, 4];
 
 import { createSelector } from "reselect";
@@ -76,10 +77,11 @@ class Overworld extends React.Component {
     const { user, xraysEnabled } = this.props;
     return (
       <Box>
+        <FeedbackSidebar/>
         <Flex px={PAGE_PADDING} pt={3} pb={1} align="center">
-          <Tooltip tooltip={t`Don't tell anyone, but you're my favorite.`}>
+          {/* <Tooltip tooltip={t`Don't tell anyone, but you're my favorite.`}>
             <MetabotLogo />
-          </Tooltip>
+          </Tooltip> */}
           <Box ml={2}>
             <Subhead>{Greeting.sayHello(user.first_name)}</Subhead>
           </Box>
