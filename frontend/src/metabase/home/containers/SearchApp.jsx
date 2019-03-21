@@ -136,7 +136,7 @@ export default class SearchApp extends React.Component {
                       </Card>
                     </Box>
                   )}
-                  {types.pulse && (
+                  {/* {types.pulse && (
                     <Box mt={2} mb={3}>
                       <div className="text-uppercase text-medium text-small text-bold my1">
                         {t`Pulse`}
@@ -158,7 +158,7 @@ export default class SearchApp extends React.Component {
                         ))}
                       </Card>
                     </Box>
-                  )}
+                  )} */}
                 </Box>
               );
             }}

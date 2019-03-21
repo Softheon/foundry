@@ -818,15 +818,3 @@
            ((if (seq (:report-timezone settings))
               run-query-without-timezone-for-downloable-query
               run-query-without-timezone-for-downloable-query) driver settings db-connection query)))))))
-
-
-; (defn execute-query-and-make-input-stream
-; "Process and run a native (raw SQL) QUERY, and return an input stream for streaming query result sets"
-; [driver {:keys [database settings], query :native, :as outer-query}]
-; (let [query (assoc query :remark (qputil/query->remark outer-query) :export-fn (get-in outer-query [:info :export-fn]))]
-;   (do-with-try-catch
-;     (fn []
-;       (let [db-connection (sql/db->jdbc-connection-spec database)]
-;         ((if (seq (:report-timezone settings))
-;            run-query-without-timezone-for-downloable-query
-;            run-query-with-timezone-for-downloable-query) driver settings db-connection query))))))
