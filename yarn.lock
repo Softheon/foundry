@@ -10560,7 +10560,7 @@ react-autosuggest@9.4.3:
     react-autowhatever "^10.1.2"
     shallow-equal "^1.0.0"
 
-react-autowhatever@10.2.0, react-autowhatever@^10.1.2:
+react-autowhatever@^10.1.2:
   version "10.2.0"
   resolved "https://registry.yarnpkg.com/react-autowhatever/-/react-autowhatever-10.2.0.tgz#bdd07bf19ddf78acdb8ce7ae162ac13b646874ab"
   integrity sha512-dqHH4uqiJldPMbL8hl/i2HV4E8FMTDEdVlOIbRqYnJi0kTpWseF9fJslk/KS9pGDnm80JkYzVI+nzFjnOG/u+g==
