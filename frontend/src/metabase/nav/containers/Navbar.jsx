@@ -29,6 +29,7 @@ import ProfileLink from "metabase/nav/components/ProfileLink.jsx";
 
 import { getPath, getContext, getUser } from "../selectors";
 import { entityListLoader } from "metabase/entities/containers/EntityListLoader";
+import AutoSuggestSearchBar from "metabase/nav/components/AutoSuggestSearchBar";
 
 const mapStateToProps = (state, props) => ({
   path: getPath(state, props),
@@ -62,7 +63,8 @@ const ActiveSearchColor = color(colors["bg-light-dark"])
   .string();
 
 const SearchWrapper = Flex.extend`
-  ${width} background-color: ${props =>
+  ${width} 
+  background-color: ${props =>
       props.active ? ActiveSearchColor : DefaultSearchColor};
   border-radius: 6px;
   align-items: center;
@@ -74,7 +76,9 @@ const SearchWrapper = Flex.extend`
 `;
 
 const SearchInput = styled.input`
-  ${space} ${width} background-color: transparent;
+  ${space} 
+  ${width} 
+  background-color: transparent;
   border: none;
   color: white;
   font-size: 1em;
@@ -285,7 +289,11 @@ export default class Navbar extends Component {
           style={{left:150}}
         >
           <Box w={2 / 3}>
-            <SearchBar
+            {/* <SearchBar
+              location={this.props.location}
+              onChangeLocation={this.props.onChangeLocation}
+            /> */}
+            <AutoSuggestSearchBar
               location={this.props.location}
               onChangeLocation={this.props.onChangeLocation}
             />

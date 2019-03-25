@@ -316,6 +316,9 @@ export const TaskApi = {
   get: GET("api/task"),
 };
 
+export const SearchApi = {
+  search: GET("/api/search"),
+}
 export function setPublicQuestionEndpoints(uuid: string) {
   setFieldEndpoints("/api/public/card/:uuid", { uuid });
 }
