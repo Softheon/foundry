@@ -32,6 +32,7 @@ const EntityItem = ({
   onMove,
   onCopy,
   onArchive,
+  onDownload,
   selected,
   onToggleSelected,
   selectable,
@@ -62,6 +63,12 @@ const EntityItem = ({
       icon: "archive",
       action: onArchive,
       event: `${analyticsContext};Entity Item;Archive Item;${item.model}`,
+    },
+    onDownload && {
+      title: t`Download this item`,
+      icon: "download",
+      action: onDownload,
+      event: `${analyticsContext};Entity Item;Download Item;${item.model}`,
     },
   ].filter(action => action);
 

@@ -18,12 +18,13 @@
              [card :as card :refer [Card]]
              [card-favorite :refer [CardFavorite]]
              [collection :as collection :refer [Collection]]
-             [database :refer [Database]]
+             [database :as database :refer [Database]]
              [interface :as mi]
              [pulse :as pulse :refer [Pulse]]
              [query :as query]
              [table :refer [Table]]
-             [view-log :refer [ViewLog]]]
+             [view-log :refer [ViewLog]]
+             [field :as field :refer [Field]]]
             [metabase.models.query.permissions :as query-perms]
             [metabase.query-processor
              [interface :as qpi]
@@ -40,7 +41,8 @@
             [schema.core :as s]
             [metabase.toucan
              [db :as db]
-             [hydrate :refer [hydrate]]])
+             [hydrate :refer [hydrate]]]
+            [clojure.string :as str])
   (:import java.util.UUID
            metabase.models.card.CardInstance))
 
@@ -689,5 +691,122 @@
   "Return related entities for an ad-hoc query."
   [:as {query :body}]
   (related/related (query/adhoc-query query)))
+
+;;; ----------------------------------------------- Download a Card ------------------------------------------------
+
+(defn- expand-card
+  [id]
+  (u/prog1 (-> (Card id)
+               api/read-check)
+           (events/publish-event! :card-json-download (assoc <> :actor-id api/*current-user-id*))))
+
+(defn- field-id-to-field-table-and-column
+  [field-id]
+  (let [field (-> (Field field-id)
+                  (hydrate :table)
+                  api/read-check)]
+    (if (and (get-in field [:table :name])
+             (:name field))
+      [(get-in field [:table :name]), (:name field)]
+      (throw (Exception. (str "Unble to find field id:" field-id))))))
+
+(defn- update-template-tag
+  [template-tag]
+  (let [tag-value (second template-tag)
+        value-key-set (set (keys tag-value))]
+    (if (contains? value-key-set :dimension)
+      (let [new-dimension-value (field-id-to-field-table-and-column (second (:dimension tag-value)))]
+        (assoc template-tag 1 (assoc tag-value :dimension new-dimension-value)))
+      template-tag)))
+
+(defn- update-template-tags
+  [template-tags]
+  (let [result (map update-template-tag template-tags)]
+    (into {} result)))
+
+(defn- field-id-to-field-string-identifier
+  [parameters]
+  (if (not (vector? parameters))
+    parameters
+    (let [count (count parameters)]
+      (loop [i 0
+             size count
+             result []]
+        (if (< i size)
+          (let [current-element (get parameters i)]
+            (if (vector? current-element)
+              (recur (+ i 1) size (conj result (field-id-to-field-string-identifier current-element)))
+              (let [first-element (get parameters 0 nil)
+                    second-element (get parameters 1 nil)]
+                (if (and (= i 0)
+                         first-element
+                         second-element
+                         (= (name first-element) "field-id")
+                         (integer? second-element))
+                  (recur 3 size (conj
+                                 (conj result (keyword "field-id"))
+                                 (field-id-to-field-table-and-column second-element)))
+                  (recur (+ i 1) size (conj result current-element))))))
+          result)))))
+
+(defn- card-name
+  [value]
+  (let [id (Integer/parseInt (str/replace value "card__" ""))]
+    (db/select-one-field :name Card :id id)))
+
+(defn- transform-parameters
+  [parameters database-id]
+  (let [is-virtual-db (= database-id database/virtual-id)]
+    (for [[key value] parameters]
+      (cond
+        (and is-virtual-db (= (name key) "source-table")) [key  (card-name value)]
+        (= (name key) "source-table") [key (db/select-one-field :name Table, :id value)]
+        :else [key (field-id-to-field-string-identifier value)]))))
+
+(defn- parent-collections
+  [collection-ids]
+  (for [collection-id collection-ids
+        :let [id (Integer/parseInt collection-id)]]
+    (db/select-one Collection :id id)))
+
+(defn- expand-parent-collection
+  [id]
+  (let [parent-collection (db/select-one Collection :id id)
+        locations (into []
+                        (rest (str/split (:location parent-collection) #"/")))]
+    (concat (parent-collections locations) [parent-collection])))
+
+(defn- card-json
+  [card]
+  (if (get-in card [:dataset_query :native])
+    (do
+      (if (get-in card [:dataset_query :native :template-tags])
+        (update-in card [:dataset_query :native :template-tags] update-template-tags)
+        card))
+    (when (get-in card [:dataset_query :query])
+      (let [database-id (get-in card [:dataset_query :database])
+            parameters (get-in card [:dataset_query :query])
+            transformed-parameters {}]
+        (-> card
+            (assoc-in [:dataset_query :query]
+                      (into transformed-parameters (transform-parameters parameters database-id)))
+            (update-in [:collection_id] expand-parent-collection))))))
+
+(api/defendpoint GET "/:card-id/:export-format/download"
+  "Find a card with given card id and return its results as a file in the specified format. Note that urrently, it only supports json."
+  [card-id export-format]
+  (let [card (-> card-id
+                 expand-card
+                 card-json)]
+    (api/let-404 [export-conf (ex/card-export-formats export-format)]
+                 (if-not (nil? card)
+                   {:status 200
+                    :body ((:export-fn export-conf) card)
+                    :headers {"Content-Type"
+                              (str (:content-type export-conf) "; charset=utf-8")
+                              "Content-Disposition"
+                              (str "attachment; filename=\"" (card :name) "." (:ext export-conf) "\"")}}
+                   {:status 500
+                    :body (str "something went wrong")}))))
 
 (api/define-routes)

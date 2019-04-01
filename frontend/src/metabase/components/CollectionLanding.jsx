@@ -574,6 +574,19 @@ export const NormalItem = ({
           ? () => item.setArchived(true)
           : null
       }
+      onDownload={
+        collection.can_write && item.model === "card"
+          ? () => {
+            const API=`/api/card/${item.id}/json/download`
+            const link =  document.createElement("a");
+            link.href = API;
+            link.style ="display: none;";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            }
+          :null
+      }
       selected={selection.has(item)}
       onToggleSelected={() => {
         onToggleSelected(item);
