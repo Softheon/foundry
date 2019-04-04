@@ -700,7 +700,7 @@
                api/read-check)
            (events/publish-event! :card-json-download (assoc <> :actor-id api/*current-user-id*))))
 
-(defn- field-id-to-field-table-and-column
+(defn- field-detail
   [field-id]
   (let [field (-> (Field field-id)
                   (hydrate :table)
@@ -715,7 +715,7 @@
   (let [tag-value (second template-tag)
         value-key-set (set (keys tag-value))]
     (if (contains? value-key-set :dimension)
-      (let [new-dimension-value (field-id-to-field-table-and-column (second (:dimension tag-value)))]
+      (let [new-dimension-value (field-detail (second (:dimension tag-value)))]
         (assoc template-tag 1 (assoc tag-value :dimension new-dimension-value)))
       template-tag)))
 
@@ -724,30 +724,61 @@
   (let [result (map update-template-tag template-tags)]
     (into {} result)))
 
-(defn- field-id-to-field-string-identifier
-  [parameters]
-  (if (not (vector? parameters))
-    parameters
-    (let [count (count parameters)]
-      (loop [i 0
-             size count
-             result []]
-        (if (< i size)
-          (let [current-element (get parameters i)]
-            (if (vector? current-element)
-              (recur (+ i 1) size (conj result (field-id-to-field-string-identifier current-element)))
-              (let [first-element (get parameters 0 nil)
-                    second-element (get parameters 1 nil)]
-                (if (and (= i 0)
-                         first-element
-                         second-element
-                         (= (name first-element) "field-id")
-                         (integer? second-element))
-                  (recur 3 size (conj
-                                 (conj result (keyword "field-id"))
-                                 (field-id-to-field-table-and-column second-element)))
-                  (recur (+ i 1) size (conj result current-element))))))
-          result)))))
+; (defn- field-id-to-field-string-identifier
+;   [parameters]
+;   (if (not (vector? parameters))
+;     parameters
+;     (let [count (count parameters)]
+;       (loop [i 0
+;              size count
+;              result []]
+;         (if (< i size)
+;           (let [current-element (get parameters i)]
+;             (if (vector? current-element)
+;               (recur (+ i 1) size (conj result (field-id-to-field-string-identifier current-element)))
+;               (let [first-element (get parameters 0 nil)
+;                     second-element (get parameters 1 nil)]
+;                 (if (and (= i 0)
+;                          first-element
+;                          second-element
+;                          (= (name first-element) "field-id")
+;                          (integer? second-element))
+;                   (recur 3 size (conj
+;                                  (conj result (keyword "field-id"))
+;                                  (field-detail second-element)))
+;                   (recur (+ i 1) size (conj result current-element))))))
+;           result)))))
+
+
+(defn- parse-field-id
+"Recursively finds 'field-id' clauses and updetes their values to the foramt 
+[field-table, field-name] for each found field id."
+[mbql]
+(if (not (vector? mbql))
+  mbql
+  (let [count (count mbql)]
+    (loop [i 0
+           size count
+           result []]
+      (if (< i size)
+        (let [current-element (get mbql i)]
+          (if (vector? current-element)
+            (recur (+ i 1) size (conj result (parse-field-id current-element)))
+            (let [first-element (get mbql 0 nil)
+                  second-element (get mbql 1 nil)
+                  third-element (get mbql 3 nil)]
+              (cond
+                (= (name first-element) "field-id") (recur size
+                                                           size (conj
+                                                                 (conj result (keyword "field-id"))
+                                                                 field-detail second-element))
+                (= (name first-element) "fk->") (recur size
+                                                       size (conj
+                                                             (conj result (keyword "fk->"))
+                                                             (field-detail second-element)
+                                                             (field-detail third-element)))
+                :else (recur (inc i) size (conj result current-element))))))
+        result)))))
 
 (defn- card-name
   [value]
@@ -761,7 +792,7 @@
       (cond
         (and is-virtual-db (= (name key) "source-table")) [key  (card-name value)]
         (= (name key) "source-table") [key (db/select-one-field :name Table, :id value)]
-        :else [key (field-id-to-field-string-identifier value)]))))
+        :else [key (parse-field-id value)]))))
 
 (defn- parent-collections
   [collection-ids]

@@ -1,6 +1,7 @@
 (ns metabase.api.dashboard
   "/api/dashboard endpoints."
   (:require [clojure.tools.logging :as log]
+            [clojure.string :as str]
             [compojure.core :refer [DELETE GET POST PUT]]
             [metabase.automagic-dashboards.populate :as magic.populate]
             [metabase
@@ -11,13 +12,14 @@
             [metabase.api.common :as api]
             [metabase.models
              [card :refer [Card]]
-             [collection :as collection]
+             [collection :as collection :refer[Collection]]
              [dashboard :as dashboard :refer [Dashboard]]
              [dashboard-card :refer [DashboardCard delete-dashboard-card!]]
              [dashboard-favorite :refer [DashboardFavorite]]
              [interface :as mi]
              [query :as query :refer [Query]]
-             [revision :as revision]]
+             [revision :as revision]
+             [field :as field :refer [Field]]]
             [metabase.query-processor.util :as qp-util]
             [metabase.util.schema :as su]
             [schema.core :as s]
@@ -456,5 +458,103 @@
     (->> (dashboard/save-transient-dashboard! dashboard parent-collection-id)
          (events/publish-event! :dashboard-create))))
 
+;;; --------------------------------------------- Downloading ---------------------------------------------------------
+
+(defn- select-collections
+  [ids]
+  (for [id ids
+        :let [collection-id (Integer/parseInt id)]]
+    (db/select-one Collection :id collection-id)))
+
+(defn- parse-parent-collections
+  [collection-id]
+  (let [collection (db/select-one Collection :id collection-id)
+        parent-collection-ids (rest (str/split (:location collection) #"/"))]
+    (concat (select-collections parent-collection-ids) [collection])))
+
+(defn- field-detail
+  [field-id]
+  (let [field (-> (Field field-id)
+                  (hydrate :table)
+                  api/read-check)]
+    (if (and (get-in field [:table :name])
+             (:name field))
+      [(get-in field [:table :name]), (:name field)]
+      (throw (Exception. (str "Unble to find field id:" field-id))))))
+
+
+(defn- parse-field-id
+  "Recursively finds 'field-id' clauses and updetes their values to the foramt 
+[field-table, field-name] for each found field id."
+  [mbql]
+  (if (not (vector? mbql))
+    mbql
+    (let [count (count mbql)]
+      (loop [i 0
+             size count
+             result []]
+        (if (< i size)
+          (let [current-element (get mbql i)]
+            (if (vector? current-element)
+              (recur (+ i 1) size (conj result (parse-field-id current-element)))
+              (let [first-element (get mbql 0 nil)
+                    second-element (get mbql 1 nil)
+                    third-element (get mbql 3 nil)]
+                (cond
+                  (= (name first-element) "field-id") (recur size size (conj
+                                                                        (conj result (keyword "field-id"))
+                                                                        field-detail second-element))
+                  (= (name first-element) "fk->") (recur size size (conj
+                                                                    (conj result (keyword "fk->"))
+                                                                    (field-detail second-element)
+                                                                    (field-detail third-element)))
+                  :else (recur (inc i ) size (conj result current-element))))))
+          result)))))
+
+(defn- parse-dashboard-card-parameter
+  [parameter]
+  (into {}
+         (for [[key value] parameter]
+           [key (parse-field-id value)])))
+
+(defn- parse-dashboard-card-parameters
+  [parameters]
+  (for [parameter parameters]
+    (parse-dashboard-card-parameter parameter)))
+
+(defn- parse-dashboard-cards
+  [dashboard-cards]
+  (for [dashboard-card dashboard-cards]
+    (let [card (dashboard-card :card)]
+      (-> dashboard-card
+          (update :parameter_mappings parse-dashboard-card-parameters)
+          (assoc :card_id (card :name))
+          (dissoc :card)))))
+
+(defn- transform-to-downloadable-dashboard
+  [dashboard]
+  (let [parent-collections (parse-parent-collections (dashboard :collection_id))
+        dashboard-cards (parse-dashboard-cards (dashboard :ordered_cards))]
+    (-> dashboard
+        (assoc :dashboard_cards dashboard-cards)
+        (assoc :collection_id parent-collections)
+        (dissoc :ordered_cards))))
+
+(api/defendpoint GET "/:id/json/download"
+  [id]
+  (api/let-404 [dashboard (-> (Dashboard id)
+                              (hydrate [:ordered_cards :card :series] :can_write)
+                              api/read-check
+                              api/check-not-archived
+                              hide-unreadable-cards
+                              add-query-average-durations)
+                downloadable-dashboard (transform-to-downloadable-dashboard dashboard)]
+               (if-not (nil? downloadable-dashboard)
+                 {:status 200
+                  :body downloadable-dashboard
+                  :headers {"Content-Type" "application/json;charset=utf-8"
+                            "Content-Disposition" (str "attachment; filename=\"" (downloadable-dashboard :name) "." ".json\"")}}
+                 {:status 500
+                  :body (str "something went wrong")})))
 
 (api/define-routes)

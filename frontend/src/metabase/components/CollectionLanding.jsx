@@ -585,7 +585,17 @@ export const NormalItem = ({
             link.click();
             document.body.removeChild(link);
             }
-          :null
+          : collection.can_write && item.model === "dashboard" 
+          ? () => {
+              const API = `/api/dashboard/${item.id}/json/download`
+              const link = document.createElement("a");
+              link.href = API;
+              link.style = "display:none;";
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            }
+          : null
       }
       selected={selection.has(item)}
       onToggleSelected={() => {
