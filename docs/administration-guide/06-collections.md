@@ -5,7 +5,7 @@
 
 Collections are a great way to organize your dashboards, saved questions, and pulses, and to decide who gets to see and edit things. Collections could be things like, "Important Metrics," "Product Team," "Marketing KPIs," or "Questions about users." Collections can even contain other collections, allowing you to create an organizational structure that fits your team. You can also choose which user groups should have what level of access to your collections (more on that below).
 
-Metabase starts out with a default top-level collection which is called "Our analytics," which every other collection is saved inside of.
+Metabase starts out with a default top-level collection which is called "Analytics," which every other collection is saved inside of.
 
 This page will teach you how to create and manage your collections. For more information on organizing saved questions and using collections, [check out this section of the User's Guide](../users-guide/06-sharing-answers.md).
 
@@ -44,7 +44,7 @@ One nuance with how collections permissions work has to do with sub-collections.
 ### Personal collections
 ![Personal collections](images/collections/personal-collections.png)
 
-Each user has a personal collection where they're always allowed to save things, even if they don't have Curate permissions for any other collections. Administrators can see and edit the contents of every user's personal collection (even those belonging to other Administrators) by clicking on the "All personal collections" link from the "Our analytics" collection.
+Each user has a personal collection where they're always allowed to save things, even if they don't have Curate permissions for any other collections. Administrators can see and edit the contents of every user's personal collection (even those belonging to other Administrators) by clicking on the "All personal collections" link from the "Analytics" collection.
 
 A personal collection works just like any other collection except that its permissions can't be changed. If a sub-collection within a personal collection is moved to a different collection, it will inherit the permissions of that collection.
 
@@ -53,7 +53,7 @@ A personal collection works just like any other collection except that its permi
 ### Archiving collections
 Users with curate permission for a collection can archive collections. Click the edit icon in the top-right of the collection screen and select `Archive this collection` to archive it. This will also archive all questions, dashboards, pulses, and all other sub-collections and their contents. Importantly, this will also remove any archived questions from all dashboards and Pulses that use them.
 
-**Note:** the "Our analytics" collection and personal collections can't be archived.
+**Note:** the "Analytics" collection and personal collections can't be archived.
 
 You can always *unarchive* things by clicking on the More menu from a collection and selecting `View the archive`, then clicking the un-archive button next to an archived item. Questions within archived collections are not individually listed in the archive, so if you want to unarchive a specific question from an archived collection, you have to unarchive that whole collection.
 

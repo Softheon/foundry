@@ -33,7 +33,7 @@ const emptyStateData = table => {
   return {
     message: t`Questions about this table will appear here as they're added`,
     icon: "all",
-    action: t`Ask a query`,
+    action: t`New Query`,
     link: getQuestionUrl({
       dbId: table.db_id,
       tableId: table.id,

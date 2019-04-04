@@ -9,7 +9,7 @@ import {
 
 import { mount } from "enzyme";
 
-const ROOT_COLLECTION_NAME = "Our analytics";
+const ROOT_COLLECTION_NAME = "Analytics";
 const NORMAL_USER_COLLECTION_NAME = "Robert Charts's Personal Collection";
 
 describe("initial collection id", () => {

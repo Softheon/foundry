@@ -2837,7 +2837,7 @@ msgstr "Commencez ici"
 #: frontend/src/metabase/containers/Overworld.jsx:299
 #: frontend/src/metabase/entities/collections.js:140
 #: src/metabase/models/collection.clj
-msgid "Our analytics"
+msgid "Analytics"
 msgstr "Notre décisionnel"
 
 #: frontend/src/metabase/containers/Overworld.jsx:208

@@ -29,7 +29,7 @@
 ;; check that we can get a basic list of collections
 ;; (for the purposes of test purposes remove the personal collections)
 (tt/expect-with-temp [Collection [collection]]
-  [{:parent_id nil, :effective_location nil, :effective_ancestors (), :can_write true, :name "Our analytics", :id "root"}
+  [{:parent_id nil, :effective_location nil, :effective_ancestors (), :can_write true, :name "Analytics", :id "root"}
    (assoc (into {} collection) :can_write true)]
   (for [collection ((user->client :crowberto) :get 200 "collection")
         :when (not (:personal_owner_id collection))]
@@ -37,7 +37,7 @@
 
 ;; We should only see our own Personal Collections!
 (expect
-  ["Our analytics"
+  ["Analytics"
    "Lucky Pigeon's Personal Collection"]
   (do
     (collection-test/force-create-personal-collections!)
@@ -46,7 +46,7 @@
 
 ;; ...unless we are *admins*
 (expect
-  ["Our analytics"
+  ["Analytics"
    "Crowberto Corv's Personal Collection"
    "Lucky Pigeon's Personal Collection"
    "Rasta Toucan's Personal Collection"
@@ -58,7 +58,7 @@
 
 ;; check that we don't see collections if we don't have permissions for them
 (expect
-  ["Our analytics"
+  ["Analytics"
    "Collection 1"
    "Rasta Toucan's Personal Collection"]
   (tu/with-non-admin-groups-no-root-collection-perms
@@ -70,7 +70,7 @@
 
 ;; check that we don't see collections if they're archived
 (expect
-  ["Our analytics"
+  ["Analytics"
    "Rasta Toucan's Personal Collection"
    "Regular Collection"]
   (tt/with-temp* [Collection [collection-1 {:name "Archived Collection", :archived true}]
@@ -190,7 +190,7 @@
    :can_write           true
    :name                "Lucky Pigeon's Personal Collection"
    :personal_owner_id   (user->id :lucky)
-   :effective_ancestors [{:metabase.models.collection/is-root? true, :name "Our analytics", :id "root", :can_write true}]
+   :effective_ancestors [{:metabase.models.collection/is-root? true, :name "Analytics", :id "root", :can_write true}]
    :effective_location  "/"
    :parent_id           nil
    :id                  (u/get-id (collection/user->personal-collection (user->id :lucky)))
@@ -345,7 +345,7 @@
 
 ;; Check that we can see stuff that isn't in any Collection -- meaning they're in the so-called "Root" Collection
 (expect
-  {:name                "Our analytics"
+  {:name                "Analytics"
    :id                  "root"
    :can_write           true
    :effective_location  nil

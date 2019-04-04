@@ -2821,7 +2821,7 @@ msgstr "ここから開始する"
 #: frontend/src/metabase/containers/Overworld.jsx:299
 #: frontend/src/metabase/entities/collections.js:140
 #: src/metabase/models/collection.clj
-msgid "Our analytics"
+msgid "Analytics"
 msgstr "分析"
 
 #: frontend/src/metabase/containers/Overworld.jsx:208

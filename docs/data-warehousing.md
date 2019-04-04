@@ -11,7 +11,7 @@ It is typical to point this to a production database of a small application (or 
 * Any recurring queries you run might start to add significant load
 * You might need to import third party data for analysis, which typically should not live on your main database
 
-At some point, you should separate out your main application database and your analytics database. There are a number of ways to do this.
+At some point, you should separate out your main application database and yAnalytics database. There are a number of ways to do this.
 
 ## Read Replica
 

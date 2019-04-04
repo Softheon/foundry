@@ -18,7 +18,7 @@ It should only take a few minutes for Metabase to start. You can check on the pr
 
 ### Upgrading beyond the `Free` tier
 
-Heroku is very kind and offers a free tier to be used for very small/non-critical workloads which is great if you just want to evaluate Metabase and see what it looks like.  If you like what you see and decide to use Metabase as an ongoing part of your analytics workflow we recommend these upgrades which are quite affordable and will allow you to fully utilize all of Metabase's capabilities without running into annoying limitations.
+Heroku is very kind and offers a free tier to be used for very small/non-critical workloads which is great if you just want to evaluate Metabase and see what it looks like.  If you like what you see and decide to use Metabase as an ongoing part of yAnalytics workflow we recommend these upgrades which are quite affordable and will allow you to fully utilize all of Metabase's capabilities without running into annoying limitations.
 
 1. Upgrade your dyno to the `Hobby` tier or one of the professional `Standard` 1x/2x dynos.  The most important reason for this is that your dyno will never sleep and that allows Metabase to run all of its background work such as sending Pulses, syncing metadata, etc, in a reliable fashion.
 

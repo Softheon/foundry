@@ -34,7 +34,7 @@ const emptyStateData = (table, segment) => {
   return {
     message: t`Queries about this segment will appear here as they're added`,
     icon: "all",
-    action: t`Ask a query`,
+    action: t`New Query`,
     link: getQuestionUrl({
       dbId: table && table.db_id,
       tableId: segment.table_id,

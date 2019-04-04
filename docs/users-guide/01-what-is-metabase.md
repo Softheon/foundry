@@ -27,9 +27,9 @@ Once you've created some [dashboards](07-dashboards.md), any of them that you pi
 
 If you connected your database to Metabase during setup, you'll see it listed at the bottom of the homepage along with the sample dataset that Metabase comes with. Click on a database to see its contents. You can click on a table to see its rows, or you can also click on the bolt icon to x-ray a table and see an automatic exploration of it, or click on the book icon to go to the data reference view for that table to learn more about it.
 
-### Explore your analytics
+### Explore yAnalytics
 
-As you and your team create dashboards and collections, they'll start to show up on the homepage. Click on a collection in the "Our analytics" section to see its contents, or click "browse all items" to see everything you and your team have made. [More about exploring](03-basic-exploration.md)
+As you and your team create dashboards and collections, they'll start to show up on the homepage. Click on a collection in the "Analytics" section to see its contents, or click "browse all items" to see everything you and your team have made. [More about exploring](03-basic-exploration.md)
 
 ### Ask a question or write a query
 

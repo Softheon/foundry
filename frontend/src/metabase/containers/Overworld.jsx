@@ -223,7 +223,7 @@ class Overworld extends React.Component {
             }
             return (
               <Box pt={2} px={PAGE_PADDING}>
-                <SectionHeading>{t`Our data`}</SectionHeading>
+                <SectionHeading>{t`Data`}</SectionHeading>
                 <Box mb={4}>
                   <Grid>
                     {databases.map(database => (
@@ -298,7 +298,7 @@ export class AdminPinMessage extends React.Component {
     }
 
     const link = (
-      <Link className="link" to={Urls.collection()}>{t`Our analytics`}</Link>
+      <Link className="link" to={Urls.collection()}>{t`Analytics`}</Link>
     );
 
     return (

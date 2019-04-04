@@ -137,7 +137,7 @@ export const getCollectionType = (collectionId: string, state: {}) =>
 
 export const ROOT_COLLECTION = {
   id: "root",
-  name: t`Our analytics`,
+  name: t`Analytics`,
   location: "",
   path: [],
 };
@@ -205,7 +205,7 @@ function getExpandedCollectionsById(
     };
   }
 
-  // "Our Analytics"
+  // "Analytics"
   collectionsById[ROOT_COLLECTION.id] = {
     ...ROOT_COLLECTION,
     parent: null,

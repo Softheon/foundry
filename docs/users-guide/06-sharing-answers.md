@@ -19,7 +19,7 @@ If your Metabase administrator has enabled [public sharing](../administration-gu
 ### Organizing and finding your saved questions
 After your team has been using Metabase for a while, you’ll probably end up with lots of saved questions. Metabase has several ways to help you organize things and find what you’re looking for.
 
-![Our analytics](images/our-analytics-page.png)
+![Analytics](images/our-analytics-page.png)
 
 #### Collections
 Collections are the main way to organize questions, as well as dashboards and pulses. [Administrators can give you different kinds of access](../administration-guide/06-collections.md) to each collection:
@@ -39,7 +39,7 @@ You can use your personal collection as a scratch space to put experiments and e
 
 In each collection, you can pin important or useful dashboards or questions to make them stick to the top of the screen. Pinned items will also be displayed as large cards to make them stand out well. If you have Curate permissions for a collection, you can pin and un-pin things, and drag and drop pins to change their order.
 
-Any dashboards that are pinned in the main "Our analytics" collection will also show up on the homepage.
+Any dashboards that are pinned in the main "Analytics" collection will also show up on the homepage.
 
 #### Search
 

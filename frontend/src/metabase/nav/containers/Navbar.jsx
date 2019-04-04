@@ -307,7 +307,7 @@ export default class Navbar extends Component {
               className="hide sm-show"
               data-metabase-event={`NavBar;New Queries`}
             >
-              <Button medium>{t`Ask a query`}</Button>
+              <Button medium>{t`New Query`}</Button>
             </Link>
           )}
           <EntityMenu
