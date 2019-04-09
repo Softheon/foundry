@@ -123,6 +123,7 @@ export default class AccordianList extends Component {
 
   toggleSection(sectionIndex) {
     if (this.props.onChangeSection) {
+      this.setState({searchText: ""})
       if (this.props.onChangeSection(sectionIndex) === false) {
         return;
       }
@@ -330,12 +331,12 @@ export default class AccordianList extends Component {
       // This is a temporary fix to handle cases where the parent component doesn’t pass in the correct `maxHeight`
       overflowY: "scroll",
     };
-
+    const className = this.props.className + " scroll-show";
     return (
       <List
         id={id}
         ref={list => (this._list = list)}
-        className={this.props.className}
+        className={className}
         style={{ ...defaultListStyle, ...(style || {}) }}
         width={width}
         height={height}
@@ -446,19 +447,20 @@ export default class AccordianList extends Component {
                         onClick={
                           this.itemIsClickable(item) &&
                           this.onChange.bind(this, item)
-                        }
-                        style={{wordBreak: "break-all",
-                        width: 250}}
+                        }                 
                       >
                         <span className="flex align-center">
                           {this.renderItemIcon(item, itemIndex)}
                         </span>
-                        <h4 className="List-item-title ml1">{item.name}</h4>
+                        <h4 className="List-item-title ml1"
+                          style={{wordWrap: "break-word",
+                          width:"180px"}}
+                        >{item.name}</h4>
                       </a>
                       {this.renderItemExtra(item, itemIndex)}
                       {(showItemArrows || item.showItemArrows) && (
                         <div className="List-item-arrow flex align-center px1">
-                          <Icon name="chevronright" size={8} />
+                          <Icon name="chevronright" size={12} />
                         </div>
                       )}
                     </div>

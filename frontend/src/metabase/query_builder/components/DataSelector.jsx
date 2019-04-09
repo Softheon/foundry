@@ -652,7 +652,7 @@ export default class DataSelector extends Component {
   onChangeDatabaseAndFolder = (index, schemaInSameStep) => {
     let database = this.state.databases[index];
     let databaseName = database.name.toUpperCase();
-    if (!databaseName || databaseName && !databaseName.endsWith("EDW")) {
+    if (!databaseName || (databaseName && !databaseName.endsWith("EDW"))) {
       return this.onChangeDatabase(index, schemaInSameStep);
     }
     let folder =
@@ -903,6 +903,10 @@ export default class DataSelector extends Component {
     const triggerClasses = this.props.renderAsSelect
       ? "border-med bg-white block no-decoration"
       : "flex align-center";
+    const style = {
+      width: "300px",
+      overflowY: "auto"
+    }
     return (
       <PopoverWithTrigger
         id="DataPopover"
@@ -912,6 +916,7 @@ export default class DataSelector extends Component {
         triggerClasses={triggerClasses}
         horizontalAttachments={["center", "left", "right"]}
         sizeToFit
+        style = {style}
       >
         {this.renderActiveStep()}
       </PopoverWithTrigger>
