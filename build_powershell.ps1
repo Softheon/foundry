@@ -17,7 +17,7 @@
 	$DATE.Trim() -replace  "`n|`r" | Out-File $VERSIONPROPERTIESFILES -Append
 
 	echo "Running 'yarn' to download javascript dependencies..." 
-	yarn install --production=false
+	yarn install --production=false --network-timeout 1000000
 	echo "Running 'webpack' with NODE_ENV=production assemble and minify frontend assets..." 
     $env:NODE_ENV="production"
 	./node_modules/.bin/webpack --bail
