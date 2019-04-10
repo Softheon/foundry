@@ -7,7 +7,7 @@
 	$DATE=git log -1 --pretty=%ad --date=short | Out-String
 	$VERSIONPROPERTIESFILES="resources/version.properties"
 
-	Remove-Item -Path $VERSIONPROPERTIESFILES
+	Remove-Item -Path $VERSIONPROPERTIESFILES -ErrorAction Ignore
 	$HASH="hash=${HASH}"
 	$BRANCH="branch=${BRANCH}"
 	$DATE="date=${DATE}"
