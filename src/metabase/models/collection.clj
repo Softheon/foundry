@@ -189,7 +189,7 @@
   "The special Root Collection placeholder object with some extra details to facilitate displaying it on the FE."
   []
   (assoc root-collection
-    :name (str (tru "analytics"))
+    :name (str (tru "Analytics"))
     :id   "root"))
 
 (defn- is-root-collection? [x]
