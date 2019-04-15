@@ -716,39 +716,13 @@
         value-key-set (set (keys tag-value))]
     (if (contains? value-key-set :dimension)
       (let [new-dimension-value (field-detail (second (:dimension tag-value)))]
-        (assoc template-tag 1 (assoc tag-value :dimension new-dimension-value)))
+        (assoc template-tag 1 (assoc tag-value :dimension ["field-id" new-dimension-value])))
       template-tag)))
 
 (defn- update-template-tags
   [template-tags]
   (let [result (map update-template-tag template-tags)]
     (into {} result)))
-
-; (defn- field-id-to-field-string-identifier
-;   [parameters]
-;   (if (not (vector? parameters))
-;     parameters
-;     (let [count (count parameters)]
-;       (loop [i 0
-;              size count
-;              result []]
-;         (if (< i size)
-;           (let [current-element (get parameters i)]
-;             (if (vector? current-element)
-;               (recur (+ i 1) size (conj result (field-id-to-field-string-identifier current-element)))
-;               (let [first-element (get parameters 0 nil)
-;                     second-element (get parameters 1 nil)]
-;                 (if (and (= i 0)
-;                          first-element
-;                          second-element
-;                          (= (name first-element) "field-id")
-;                          (integer? second-element))
-;                   (recur 3 size (conj
-;                                  (conj result (keyword "field-id"))
-;                                  (field-detail second-element)))
-;                   (recur (+ i 1) size (conj result current-element))))))
-;           result)))))
-
 
 (defn- parse-field-id
 "Recursively finds 'field-id' clauses and updetes their values to the foramt 
@@ -809,19 +783,20 @@
 
 (defn- card-json
   [card]
-  (if (get-in card [:dataset_query :native])
-    (do
-      (if (get-in card [:dataset_query :native :template-tags])
-        (update-in card [:dataset_query :native :template-tags] update-template-tags)
-        card))
-    (when (get-in card [:dataset_query :query])
-      (let [database-id (get-in card [:dataset_query :database])
-            parameters (get-in card [:dataset_query :query])
-            transformed-parameters {}]
-        (-> card
-            (assoc-in [:dataset_query :query]
-                      (into transformed-parameters (transform-parameters parameters database-id)))
-            (update-in [:collection_id] expand-parent-collection))))))
+  (let [expanded-card (update-in card [:collection_id] expand-parent-collection)]
+    (if (get-in expanded-card [:dataset_query :native])
+      (do
+        (if (get-in expanded-card [:dataset_query :native :template-tags])
+          (update-in expanded-card [:dataset_query :native :template-tags] update-template-tags)
+          expanded-card))
+      (when (get-in expanded-card [:dataset_query :query])
+        (let [database-id (get-in expanded-card [:dataset_query :database])
+              parameters (get-in expanded-card [:dataset_query :query])
+              transformed-parameters {}]
+          (-> expanded-card
+              (assoc-in [:dataset_query :query]
+                        (into transformed-parameters (transform-parameters parameters database-id)))))))))
+
 
 (api/defendpoint GET "/:card-id/:export-format/download"
   "Find a card with given card id and return its results as a file in the specified format. Note that urrently, it only supports json."
