@@ -726,7 +726,7 @@
 
 (defn- parse-field-id
 "Recursively finds 'field-id' clauses and updetes their values to the foramt 
-[field-table, field-name] for each found field id."
+[field-table, field-name]."
 [mbql]
 (if (not (vector? mbql))
   mbql
@@ -740,17 +740,19 @@
             (recur (+ i 1) size (conj result (parse-field-id current-element)))
             (let [first-element (get mbql 0 nil)
                   second-element (get mbql 1 nil)
-                  third-element (get mbql 3 nil)]
+                  third-element (get mbql 2 nil)]
+              (log/info (identity second-element))
+              (log/info (identity third-element))
               (cond
                 (= (name first-element) "field-id") (recur size
                                                            size (conj
                                                                  (conj result (keyword "field-id"))
-                                                                 field-detail second-element))
+                                                                 (field-detail second-element)))
                 (= (name first-element) "fk->") (recur size
                                                        size (conj
                                                              (conj result (keyword "fk->"))
-                                                             (field-detail second-element)
-                                                             (field-detail third-element)))
+                                                             ["field-id" (field-detail (second-element 1))]
+                                                             ["field-id" (field-detail (third-element 1))]))
                 :else (recur (inc i) size (conj result current-element))))))
         result)))))
 
