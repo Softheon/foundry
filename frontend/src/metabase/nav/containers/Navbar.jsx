@@ -280,7 +280,7 @@ export default class Navbar extends Component {
           mx={1}
           hover={{ backgroundColor: DefaultSearchColor }}
         >
-            <img src="https://www.softheon.com/HTMLCache/Resources/Logo-navbar-01.png" width="150" height="40"/>
+            <img src="app/assets/img/Logo-navbar-01.png" width="150" height="40"/>
         </Link>
         <Flex
           className="absolute top left right bottom z1"

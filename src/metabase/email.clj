@@ -1,5 +1,6 @@
 (ns metabase.email
   (:require [clojure.tools.logging :as log]
+            [clojure.java.io :as io]
             [metabase.models.setting :as setting :refer [defsetting]]
             [metabase.util :as u]
             [metabase.util
@@ -84,7 +85,11 @@
                 :attachments message
                 :text        message
                 :html        [{:type    "text/html; charset=utf-8"
-                               :content message}])}))
+                               :content message}
+                              {:type :inline
+                               :content-id 12
+                               :content-type "image/png"
+                               :content (io/resource "frontend_client/app/assets/img/Softheon_Logo_Color.png")}])}))
 
 (defn send-message!
   "Send an email to one or more RECIPIENTS.
