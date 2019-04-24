@@ -12,7 +12,7 @@
             [colorize.core :as colorize]
             [medley.core :as m]
             [metabase.config :as config]
-            [metabase.util.i18n :refer [trs]]
+            [metabase.util.i18n :refer [trs tru]]
             [ring.util.codec :as codec])
   (:import [java.net InetAddress InetSocketAddress Socket]
            [java.text Normalizer Normalizer$Form]
@@ -318,7 +318,8 @@
   [futur timeout-ms]
   (let [result (deref futur timeout-ms ::timeout)]
     (when (= result ::timeout)
-      (throw (TimeoutException. (format "Timed out after %d milliseconds." timeout-ms))))
+      (future-cancel futur)
+      (throw (TimeoutException. (str (tru "Timed out after {0} milliseconds." timeout-ms)))))
     result))
 
 (defmacro with-timeout

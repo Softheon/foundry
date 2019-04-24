@@ -378,10 +378,11 @@
   ([model k v & more]
    (apply (resolve 'metabase.toucan.db/select-one) model k v more)))
 
-(def ^:const ^{:arglists '([model])} ^Boolean model?
+(defn model?
   "Is model a valid toucan model?"
-  ::model)
-
+  [model]
+  (and (record? model)
+       (::model model)))
 ;; We use the same record type (e.g., `DatabaseInstance`) for both the "model" (e.g., `Database`) and objects fetched
 ;; from the DB ("instances"). Model definitions have the key `::model` assoced so we can differentiate.
 ;; Invoking an instance calls get so you can do things like `(db :name)` as if it were a regular map.
