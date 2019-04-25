@@ -192,7 +192,7 @@ class Overworld extends React.Component {
                     ? t`Save dashboards, queries, and collections in "${
                         ROOT_COLLECTION.name
                       }"`
-                    : t`Access dashboards, quequeriesstions, and collections in "${
+                    : t`Access dashboards, queries, and collections in "${
                         ROOT_COLLECTION.name
                       }"`}
                 </h3>
