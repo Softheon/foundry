@@ -49,7 +49,7 @@
   @instance*)
 
 (defn create-server
-  "Create a new async Jetty server with `handler` and `options`. Handy for creating the real Metabase web server, and
+  "Create a new async Jetty server with `handler` and `options`. Handy for creating the real Foundry web server, and
   creating one-off web servers for tests and REPL usage."
   ^Server [handler options]
   (doto ^Server (#'ring-jetty/create-server (assoc options :async? true))

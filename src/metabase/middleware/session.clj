@@ -15,7 +15,7 @@
   (:import java.util.UUID
            org.joda.time.DateTime))
 
-;; How do authenticated API requests work? Metabase first looks for a cookie called `metabase.SESSION`. This is the
+;; How do authenticated API requests work? Foundry first looks for a cookie called `metabase.SESSION`. This is the
 ;; normal way of doing things; this cookie gets set automatically upon login. `metabase.SESSION` is an HttpOnly
 ;; cookie and thus can't be viewed by FE code.
 ;;
@@ -25,7 +25,7 @@
 ;; switched to a new Cookie name for 0.32.x because the new cookie includes a `path` attribute, thus browsers consider
 ;; it to be a different Cookie; Ring cookie middleware does not handle multiple cookies with the same name.)
 ;;
-;; Finally we'll check for the presence of a `X-Metabase-Session` header. If that isn't present, you don't have a
+;; Finally we'll check for the presence of a `X-Foundry-Session` header. If that isn't present, you don't have a
 ;; Session ID and thus are definitely not authenticated
 (def ^:private ^String metabase-session-cookie        "metabase.SESSION")
 (def ^:private ^String metabase-legacy-session-cookie "metabase.SESSION_ID") ; this can be removed in 0.33.x
@@ -72,7 +72,7 @@
     (= scheme :https)))
 
 (s/defn set-session-cookie
-  "Add a `Set-Cookie` header to `response` to persist the Metabase session."
+  "Add a `Set-Cookie` header to `response` to persist the Foundry session."
   [request response, session-id :- UUID]
   (-> response
       wrap-body-if-needed
@@ -93,7 +93,7 @@
           {:secure true})))))
 
 (defn clear-session-cookie
-  "Add a header to `response` to clear the current Metabase session cookie."
+  "Add a header to `response` to clear the current Foundry session cookie."
   [response]
   (-> response
       wrap-body-if-needed

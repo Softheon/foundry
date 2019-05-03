@@ -12,10 +12,10 @@
   {:features (constantly #{:a})})
 
 
-;; driver-supports?
+;; supports?
 
-(expect true  (driver/driver-supports? (TestDriver.) :a))
-(expect false (driver/driver-supports? (TestDriver.) :b))
+(expect true  (driver/supports? (TestDriver.) :a))
+(expect false (driver/supports? (TestDriver.) :b))
 
 ;; values->base-type
 (expect

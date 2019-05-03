@@ -3,6 +3,7 @@
             [metabase
              [config :as config]
              [types :as types]]
+            [metabase.driver.util :as driver.u]
             [metabase.models
              [common :as common]
              [setting :as setting :refer [defsetting]]]
@@ -19,12 +20,12 @@
   :default true)
 
 (defsetting version-info
-  (tru "Information about available versions of Foundry")
+  (tru "Information about available versions of Foundry.")
   :type    :json
   :default {})
 
 (defsetting site-name
-  (tru "The name used for this instance of Foundry")
+  (tru "The name used for this instance of Foundry.")
   :default "Foundry")
 
 (defsetting site-uuid
@@ -44,7 +45,7 @@
 ;; This value is *guaranteed* to never have a trailing slash :D
 ;; It will also prepend `http://` to the URL if there's not protocol when it comes in
 (defsetting site-url
-  (tru "The base URL of this Foundry instance, e.g. \"http://metabase.my-company.com\".")
+  (tru "The base URL of this Foundry instance, e.g. \"http://my-company.com\".")
   :setter (fn [new-value]
             (setting/set-string! :site-url (when new-value
                                              (cond->> (str/replace new-value #"/$" "")
@@ -52,6 +53,7 @@
 
 (defsetting site-locale
   (str  (tru "The default language for this Foundry instance.")
+        " "
         (tru "This only applies to emails, Pulses, etc. Users'' browsers will specify the language used in the user interface."))
   :type    :string
   :setter  (fn [new-value]
@@ -107,7 +109,10 @@
   :type    :integer
   :default 1000
   :setter  (fn [new-value]
-             (when (> new-value global-max-caching-kb)
+             (when (and new-value
+                        (> (cond-> new-value
+                             (string? new-value) Integer/parseInt)
+                           global-max-caching-kb))
                (throw (IllegalArgumentException.
                        (str
                         (tru "Failed setting `query-caching-max-kb` to {0}." new-value)
@@ -179,17 +184,19 @@
    :anon_tracking_enabled (anon-tracking-enabled)
    :custom_geojson        (setting/get :custom-geojson)
    :custom_formatting     (setting/get :custom-formatting)
-   :email_configured      ((resolve 'metabase.email/email-configured?))
+   :email_configured      (do (require 'metabase.email)
+                              ((resolve 'metabase.email/email-configured?)))
    :embedding             (enable-embedding)
    :enable_query_caching  (enable-query-caching)
    :enable_nested_queries (enable-nested-queries)
    :enable_xrays          (enable-xrays)
-   :engines               ((resolve 'metabase.driver/available-drivers))
+   :engines               (driver.u/available-drivers-info)
    :ga_code               ""
    :google_auth_client_id (setting/get :google-auth-client-id)
    :has_sample_dataset    (db/exists? 'Database, :is_sample true)
    :hide_embed_branding   (metastore/hide-embed-branding?)
-   :ldap_configured       ((resolve 'metabase.integrations.ldap/ldap-configured?))
+   :ldap_configured       (do (require 'metabase.integrations.ldap)
+                              ((resolve 'metabase.integrations.ldap/ldap-configured?)))
    :available_locales     (available-locales-with-names)
    :map_tile_server_url   (map-tile-server-url)
    :metastore_url         metastore/store-url
@@ -197,7 +204,9 @@
    :premium_token         (metastore/premium-embedding-token)
    :public_sharing        (enable-public-sharing)
    :report_timezone       (setting/get :report-timezone)
-   :setup_token           ((resolve 'metabase.setup/token-value))
+   :setup_token           (do
+                            (require 'metabase.setup)
+                            ((resolve 'metabase.setup/token-value)))
    :site_name             (site-name)
    :site_url              (site-url)
    :timezone_short        (short-timezone-name (setting/get :report-timezone))

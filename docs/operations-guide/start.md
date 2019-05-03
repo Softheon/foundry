@@ -1,20 +1,45 @@
 
 **Covered in this guide:**
 
-*  [How to install Metabase](#installing-and-running-metabase)
-*  [How to upgrade Metabase](#upgrading-metabase)
-*  [Configuring the application database](#configuring-the-metabase-application-database)
-*  [Migrating from using the H2 database to MySQL or Postgres](#migrating-from-using-the-h2-database-to-mysql-or-postgres)
-*  [Running database migrations manually](#running-metabase-database-migrations-manually)
-*  [Backing up Metabase Application Data](#backing-up-metabase-application-data)
-*  [Encrypting your database connection details at rest](#encrypting-your-database-connection-details-at-rest)
-*  [Customizing the Metabase Jetty Webserver](#customizing-the-metabase-jetty-webserver)
-*  [Changing password complexity](#changing-metabase-password-complexity)
-*  [Handling Timezones](#handling-timezones-in-metabase)
-*  [Configuring Emoji Logging](#configuring-emoji-logging)
-*  [Configuring Logging Level](#configuring-logging-level)
-*  [How to setup monitoring via JMX](#monitoring-via-jmx)
-*  [A word on Java versions](#java-versions)
+- [Installing and Running Metabase](#installing-and-running-metabase)
+      - [Running the Jar File](#running-the-jar-file)
+      - [Running the Mac Application](#running-the-mac-application)
+      - [Running on Docker](#running-on-docker)
+    - [Cloud Platforms](#cloud-platforms)
+      - [Running on AWS Elastic Beanstalk](#running-on-aws-elastic-beanstalk)
+      - [Running on Heroku](#running-on-heroku)
+      - [Running on Cloud66](#running-on-cloud66)
+      - [Running on Debian as a service](#running-on-debian-as-a-service)
+      - [Running on Kubernetes](#running-on-kubernetes)
+- [Upgrading Metabase](#upgrading-metabase)
+    - [Specific Platforms](#specific-platforms)
+      - [Docker Image](#docker-image)
+      - [Jar file](#jar-file)
+      - [macOS Application](#macos-application)
+      - [Upgrading AWS Elastic Beanstalk deployments](#upgrading-aws-elastic-beanstalk-deployments)
+      - [Upgrading Heroku deployments](#upgrading-heroku-deployments)
+- [Configuring the Metabase Application Database](#configuring-the-metabase-application-database)
+      - [H2 (default)](#h2-default)
+      - [Postgres](#postgres)
+      - [MySQL](#mysql)
+- [Migrating from using the H2 database to MySQL or Postgres](#migrating-from-using-the-h2-database-to-mysql-or-postgres)
+          - [Notes](#notes)
+- [Running Metabase database migrations manually](#running-metabase-database-migrations-manually)
+- [Backing up Metabase Application Data](#backing-up-metabase-application-data)
+    - [H2 Embedded Database (default)](#h2-embedded-database-default)
+    - [Amazon RDS for the Database Application](#amazon-rds-for-the-database-application)
+    - [Self-managed PostgreSQL or MySQL database](#self-managed-postgresql-or-mysql-database)
+- [Encrypting your database connection details at rest](#encrypting-your-database-connection-details-at-rest)
+- [Customizing the Metabase Jetty webserver](#customizing-the-metabase-jetty-webserver)
+    - [Running Metabase on another port](#running-metabase-on-another-port)
+    - [Listening on a specific network interface](#listening-on-a-specific-network-interface)
+    - [Using HTTPS with Metabase](#using-https-with-metabase)
+- [Changing Metabase password complexity](#changing-metabase-password-complexity)
+- [Handling timezones in Metabase](#handling-timezones-in-metabase)
+- [Configuring Emoji Logging](#configuring-emoji-logging)
+- [Configuring Logging Level](#configuring-logging-level)
+- [Monitoring via JMX](#monitoring-via-jmx)
+- [Java Versions](#java-versions)
 
 # Installing and Running Metabase
 
@@ -340,33 +365,4 @@ Diagnosing performance related issues can be a challenge. Luckily the JVM ships 
 
 # Java Versions
 
-Metabase will run on Java version 8 or greater; Java 8 is the easiest and most common choice.
-
-## Running on Java 8
-
-Running on Java 8 is the easiest path to running Metabase. There are no additional parameters required, if launching from a Jar the below invocation will work:
-
-    java -jar metabase.jar
-
-## Running on Java 9 or Newer
-
-To use Metabase on Java 9 with Oracle, Vertica, SparkSQL, or other drivers that require external dependencies,
-you'll need to tweak the way you launch Metabase.
-
-Java version 9 has introduced a new module system that places some additional restrictions on class loading. To use
-Metabase drivers that require extra external dependencies, you'll need to include them as part of the classpath at
-launch time. Run Metabase as follows:
-
-```bash
-# Unix
-java -cp metabase.jar:plugins/* metabase.core
-```
-
-On Windows, use a semicolon instead:
-
-```powershell
-# Windows
-java -cp metabase.jar;plugins/* metabase.core
-```
-
-The default Docker images use Java 8 so this step is only needed when running the JAR directly.
+Metabase will run on Java version 8, 9, or 10. Java 11 support is still a work in progress, so please be patient while we get everything working.

@@ -390,7 +390,7 @@
    "os.name" "os.version"])
 
 (defn- system-metrics
-  "Metadata about the environment Foundry is running in"
+  "Foundry about the environment Foundry is running in"
   []
   (let [runtime (Runtime/getRuntime)]
     (merge

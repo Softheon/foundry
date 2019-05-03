@@ -1,8 +1,6 @@
 (ns metabase.util.export
   (:require [cheshire.core :as json]
-            [metabase.csv.csv :as csv]
-            [clojure.java.io :as io]
-            [ring.util.io :as ring-io]
+            [clojure.data.csv :as csv]
             [dk.ative.docjure.spreadsheet :as spreadsheet])
   (:import [java.io ByteArrayInputStream ByteArrayOutputStream File]
            org.apache.poi.ss.usermodel.Cell))
@@ -56,39 +54,9 @@
   (for [row rows]
     (zipmap columns row)))
 
-(defn- start-with-zero?
-  "Check if a string has a leading zero"
-  [inputStr]
-  (and  (>= (count inputStr) 1)
-        (= (subs inputStr 0 1) "0")))
-
-(defn stream-xlsx
-  [columns rows]
-  (let [wb  (spreadsheet/create-workbook "Query result" (cons (mapv name columns) rows))
-        ;; note: byte array streams don't need to be closed
-        stream-xlsx-fn (fn [out]
-                         (spreadsheet/save-workbook! out wb))]
-    (ring-io/piped-input-stream stream-xlsx-fn)))
-
-(defn stream-csv-format
-  [resultSet]
-  (let [write-to-csv-stream (fn [writer]
-                              (csv/write-csv writer resultSet)
-                              (.flush writer))]
-    (ring-io/piped-input-stream #(write-to-csv-stream (io/make-writer % {})))))
-
-(defn- export-to-csv-stream-writer
-  [writer results]
-  (let [out (io/make-writer writer {})]
-    (try
-      (csv/write-csv out results)
-      (.flush out)
-      (catch Exception e
-        (throw e)))))
-
 (def export-formats
   "Map of export types to their relevant metadata"
-  {"csv"  {:export-fn    export-to-csv-stream-writer
+  {"csv"  {:export-fn    export-to-csv
            :content-type "text/csv"
            :ext          "csv"
            :context      :csv-download},
@@ -100,8 +68,9 @@
   ;          :content-type "applicaton/json"
   ;          :ext          "json"
   ;          :context      :json-download}
-})
-
+           
+           })
+          
 (defn- export-card-to-json
   [card]
   (assoc {}

@@ -67,9 +67,9 @@
           ;; stacktrace for debugging purposes
           :else
           (assoc other-info
-                 :message    message
-                 :type       (class e)
-                 :stacktrace (u/filtered-stacktrace e)))]
+            :message    message
+            :type       (class e)
+            :stacktrace (u/filtered-stacktrace e)))]
     {:status  (or status-code 500)
      :headers (mw.security/security-headers)
      :body    body}))

@@ -39,7 +39,7 @@
    (u/emoji (if default-secret-key "🔐" "🔓"))
    "\n"
    (trs "For more information, see")
-   "https://www.softheon-foundry.com/docs/latest/operations-guide/start.html#encrypting-your-database-connection-details-at-rest"))
+   ""))
 
 (defn encrypt
   "Encrypt string `s` as hex bytes using a `secret-key` (a 64-byte byte array), by default the hashed value of

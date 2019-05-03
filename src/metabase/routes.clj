@@ -52,12 +52,14 @@
     (fallback-localization *locale*)))
 
 (defn- load-entrypoint-template [entrypoint-name embeddable? uri]
-  (load-template (str "frontend_client/" entrypoint-name ".html")
-                 {:bootstrap_json    (escape-script (json/generate-string (public-settings/public-settings)))
-                  :localization_json (escape-script (load-localization))
-                  :uri               (escape-script (json/generate-string uri))
-                  :base_href         (escape-script (json/generate-string (base-href)))
-                  :embed_code        (when embeddable? (embed/head uri))}))
+  (load-template
+   (str "frontend_client/" entrypoint-name ".html")
+   {:bootstrap_json    (escape-script (json/generate-string (public-settings/public-settings)))
+    :localization_json (escape-script (load-localization))
+    :uri               (escape-script (json/generate-string uri))
+    :base_href         (escape-script (json/generate-string (base-href)))
+    :embed_code        (when embeddable? (embed/head uri))}))
+  
 (defn- entrypoint
   "Repsonse that serves up an entrypoint into the Foundry application, e.g. `index.html`."
   [entrypoint-name embeddable? {:keys [uri]} respond raise]

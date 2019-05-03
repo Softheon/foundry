@@ -162,7 +162,7 @@
 
 (defn types->parents
   "Return a map of various types to their parent types.
-   This is intended for export to the frontend as part of `MetabaseBootstrap` so it can build its own implementation of `isa?`."
+   This is intended for export to the frontend as part of `FoundryBootstrap` so it can build its own implementation of `isa?`."
   ([] (types->parents :type/*))
   ([root]
    (into {} (for [t (descendants root)]

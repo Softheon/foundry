@@ -558,7 +558,11 @@
     (s/optional-key :filter)       Filter
     (s/optional-key :limit)        su/IntGreaterThanZero
     (s/optional-key :order-by)     (distinct-non-empty [OrderBy])
-    (s/optional-key :page)         {:page  su/IntGreaterThanOrEqualToZero
+    ;; page = page num, starting with 1. items = number of items per page.
+    ;; e.g.
+    ;; {:page 1, :items 10} = items 1-10
+    ;; {:page 2, :items 10} = items 11-20
+    (s/optional-key :page)         {:page  su/IntGreaterThanZero
                                     :items su/IntGreaterThanZero}
     ;; Various bits of middleware add additonal keys, such as `fields-is-implicit?`, to record bits of state or pass
     ;; info to other pieces of middleware. Everyone else can ignore them.
@@ -597,29 +601,56 @@
   "Additional constraints added to a query limiting the maximum number of rows that can be returned. Mostly useful
   because native queries don't support the MBQL `:limit` clause. For MBQL queries, if `:limit` is set, it will
   override these values."
-  {;; maximum number of results to allow for a query with aggregations
-   (s/optional-key :max-results)           su/IntGreaterThanOrEqualToZero
-   ;; maximum number of results to allow for a query with no aggregations
-   (s/optional-key :max-results-bare-rows) su/IntGreaterThanOrEqualToZero
-   ;; other Constraints might be used somewhere, but I don't know about them. Add them if you come across them for
-   ;; documentation purposes
-   s/Keyword                               s/Any})
+  (s/constrained
+   { ;; maximum number of results to allow for a query with aggregations. If `max-results-bare-rows` is unset, this
+    ;; applies to all queries
+    (s/optional-key :max-results)           su/IntGreaterThanOrEqualToZero
+    ;; maximum number of results to allow for a query with no aggregations.
+    ;; If set, this should be LOWER than `:max-results`
+    (s/optional-key :max-results-bare-rows) su/IntGreaterThanOrEqualToZero
+    ;; other Constraints might be used somewhere, but I don't know about them. Add them if you come across them for
+    ;; documentation purposes
+    s/Keyword                               s/Any}
+   (fn [{:keys [max-results max-results-bare-rows]}]
+     (if-not (core/and max-results max-results-bare-rows)
+       true
+       (core/>= max-results max-results-bare-rows)))
+   "max-results-bare-rows must be less or equal to than max-results"))
 
 (def ^:private MiddlewareOptions
   "Additional options that can be used to toggle middleware on or off."
   {;; should we skip adding results_metadata to query results after running the query? Used by
    ;; `metabase.query-processor.middleware.results-metadata`; default `false`
-   (s/optional-key :skip-results-metadata?) s/Bool
+   (s/optional-key :skip-results-metadata?)
+   s/Bool
+
    ;; should we skip converting datetime types to ISO-8601 strings with appropriate timezone when post-processing
    ;; results? Used by `metabase.query-processor.middleware.format-rows`; default `false`
-   (s/optional-key :format-rows?)           s/Bool
+   (s/optional-key :format-rows?)
+   s/Bool
+
    ;; disable the MBQL->native middleware. If you do this, the query will not work at all, so there are no cases where
    ;; you should set this yourself. This is only used by the `qp/query->preprocessed` function to get the fully
    ;; pre-processed query without attempting to convert it to native.
-   (s/optional-key :disable-mbql->native?)  s/Bool
+   (s/optional-key :disable-mbql->native?)
+   s/Bool
+
+   ;; Userland queries are ones ran as a result of an API call, Pulse, MetaBot query, or the like. Special handling is
+   ;; done in the `process-userland-query` middleware for such queries -- results are returned in a slightly different
+   ;; format, and QueryExecution entries are normally saved, unless you pass `:no-save` as the option.
+   (s/optional-key :userland-query?)
+   (s/maybe s/Bool)
+
+   ;; Whether to add some default `max-results` and `max-results-bare-rows` constraints. By default, none are added,
+   ;; although the functions that ultimately power most API endpoints tend to set this to `true`. See
+   ;; `add-constraints` middleware for more details.
+   (s/optional-key :add-default-userland-constraints?)
+   (s/maybe s/Bool)
+
    ;; other middleware options might be used somewhere, but I don't know about them. Add them if you come across them
    ;; for documentation purposes
-   s/Keyword                                s/Any})
+   s/Keyword
+   s/Any})
 
 
 ;;; ------------------------------------------------------ Info ------------------------------------------------------
@@ -644,6 +675,8 @@
           :question
           :xlsx-download))
 
+;; TODO - this schema is somewhat misleading because if you use a function like
+;; `qp/process-query-and-save-with-max-results-constraints!` some of these keys (e.g. `:context`) are in fact required
 (def Info
   "Schema for query `:info` dictionary, which is used for informational purposes to record information about how a query
   was executed in QueryExecution and other places. It is considered bad form for middleware to change its behavior
@@ -656,13 +689,10 @@
    (s/optional-key :dashboard-id) (s/maybe su/IntGreaterThanZero)
    (s/optional-key :pulse-id)     (s/maybe su/IntGreaterThanZero)
    (s/optional-key :nested?)      (s/maybe s/Bool)
-   ;; `:hash` and `:query-type` get added automatically by `process-query-and-save-execution!`, so don't try passing
+   ;; `:hash` gets added automatically by `process-query-and-save-execution!`, so don't try passing
    ;; these in yourself. In fact, I would like this a lot better if we could take these keys out of `:info` entirely
    ;; and have the code that saves QueryExceutions figure out their values when it goes to save them
-   (s/optional-key :query-hash)   (s/maybe (Class/forName "[B"))
-   ;; TODO - this key is pointless since we can just look at `:type`; let's normalize it out and remove it entirely
-   ;; when we get a chance
-   (s/optional-key :query-type)   (s/enum "MBQL" "native")})
+   (s/optional-key :query-hash)   (s/maybe (Class/forName "[B"))})
 
 (def SourceQueryMetadata
   "Schema for the expected keys in metadata about source query columns if it is passed in to the query."
@@ -683,6 +713,7 @@
   `Card.dataset_query`."
   (s/constrained
    ;; TODO - move database/virtual-id into this namespace so we don't have to use the magic number here
+   ;; Something like `metabase.mbql.constants`
    {:database                         (s/cond-pre (s/eq -1337) su/IntGreaterThanZero)
     ;; Type of query. `:query` = MBQL; `:native` = native. TODO - consider normalizing `:query` to `:mbql`
     :type                             (s/enum :query :native)

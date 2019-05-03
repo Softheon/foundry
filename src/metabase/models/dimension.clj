@@ -2,8 +2,8 @@
   "Dimensions are used to define remappings for Fields handled automatically when those Fields are encountered by the
   Query Processor. For a more detailed explanation, refer to the documentation in
   `metabase.query-processor.middleware.add-dimension-projections`."
-  (:require [metabase.toucan.models :as models]
-            [metabase.util :as u]))
+  (:require [metabase.util :as u]
+            [metabase.toucan.models :as models]))
 
 (def dimension-types
   "Possible values for `Dimension.type`"

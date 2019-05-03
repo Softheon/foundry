@@ -15,7 +15,7 @@
             [metabase.toucan.db :as db]))
 
 (def ^:private activity-feed-topics
-  "The `Set` of event topics which are subscribed to for use in the Foundry activity feed."
+  "The set of event topics which are subscribed to for use in the Foundry activity feed."
   #{:alert-create
     :alert-delete
     :card-create
@@ -34,7 +34,7 @@
     :segment-create
     :segment-update
     :segment-delete
-    :user-login})
+    :user-login}) ; this is only used these days the first time someone logs in to record 'user-joined' events
 
 (def ^:private activity-feed-channel
   "Channel for receiving event notifications we want to subscribe to for the activity feed."

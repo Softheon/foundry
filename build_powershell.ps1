@@ -31,6 +31,6 @@
 	}else{
 		echo "Sample Dataset already generated."
 	}
-
+	&"$PSScriptRoot\build-drivers.ps1"
 	echo "Running 'lein uberjar'..."
 	lein uberjar

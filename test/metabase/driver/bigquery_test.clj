@@ -160,8 +160,8 @@
        "ORDER BY `name` ASC")
   ;; normally for test purposes BigQuery doesn't support foreign keys so override the function that checks that and
   ;; make it return `true` so this test proceeds as expected
-  (with-redefs [driver/driver-supports?         (constantly true)
-                check-features/driver-supports? (constantly true)]
+  (with-redefs [driver/supports?         (constantly true)
+                check-features/supports? (constantly true)]
     (tu/with-temp-vals-in-db 'Field (data/id :venues :category_id) {:fk_target_field_id (data/id :categories :id)
                                                                     :special_type       "type/FK"}
       (let [results (qp/process-query

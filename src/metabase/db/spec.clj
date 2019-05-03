@@ -17,46 +17,42 @@
           :subname     db}
          (dissoc opts :db)))
 
-(defn- remove-required-keys [db-spec & more-keys]
-  (apply dissoc db-spec (concat [:host :port :db :dbname :user :password :additional-options]
-                                more-keys)))
-
-(defn- purge-nil-values [m]
-  (m/remove-kv (fn [k v] (or (nil? k) (nil? v))) m))
-
-(defn- make-subname [host port db extra-connection-params]
-  (let [query-params (codec/form-encode (purge-nil-values extra-connection-params))]
-    (str "//" host ":" port "/" db (when-not (str/blank? query-params)
-                                     (str "?" query-params)))))
+(defn- make-subname [host port db]
+  (str "//" host ":" port "/" db))
 
 (defn postgres
-  "Create a database specification for a postgres database. Opts should include
-  keys for :db, :user, and :password. You can also optionally set host and
-  port."
+  "Create a Clojure JDBC database specification for a Postgres database."
   [{:keys [host port db]
     :or   {host "localhost", port 5432, db ""}
     :as   opts}]
-  (let [extra-conn-params (-> opts
-                              (remove-required-keys :sslfactory)
-                              (merge {:OpenSourceSubProtocolOverride true}))]
-    (merge {:classname   "org.postgresql.Driver"
-            :subprotocol "postgresql"
-            :subname     (make-subname host port db extra-conn-params)}
-           (dissoc opts :host :port :db))))
+  (merge
+   {:classname                     "org.postgresql.Driver"
+    :subprotocol                   "postgresql"
+    :subname                       (make-subname host (or port 5432) db)
+    :OpenSourceSubProtocolOverride true}
+   (dissoc opts :host :port :db)))
 
 (defn mysql
-  "Create a database specification for a mysql database. Opts should include keys
-  for :db, :user, and :password. You can also optionally set host and port.
-  Delimiters are automatically set to \"`\"."
+  "Create a Clojure JDBC database specification for a MySQL or MariaDB database."
   [{:keys [host port db]
     :or   {host "localhost", port 3306, db ""}
     :as   opts}]
-  (let [extra-connection-params (remove-required-keys opts)]
-    (merge {:classname   "com.mysql.jdbc.Driver"
-            :subprotocol "mysql"
-            :subname     (make-subname host port db extra-connection-params)
-            :delimiters  "`"}
-           (dissoc opts :host :port :db))))
+  (merge
+   {:classname   "org.mariadb.jdbc.Driver"
+    :subprotocol "mysql"
+    :subname     (make-subname host (or port 3306) db)}
+   (dissoc opts :host :port :db)))
+
+(defn mysql
+  "Create a Clojure JDBC database specification for a MySQL or MariaDB database."
+  [{:keys [host port db]
+    :or   {host "localhost", port 3306, db ""}
+    :as   opts}]
+  (merge
+   {:classname   "org.mariadb.jdbc.Driver"
+    :subprotocol "mysql"
+    :subname     (make-subname host (or port 3306) db)}
+   (dissoc opts :host :port :db)))
 
 (defn mssql
   "Create a database specification for a mssql database. Opts should include keys

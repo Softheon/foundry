@@ -1,5 +1,5 @@
 (ns metabase.handler
-  "Top-level Metabase Ring handler."
+  "Top-level Foundry Ring handler."
   (:require [metabase.middleware
              [auth :as mw.auth]
              [exceptions :as mw.exceptions]
@@ -33,8 +33,8 @@
    wrap-params                             ; parses GET and POST params as :query-params/:form-params and both as :params
    mw.session/bind-current-user            ; Binds *current-user* and *current-user-id* if :metabase-user-id is non-nil
    mw.session/wrap-current-user-id         ; looks for :metabase-session-id and sets :metabase-user-id if Session ID is valid
-   mw.session/wrap-session-id              ; looks for a Metabase Session ID and assoc as :metabase-session-id
-   mw.auth/wrap-api-key                    ; looks for a Metabase API Key on the request and assocs as :metabase-api-key
+   mw.session/wrap-session-id              ; looks for a Foundry Session ID and assoc as :metabase-session-id
+   mw.auth/wrap-api-key                    ; looks for a Foundry API Key on the request and assocs as :metabase-api-key
    mw.misc/maybe-set-site-url              ; set the value of `site-url` if it hasn't been set yet
    ;; Disabled for now because some things like CSV download buttons don't work with this on.
    mw.misc/bind-user-locale                ; Binds *locale* for i18n

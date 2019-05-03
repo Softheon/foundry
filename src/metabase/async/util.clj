@@ -20,8 +20,8 @@
 
 (s/defn promise-canceled-chan :- PromiseChan
   "Given a `promise-chan`, return a new channel that will receive a single message if `promise-chan` is closed before
-  a message is written to it (i.e. if an API request is canceled). Automatically closes after `promise-chan` receives
-  a message or is closed."
+a message is written to it (i.e. if an API request is canceled). Automatically closes after `promise-chan` receives
+a message or is closed."
   [promise-chan :- PromiseChan]
   (let [canceled-chan (a/promise-chan)]
     (a/go
@@ -32,31 +32,31 @@
 
 (s/defn single-value-pipe :- PromiseChan
   "Pipe that will forward a single message from `in-chan` to `out-chan`, closing both afterward. If `out-chan` is closed
-  before `in-chan` produces a value, closes `in-chan`; this can be used to automatically cancel QP requests and the
-  like.
+before `in-chan` produces a value, closes `in-chan`; this can be used to automatically cancel QP requests and the
+like.
 
-  Returns a channel that will send a single message when such early-closing cancelation occurs. You can listen for
-  this message to implement special cancelation/close behavior, such as canceling async jobs. This channel
-  automatically closes when either `in-chan` or `out-chan` closes."
+Returns a channel that will send a single message when such early-closing cancelation occurs. You can listen for
+this message to implement special cancelation/close behavior, such as canceling async jobs. This channel
+automatically closes when either `in-chan` or `out-chan` closes."
   [in-chan :- ManyToManyChannel, out-chan :- ManyToManyChannel]
   (let [canceled-chan (a/promise-chan)]
-    ;; fire off a block that will wait for either in-chan to produce a result or out-chan to be closed
+  ;; fire off a block that will wait for either in-chan to produce a result or out-chan to be closed
     (a/go
       (try
         (let [[result first-finished-chan] (a/alts! [in-chan out-chan])]
           (if (and (= first-finished-chan in-chan)
                    (some? result))
-            ;; If `in-chan` (e.g. fn call result) finishes first and receives a result, forward result to `out-chan`
+          ;; If `in-chan` (e.g. fn call result) finishes first and receives a result, forward result to `out-chan`
             (a/>! out-chan result)
-            ;; Otherwise one of the two channels was closed (e.g. query cancelation) before `in-chan` returned a
-            ;; result (e.g. QP result), pass a message to `canceled-chan`; `finally` block will close all three channels
+          ;; Otherwise one of the two channels was closed (e.g. query cancelation) before `in-chan` returned a
+          ;; result (e.g. QP result), pass a message to `canceled-chan`; `finally` block will close all three channels
             (a/>! canceled-chan ::canceled)))
-        ;; Either way, close whichever of the channels is still open just to be safe
+      ;; Either way, close whichever of the channels is still open just to be safe
         (finally
           (a/close! out-chan)
           (a/close! in-chan)
           (a/close! canceled-chan))))
-    ;; return the canceled chan in case someone wants to listen to it
+  ;; return the canceled chan in case someone wants to listen to it
     canceled-chan))
 
 (s/defn ^:private do-on-separate-thread* :- Future
@@ -75,8 +75,8 @@
 
                 (not (a/>!! out-chan result))
                 (log/error (trs "Unexpected error writing result to output channel: already closed"))))
-            ;; if we catch an Exception (shouldn't happen in a QP query, but just in case), send it to `chan`.
-            ;; It's ok, our IMPL of Ring `StreamableResponseBody` will do the right thing with it.
+          ;; if we catch an Exception (shouldn't happen in a QP query, but just in case), send it to `chan`.
+          ;; It's ok, our IMPL of Ring `StreamableResponseBody` will do the right thing with it.
             (catch Throwable e
               (log/error e (trs "Caught error running {0}" f))
               (when-not (a/>!! out-chan e)
@@ -86,14 +86,14 @@
 
 (s/defn do-on-separate-thread :- PromiseChan
   "Run `(apply f args)` on a separate thread, returns a channel to fetch the results. Closing this channel early will
-  cancel the future running the function, if possible."
+cancel the future running the function, if possible."
   [f & args]
   (let [out-chan      (a/promise-chan)
         canceled-chan (promise-canceled-chan out-chan)
-        ;; Run `f` on a separarate thread because it's a potentially long-running QP query and we don't want to tie
-        ;; up precious core.async threads
+      ;; Run `f` on a separarate thread because it's a potentially long-running QP query and we don't want to tie
+      ;; up precious core.async threads
         futur         (apply do-on-separate-thread* out-chan canceled-chan f args)]
-    ;; if output chan is closed early cancel the future
+  ;; if output chan is closed early cancel the future
     (a/go
       (when (a/<! canceled-chan)
         (log/debug (trs "Request canceled, canceling future."))

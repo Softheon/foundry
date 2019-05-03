@@ -11,7 +11,7 @@
             [metabase.util
              [date :as du]
              [i18n :refer [trs]]]
-            [toucan.db :as db])
+            [metabase.toucan.db :as db])
   (:import clojure.core.async.impl.channels.ManyToManyChannel
            org.eclipse.jetty.util.thread.QueuedThreadPool))
 

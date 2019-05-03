@@ -10,6 +10,7 @@
              [common :as api]
              [database :as database-api :refer [DBEngineString]]]
             [metabase.integrations.slack :as slack]
+            [metabase.middleware.session :as mw.session]
             [metabase.models
              [database :refer [Database]]
              [session :refer [Session]]
@@ -18,8 +19,8 @@
              [i18n :refer [tru]]
              [schema :as su]]
             [schema.core :as s]
-            [clojure.tools.logging :as log]
-            [metabase.toucan.db :as db]))
+            [metabase.toucan.db :as db])
+  (:import java.util.UUID))
 
 (def ^:private SetupToken
   "Schema for a string that matches the instance setup token."
@@ -33,7 +34,8 @@
   [:as {{:keys [token]
          {:keys [name engine details is_full_sync is_on_demand schedules]} :database
          {:keys [first_name last_name email password]}                     :user
-         {:keys [allow_tracking site_name]}                                :prefs} :body}]
+         {:keys [allow_tracking site_name]}                                :prefs} :body
+        :as request}]
   {token          SetupToken
    site_name      su/NonBlankString
    first_name     su/NonBlankString
@@ -43,13 +45,13 @@
    allow_tracking (s/maybe (s/cond-pre s/Bool su/BooleanString))
    schedules      (s/maybe database-api/ExpandedSchedulesMap)}
   ;; Now create the user
-  (let [session-id (str (java.util.UUID/randomUUID))
+  (let [session-id (UUID/randomUUID)
         new-user   (db/insert! User
-                               :email        email
-                               :first_name   first_name
-                               :last_name    last_name
-                               :password     (str (java.util.UUID/randomUUID))
-                               :is_superuser true)]
+                     :email        email
+                     :first_name   first_name
+                     :last_name    last_name
+                     :password     (str (UUID/randomUUID))
+                     :is_superuser true)]
     ;; this results in a second db call, but it avoids redundant password code so figure it's worth it
     (user/set-password! (:id new-user) password)
     ;; set a couple preferences
@@ -60,28 +62,28 @@
     (public-settings/anon-tracking-enabled (or (nil? allow_tracking)
                                                allow_tracking))
     ;; setup database (if needed)
-    (when (driver/is-engine? engine)
+    (when (some-> engine driver/available?)
       (let [db (db/insert! Database
-                           (merge
-                            {:name         name
-                             :engine       engine
-                             :details      details
-                             :is_on_demand (boolean is_on_demand)
-                             :is_full_sync (or (nil? is_full_sync) ; default to `true` is `is_full_sync` isn't specified
-                                               is_full_sync)}
-                            (when schedules
-                              (database-api/schedule-map->cron-strings schedules))))]
+                 (merge
+                  {:name         name
+                   :engine       engine
+                   :details      details
+                   :is_on_demand (boolean is_on_demand)
+                   :is_full_sync (or (nil? is_full_sync) ; default to `true` is `is_full_sync` isn't specified
+                                     is_full_sync)}
+                  (when schedules
+                    (database-api/schedule-map->cron-strings schedules))))]
         (events/publish-event! :database-create db)))
     ;; clear the setup token now, it's no longer needed
     (setup/clear-token!)
     ;; then we create a session right away because we want our new user logged in to continue the setup process
     (db/insert! Session
-                :id      session-id
-                :user_id (:id new-user))
+      :id      (str session-id)
+      :user_id (:id new-user))
     ;; notify that we've got a new user in the system AND that this user logged in
     (events/publish-event! :user-create {:user_id (:id new-user)})
-    (events/publish-event! :user-login {:user_id (:id new-user), :session_id session-id, :first_login true})
-    {:id session-id}))
+    (events/publish-event! :user-login {:user_id (:id new-user), :session_id (str session-id), :first_login true})
+    (mw.session/set-session-cookie request {:id (str session-id)} session-id)))
 
 
 (api/defendpoint POST "/validate"

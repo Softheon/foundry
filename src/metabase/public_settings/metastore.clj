@@ -27,7 +27,7 @@
      (some-> (env :metastore-dev-server-url)
              ;; remove trailing slashes
              (str/replace  #"/$" "")))
-   "https://store.softheon-foundry.com"))
+   "https://"))
 
 
 ;;; +----------------------------------------------------------------------------------------------------------------+
@@ -65,7 +65,7 @@
           ;; slurp will throw a FileNotFoundException for 404s, so in that case just return an appropriate
           ;; 'Not Found' message
           (catch java.io.FileNotFoundException e
-            {:valid false, :status (tru "Unable to validate token: 404 not found.")})
+            {:valid false, :status (str (tru "Unable to validate token: 404 not found."))})
           ;; if there was any other error fetching the token, log it and return a generic message about the
           ;; token being invalid. This message will get displayed in the Settings page in the admin panel so
           ;; we do not want something complicated
@@ -75,7 +75,7 @@
                                         " "
                                         (.getMessage e))})))
    fetch-token-status-timeout-ms
-   {:valid false, :status (tru "Token validation timed out.")}))
+   {:valid false, :status (str (tru "Token validation timed out."))}))
 
 (def ^:private ^{:arglists '([token])} fetch-token-status
   "TTL-memoized version of `fetch-token-status*`. Caches API responses for 5 minutes. This is important to avoid making

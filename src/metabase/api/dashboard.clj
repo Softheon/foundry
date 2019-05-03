@@ -1,15 +1,14 @@
 (ns metabase.api.dashboard
   "/api/dashboard endpoints."
   (:require [clojure.tools.logging :as log]
-            [clojure.string :as str]
+            [clojure.string :as str]  
             [compojure.core :refer [DELETE GET POST PUT]]
-            [metabase.automagic-dashboards.populate :as magic.populate]
             [metabase
              [events :as events]
-             [query-processor :as qp]
              [related :as related]
              [util :as u]]
             [metabase.api.common :as api]
+            [metabase.automagic-dashboards.populate :as magic.populate]
             [metabase.models
              [card :refer [Card]]
              [collection :as collection :refer[Collection]]
@@ -20,6 +19,7 @@
              [query :as query :refer [Query]]
              [revision :as revision]
              [field :as field :refer [Field]]]
+            [metabase.query-processor.middleware.constraints :as constraints]
             [metabase.query-processor.util :as qp-util]
             [metabase.util.schema :as su]
             [schema.core :as s]
@@ -61,7 +61,7 @@
 
 
 (api/defendpoint POST "/"
-  "Create a new `Dashboard`."
+  "Create a new Dashboard."
   [:as {{:keys [name description parameters collection_id collection_position], :as dashboard} :body}]
   {name                su/NonBlankString
    parameters          [su/Map]
@@ -139,10 +139,10 @@
   [{:keys [dataset_query]}]
   (u/ignore-exceptions
     [(qp-util/query-hash dataset_query)
-     (qp-util/query-hash (assoc dataset_query :constraints qp/default-query-constraints))]))
+     (qp-util/query-hash (assoc dataset_query :constraints constraints/default-query-constraints))]))
 
 (defn- dashcard->query-hashes
-  "Return a sequence of all the query hashes for this DASHCARD, including the top-level Card and any Series."
+  "Return a sequence of all the query hashes for this `dashcard`, including the top-level Card and any Series."
   [{:keys [card series]}]
   (reduce concat
           (card->query-hashes card)
@@ -150,13 +150,13 @@
             (card->query-hashes card))))
 
 (defn- dashcards->query-hashes
-  "Return a sequence of all the query hashes used in a DASHCARDS."
+  "Return a sequence of all the query hashes used in a `dashcards`."
   [dashcards]
   (apply concat (for [dashcard dashcards]
                   (dashcard->query-hashes dashcard))))
 
 (defn- hashes->hash-vec->avg-time
-  "Given some query HASHES, return a map of hashes (as normal Clojure vectors) to the average query durations.
+  "Given some query `hashes`, return a map of hashes (as normal Clojure vectors) to the average query durations.
   (The hashes are represented as normal Clojure vectors because identical byte arrays aren't considered equal to one
   another, and thus do not work as one would expect when used as map keys.)"
   [hashes]
@@ -165,7 +165,7 @@
                {(vec k) v}))))
 
 (defn- add-query-average-duration-to-card
-  "Add `:query_average_duration` info to a CARD (i.e., the `:card` property of a DashCard or an entry in its `:series`
+  "Add `:query_average_duration` info to a `card` (i.e., the `:card` property of a DashCard or an entry in its `:series`
   array)."
   [card hash-vec->avg-time]
   (assoc card :query_average_duration (some (fn [query-hash]
@@ -173,7 +173,7 @@
                                             (card->query-hashes card))))
 
 (defn- add-query-average-duration-to-dashcards
-  "Add `:query_average_duration` to the top-level Card and any Series in a sequence of DASHCARDS."
+  "Add `:query_average_duration` to the top-level Card and any Series in a sequence of `dashcards`."
   ([dashcards]
    (add-query-average-duration-to-dashcards dashcards (hashes->hash-vec->avg-time (dashcards->query-hashes dashcards))))
   ([dashcards hash-vec->avg-time]
@@ -185,13 +185,13 @@
                              (add-query-average-duration-to-card card hash-vec->avg-time))))))))
 
 (defn add-query-average-durations
-  "Add a `average_execution_time` field to each card (and series) belonging to DASHBOARD."
+  "Add a `average_execution_time` field to each card (and series) belonging to `dashboard`."
   [dashboard]
   (update dashboard :ordered_cards add-query-average-duration-to-dashcards))
 
 
 (defn- get-dashboard
-  "Get `Dashboard` with ID."
+  "Get Dashboard with ID."
   [id]
   (-> (Dashboard id)
       api/check-404
@@ -203,7 +203,7 @@
 
 
 (api/defendpoint POST "/:from-dashboard-id/copy"
-  "Copy a `Dashboard`."
+  "Copy a Dashboard."
   [from-dashboard-id :as {{:keys [name description collection_id collection_position], :as dashboard} :body}]
   {name                (s/maybe su/NonBlankString)
    description         (s/maybe s/Str)
@@ -219,29 +219,23 @@
                         :collection_id       collection_id
                         :collection_position collection_position}
         dashboard      (db/transaction
-                            ;; Adding a new dashboard at `collection_position` could cause other dashboards in this collection to change
-                            ;; position, check that and fix up if needed
-                            (api/maybe-reconcile-collection-position! dashboard-data)
-                            ;; Ok, now save the Dashboard
-                            (u/prog1 (db/insert! Dashboard dashboard-data)
-                                    ;; Get cards from existing dashboard and associate to copied dashboard
-                                    (doseq [card (:ordered_cards existing-dashboard)]
-                                      (api/check-500 (dashboard/add-dashcard! <> (:card_id card) card)))))]
+                         ;; Adding a new dashboard at `collection_position` could cause other dashboards in this
+                         ;; collection to change position, check that and fix up if needed
+                         (api/maybe-reconcile-collection-position! dashboard-data)
+                         ;; Ok, now save the Dashboard
+                         (u/prog1 (db/insert! Dashboard dashboard-data)
+                           ;; Get cards from existing dashboard and associate to copied dashboard
+                           (doseq [card (:ordered_cards existing-dashboard)]
+                             (api/check-500 (dashboard/add-dashcard! <> (:card_id card) card)))))]
     (events/publish-event! :dashboard-create dashboard)))
 
 
 ;;; --------------------------------------------- Fetching/Updating/Etc. ---------------------------------------------
 
 (api/defendpoint GET "/:id"
-  "Get `Dashboard` with ID."
+  "Get Dashboard with ID."
   [id]
-  (u/prog1 (-> (Dashboard id)
-               api/check-404
-               (hydrate [:ordered_cards :card :series] :can_write)
-               api/read-check
-               api/check-not-archived
-               hide-unreadable-cards
-               add-query-average-durations)
+  (u/prog1 (get-dashboard id)
     (events/publish-event! :dashboard-read (assoc <> :actor_id api/*current-user-id*))))
 
 
@@ -255,7 +249,7 @@
     (api/check-superuser)))
 
 (api/defendpoint PUT "/:id"
-  "Update a `Dashboard`.
+  "Update a Dashboard.
 
   Usually, you just need write permissions for this Dashboard to do this (which means you have appropriate
   permissions for the Cards belonging to this Dashboard), but to change the value of `enable_embedding` you must be a
@@ -301,7 +295,7 @@
 ;; TODO - We can probably remove this in the near future since it should no longer be needed now that we're going to
 ;; be setting `:archived` to `true` via the `PUT` endpoint instead
 (api/defendpoint DELETE "/:id"
-  "Delete a `Dashboard`."
+  "Delete a Dashboard."
   [id]
   (log/warn (str "DELETE /api/dashboard/:id is deprecated. Instead of deleting a Dashboard, you should change its "
                  "`archived` value via PUT /api/dashboard/:id."))
@@ -313,7 +307,7 @@
 
 ;; TODO - param should be `card_id`, not `cardId` (fix here + on frontend at the same time)
 (api/defendpoint POST "/:id/cards"
-  "Add a `Card` to a `Dashboard`."
+  "Add a `Card` to a Dashboard."
   [id :as {{:keys [cardId parameter_mappings series], :as dashboard-card} :body}]
   {cardId             (s/maybe su/IntGreaterThanZero)
    parameter_mappings [su/Map]}
@@ -328,7 +322,7 @@
 
 ;; TODO - we should use schema to validate the format of the Cards :D
 (api/defendpoint PUT "/:id/cards"
-  "Update `Cards` on a `Dashboard`. Request body should have the form:
+  "Update `Cards` on a Dashboard. Request body should have the form:
 
     {:cards [{:id     ...
               :sizeX  ...
@@ -345,7 +339,7 @@
 
 
 (api/defendpoint DELETE "/:id/cards"
-  "Remove a `DashboardCard` from a `Dashboard`."
+  "Remove a `DashboardCard` from a Dashboard."
   [id dashcardId]
   {dashcardId su/IntStringGreaterThanZero}
   (api/check-not-archived (api/write-check Dashboard id))
@@ -355,14 +349,14 @@
 
 
 (api/defendpoint GET "/:id/revisions"
-  "Fetch `Revisions` for `Dashboard` with ID."
+  "Fetch `Revisions` for Dashboard with ID."
   [id]
   (api/read-check Dashboard id)
   (revision/revisions+details Dashboard id))
 
 
 (api/defendpoint POST "/:id/revert"
-  "Revert a `Dashboard` to a prior `Revision`."
+  "Revert a Dashboard to a prior `Revision`."
   [id :as {{:keys [revision_id]} :body}]
   {revision_id su/IntGreaterThanZero}
   (api/write-check Dashboard id)
@@ -468,9 +462,10 @@
 
 (defn- parse-parent-collections
   [collection-id]
-  (let [collection (db/select-one Collection :id collection-id)
-        parent-collection-ids (rest (str/split (:location collection) #"/"))]
-    (concat (select-collections parent-collection-ids) [collection])))
+  (when (not (nil? collection-id))
+    (let [collection (db/select-one Collection :id collection-id)
+          parent-collection-ids (rest (str/split (:location collection) #"/"))]
+      (concat (select-collections parent-collection-ids) [collection])))) 
 
 (defn- field-detail
   [field-id]

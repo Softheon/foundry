@@ -13,6 +13,7 @@
              [util :as sync-util]]
             [metabase.sync.sync-metadata.metabase-metadata :as metabase-metadata]
             [metabase.util :as u]
+            [metabase.util.i18n :refer [trs]]
             [schema.core :as s]
             [metabase.toucan.db :as db]))
 
@@ -80,15 +81,12 @@
 
 ;;; ---------------------------------------------------- Syncing -----------------------------------------------------
 
-(def ^:private db-metadata-sync-limits 
-  "The number of tries to get table info from a DB"
-  5)
 ;; TODO - should we make this logic case-insensitive like it is for fields?
 
 (s/defn ^:private create-or-reactivate-tables!
   "Create NEW-TABLES for database, or if they already exist, mark them as active."
   [database :- i/DatabaseInstance, new-tables :- #{i/DatabaseMetadataTable}]
-  (log/info "Found new tables:"
+  (log/info (trs "Found new tables:")
             (for [table new-tables]
               (sync-util/name-for-logging (table/map->TableInstance table))))
   (doseq [{schema :schema, table-name :name, :as table} new-tables]
@@ -112,22 +110,23 @@
 
 
 (s/defn ^:private retire-tables!
-  "Mark any OLD-TABLES belonging to DATABASE as inactive."
+  "Mark any `old-tables` belonging to `database` as inactive."
   [database :- i/DatabaseInstance, old-tables :- #{i/DatabaseMetadataTable}]
-  (log/info "Marking tables as inactive:"
+  (log/info (trs "Marking tables as inactive:")
             (for [table old-tables]
               (sync-util/name-for-logging (table/map->TableInstance table))))
   (doseq [{schema :schema, table-name :name, :as table} old-tables]
     (db/update-where! Table {:db_id  (u/get-id database)
                              :schema schema
+                             :name   table-name
                              :active true}
       :active false)))
 
 
 (s/defn ^:private update-table-description!
-  "Update description for any CHANGED-TABLES belonging to DATABASE."
+  "Update description for any `changed-tables` belonging to `database`."
   [database :- i/DatabaseInstance, changed-tables :- #{i/DatabaseMetadataTable}]
-  (log/info "Updating description for tables:"
+  (log/info (trs "Updating description for tables:")
             (for [table changed-tables]
               (sync-util/name-for-logging (table/map->TableInstance table))))
   (doseq [{schema :schema, table-name :name, description :description} changed-tables]
@@ -140,7 +139,7 @@
 
 
 (s/defn ^:private db-metadata :- #{i/DatabaseMetadataTable}
-  "Return information about DATABASE by calling its driver's implementation of `describe-database`."
+  "Return information about `database` by calling its driver's implementation of `describe-database`."
   [database :- i/DatabaseInstance]
   (set (for [table (:tables (fetch-metadata/db-metadata database))
              :when (not (metabase-metadata/is-metabase-metadata-table? table))]
@@ -154,21 +153,12 @@
               :db_id  (u/get-id database)
               :active true))))
 
-(s/defn ^:private fetch-our-metadata
-"Try a number of time to get information about what Tables we have for this DB."
-[database :- i/DatabaseInstance limit]
-(loop [x limit]
-  (let [db-metadata (db-metadata database)]
-    (if  (or (not (empty? db-metadata)) (< x 1))
-      db-metadata
-      (recur (- x 1)))))) 
-
 (s/defn sync-tables!
   "Sync the Tables recorded in the Foundry application database with the ones obtained by calling DATABASE's driver's
   implementation of `describe-database`."
   [database :- i/DatabaseInstance]
   ;; determine what's changed between what info we have and what's in the DB
-  (let [db-metadata            (fetch-our-metadata database db-metadata-sync-limits)
+  (let [db-metadata             (db-metadata database)
         our-metadata            (our-metadata database)
         strip-desc              (fn [metadata]
                                   (set (map #(dissoc % :description) metadata)))

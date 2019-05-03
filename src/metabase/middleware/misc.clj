@@ -44,7 +44,7 @@
   (when (mdb/db-is-setup?)
     (when-not (public-settings/site-url)
       (when-let [site-url (or origin host)]
-        (log/info (trs "Setting Metabase site URL to {0}" site-url))
+        (log/info (trs "Setting Foundry site URL to {0}" site-url))
         (public-settings/site-url site-url)))))
 
 (defn maybe-set-site-url
