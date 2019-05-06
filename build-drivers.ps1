@@ -89,7 +89,8 @@ function Delete-OldDrivers() {
 # Check if Metabase is installed locally for building drivers; install it if not
 function Install-MetabaseCore() {
     $UserDir = $M2
-    Write-Host "$UserDir\.m2\repository\metabase-core\metabase-core"
+    Write-Host "$UserDir\.m2\repository\metabase-core\metabase-core" "Hxia"
+    Write-Host "./m2 content"
     ls  C:\Windows\ServiceProfiles\NetworkService\.m2
     $Result = Get-ChildItem -Path "$UserDir\.m2\repository\metabase-core\metabase-core" -Include '*.jar' -Recurse
     Get-ChildItem -Path "$UserDir\.m2\repository\metabase-core\metabase-core" -Include '*.jar' -Recurse
