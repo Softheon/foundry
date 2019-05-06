@@ -89,7 +89,9 @@ function Delete-OldDrivers() {
 # Check if Metabase is installed locally for building drivers; install it if not
 function Install-MetabaseCore() {
     $UserDir = $M2
+    Write-Host "$UserDir\.m2\repository\metabase-core\metabase-core"
     $Result = Get-ChildItem -Path "$UserDir\.m2\repository\metabase-core\metabase-core" -Include '*.jar' -Recurse
+    $Result
     if (!$Result -or $Result.length -eq 0) {
         Write-Host "Building and installing jar locally"
         lein clean
@@ -100,6 +102,7 @@ function Install-MetabaseCore() {
         Write-Host "metabase-core already installed to local Maven repo."
         return $true
     } 
+    Write-Host "Failed to install metabase core."
     return $false
 }
 
@@ -342,6 +345,7 @@ function Build-DriverPipeline () {
         $Result = $Result -and (CopyTargetTo-Dest -TargetJar $TargetJar -DestLocation $DestLocation)
         $Result = $Result -and (Verify-Build -Driver $Driver -ChecksumFile $ChecksumFile -TargetJar $TargetJar -DestLocation $DestLocation)
         $Result = $Result -and (Save-Checksum -DriverProjectDir $DriverProjectDir -ChecksumFile $ChecksumFile)
+        Write-Host $Result
         return $Result
     }
     catch {
@@ -400,7 +404,7 @@ function Retry() {
     $Result = Build-DriverPipeline -DriverProjectDir $DriverProjectDir -Driver $Driver -ProjectRoot $ProjectRoot -DriverJar $DriverJar -Destination $DestLocation -MetabaseUberJar $MetabaseUberjar -TargetJar $TargetJar -ChecksumFile $ChecksumFile
     return $Result[0]
 }
-lein classpath
+
 mkdir -Path "resources\modules" -ErrorAction Ignore
 $Drivers = Get-ChildItem -Directory  -Path "modules\drivers"  -Name 
 foreach ($Driver in $Drivers) {
@@ -411,9 +415,3 @@ foreach ($Driver in $Drivers) {
     }
     
 }
-# Write-Host "Build: $Driver"
-# $status = Build-Driver -Driver "bigquery"
-# $status
-# if ((Build-Driver -Driver "bigquery")) {
-#     throw "Failed to build driver bigquery"
-# }
