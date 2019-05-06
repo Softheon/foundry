@@ -90,8 +90,11 @@ function Delete-OldDrivers() {
 function Install-MetabaseCore() {
     $UserDir = $M2
     Write-Host "$UserDir\.m2\repository\metabase-core\metabase-core"
+    ls  C:\Windows\ServiceProfiles\NetworkService\.m2
     $Result = Get-ChildItem -Path "$UserDir\.m2\repository\metabase-core\metabase-core" -Include '*.jar' -Recurse
-    $Result
+    Get-ChildItem -Path "$UserDir\.m2\repository\metabase-core\metabase-core" -Include '*.jar' -Recurse
+    lein clean
+    lein install-for-building-drivers
     if (!$Result -or $Result.length -eq 0) {
         Write-Host "Building and installing jar locally"
         lein clean
