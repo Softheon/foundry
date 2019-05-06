@@ -113,7 +113,7 @@
    [org.eclipse.jetty/jetty-server "9.4.15.v20190215"]                ; We require JDK 8 which allows us to run Jetty 9.4, ring-jetty-adapter runs on 1.7 which forces an older version
    [ring/ring-json "0.4.0"]                                           ; Ring middleware for reading/writing JSON automatically
    [stencil "0.5.0"]                                                  ; Mustache templates for Clojure
-   ;[toucan "1.11.0" :exclusions [org.clojure/java.jdbc honeysql]]
+   [toucan "1.11.0" :exclusions [org.clojure/java.jdbc honeysql]]
    ]    ; Model layer, hydration, and DB utilities
 
   :main ^:skip-aot metabase.core

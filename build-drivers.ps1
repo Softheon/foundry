@@ -299,7 +299,6 @@ function Checksum-IsSame() {
         Write-Host "Checksum of source files for previous build: $OldChecksum"
         Write-Host "Current checksum of source files: $CurrentChecksum"
         if ($OldChecksum -eq $CurrentChecksum) {
-            return $true
             if ((Test-Path -Path $TargetJar)) {
                 Write-Host "$Driver driver source unchanged since last build. Skipping re-build."
                 return $true
