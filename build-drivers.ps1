@@ -397,7 +397,7 @@ function Retry() {
     $Result = Build-DriverPipeline -DriverProjectDir $DriverProjectDir -Driver $Driver -ProjectRoot $ProjectRoot -DriverJar $DriverJar -Destination $DestLocation -MetabaseUberJar $MetabaseUberjar -TargetJar $TargetJar -ChecksumFile $ChecksumFile
     return $Result[0]
 }
-
+lein classpath
 mkdir -Path "resources\modules" -ErrorAction Ignore
 $Drivers = Get-ChildItem -Directory  -Path "modules\drivers"  -Name 
 foreach ($Driver in $Drivers) {
