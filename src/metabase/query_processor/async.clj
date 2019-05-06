@@ -71,3 +71,12 @@
      out-chan)
     ;; return out-chan
     out-chan))
+
+;;----------------------------- Streaming Query Result -----------------------------------------------------
+
+(s/defn process-query-and-stream-file! :- async.u/PromiseChan
+    "Async version of `metabase.query-processor/process-query-and-save-execution!`. Runs query asynchronously, and returns
+    a `core.async` channel that can be used to fetch the results once the query finishes running. Closing the channel
+    will cancel the query."
+    [query options]
+    (qp/process-query-and-stream-file! (assoc query :async? true) options))

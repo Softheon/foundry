@@ -46,7 +46,8 @@
              [validate :as validate]
              [wrap-value-literals :as wrap-value-literals]]
             [metabase.util.i18n :refer [tru]]
-            [schema.core :as s]))
+            [schema.core :as s]
+            [metabase.driver.sql-jdbc.execute :as sql-jdbc.execute]))
 
 ;;; +----------------------------------------------------------------------------------------------------------------+
 ;;; |                                                QUERY PROCESSOR                                                 |
@@ -263,3 +264,94 @@
   [query, options :- mbql.s/Info]
   (let [query (assoc-in query [:middleware :add-default-userland-constraints?] true)]
     (process-query-and-save-execution! query options)))
+
+
+  ;;; +--------------------------------------------------------------------------------------------------------------+
+;;; |                                      Streaming Query Result                                                    |
+;;; +----------------------------------------------------------------------------------------------------------------+
+
+(s/defn ^:private query-result-stream
+  [query :- {:driver   s/Keyword
+              s/Keyword s/Any}]
+  (sql-jdbc.execute/stream-query (:driver query) query))
+
+(defn- stream-pipeline
+  [f]
+  ;; ▼▼▼ POST-PROCESSING ▼▼▼  happens from TOP-TO-BOTTOM, e.g. the results of `f` are (eventually) passed to `limit`
+  (-> f
+      ;; ▲▲▲ NATIVE-ONLY POINT ▲▲▲ Query converted from MBQL to native here; f will see a native query instead of MBQL
+      mbql-to-native/mbql-native-download
+      ;annotate/result-rows-maps->vectors
+      check-features/check-features
+      wrap-value-literals/wrap-value-literals
+      ;annotate/add-column-info
+      perms/check-query-permissions
+      ;cumulative-ags/handle-cumulative-aggregations
+      resolve-joined-tables/resolve-joined-tables
+      ;dev/check-results-format
+      ;limit/limit
+      ;results-metadata/record-and-return-metadata!
+      ;format-rows/format-rows
+      desugar/desugar
+      binning/update-binning-strategy
+      resolve-fields/resolve-fields
+      ;add-dim/add-remapping
+      add-dim/add-fk-remapping
+      implicit-clauses/add-implicit-clauses
+      reconcile-bucketing/reconcile-breakout-and-order-by-bucketing
+      bucket-datetime/auto-bucket-datetimes
+      resolve-source-table/resolve-source-table
+     ; row-count-and-status/add-row-count-and-status
+      ;; ▼▼▼ RESULTS WRAPPING POINT ▼▼▼ All functions *below* will see results WRAPPED in `:data` during POST-PROCESSING
+      ;;
+      ;; TODO - I think we should add row count and status much later, perhaps at the very end right before
+      ;; `catch-exceptions`
+      parameters/substitute-parameters
+      expand-macros/expand-macros
+      ;; (drivers can inject custom middleware if they implement IDriver's `process-query-in-context`)
+      driver-specific/process-query-in-context
+      add-settings/add-settings
+      ;splice-params-in-response/splice-params-in-response
+      ;; ▲▲▲ DRIVER RESOLUTION POINT ▲▲▲
+      ;; All functions *above* will have access to the driver during PRE- *and* POST-PROCESSING
+      ;; TODO - I think we should do this much earlier
+      resolve-driver/resolve-driver
+      bind-timezone/bind-effective-timezone
+      resolve-database/resolve-database
+      fetch-source-query/fetch-source-query
+      store/initialize-store
+      log-query/log-query
+      ;; ▲▲▲ SYNC MIDDLEWARE ▲▲▲
+      ;;
+      ;; All middleware above this point is written in the synchronous 1-arg style. All middleware below is written in
+      ;; async 4-arg style. Eventually the entire QP middleware stack will be rewritten in the async style. But not yet
+      ;;
+      ;; ▼▼▼ ASYNC MIDDLEWARE ▼▼▼
+      async/async->sync
+      async-wait/wait-for-permit
+      ;cache/maybe-return-cached-results
+      validate/validate-query
+      normalize/normalize
+      catch-exceptions/catch-exceptions
+      ;process-userland-query/process-userland-query
+      ;constraints/add-default-userland-constraints
+      async/async-setup))
+
+(def ^:private default-stream-pipeline (stream-pipeline query-result-stream))
+
+(defn stream-query
+  "A pipeline of various QP functions (including middleware) that are used to process MB queries."
+  {:style/indent 0}
+  [query]
+  (default-stream-pipeline query))
+    
+(s/defn process-query-and-stream-file!
+  "Process and run a 'userland' MBQL query (e.g. one ran as the result of an API call, scheduled Pulse, MetaBot query,
+  etc.). Returns results in a format appropriate for consumption by FE client. Saves QueryExecution row in application
+  DB."
+  {:style/indent 1}
+  [query, options :- mbql.s/Info]
+  (stream-query
+    (-> query
+        (update :info merge options)
+        (assoc-in [:middleware :userland-query?] true))))

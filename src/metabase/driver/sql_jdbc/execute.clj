@@ -16,7 +16,9 @@
             [metabase.util
              [date :as du]
              [honeysql-extensions :as hx]
-             [i18n :refer [tru]]])
+             [i18n :refer [tru]]]
+            [metabase.java.jdbc :as f-jdbc]
+            [metabase.util.export :as export])
   (:import [java.sql PreparedStatement ResultSet ResultSetMetaData SQLException Types]
            [java.util Calendar Date TimeZone]))
 
@@ -286,3 +288,92 @@
           ((if (seq (:report-timezone settings))
              run-query-with-timezone
              run-query-without-timezone) driver settings db-connection query))))))
+
+;;; ------------------------------------------------- stream-query --------------------------------------------------
+(defn- do-without-auto-close-ensured-connection [db f]
+  (if-let [conn (jdbc/db-find-connection db)]
+    (f conn)
+    (let [conn (jdbc/get-connection db)]
+      (f conn))))
+
+(defmacro ^:private with-ensured-connection-without-auto-close
+  "In many of the clojure.java.jdbc functions, it checks to see if there's already a connection open before opening a
+  new one. This macro checks to see if one is open, or will open a new one. Will bind the connection to `conn-sym`."
+  {:style/indent 1}
+  [[conn-binding db] & body]
+  `(do-without-auto-close-ensured-connection ~db (fn [~conn-binding] ~@body)))
+
+(defn- cancellable-run-query-for-download
+  "Runs `sql` in such a way that it can be interrupted via a `future-cancel`"
+  [db sql params opts]
+  (with-ensured-connection-without-auto-close [conn db]
+    ;; This is normally done for us by java.jdbc as a result of our `jdbc/query` call
+    (let [^PreparedStatement stmt (jdbc/prepare-statement conn sql opts)]
+      ;; Need to run the query in another thread so that this thread can cancel it if need be
+      (try
+        (let [query-future (future (f-jdbc/inputstream-for-downloable-query conn (into [stmt] params) opts))]
+          ;; This thread is interruptable because it's awaiting the other thread (the one actually running the
+          ;; query). Interrupting this thread means that the client has disconnected (or we're shutting down) and so
+          ;; we can give up on the query running in the future
+          @query-future)
+        (catch InterruptedException e
+          (log/warn e "Client closed connection, cancelling query")
+          ;; This is what does the real work of cancelling the query. We aren't checking the result of
+          ;; `query-future` but this will cause an exception to be thrown, saying the query has been cancelled.
+          (.cancel stmt)
+          (throw e))))))
+
+(defn- cancelable-run-query
+  "Runs `sql` in such a way that it can be interrupted via a `future-cancel`"
+  [db sql params opts]
+  (with-ensured-connection [conn db]
+    ;; This is normally done for us by java.jdbc as a result of our `jdbc/query` call
+    (with-open [^PreparedStatement stmt (jdbc/prepare-statement conn sql opts)]
+      ;; specifiy that we'd like this statement to close once its dependent result sets are closed
+      ;; (Not all drivers support this so ignore Exceptions if they don't)
+      (u/ignore-exceptions
+        (.closeOnCompletion stmt))
+      ;; Need to run the query in another thread so that this thread can cancel it if need be
+      (try
+        (let [query-future (future (jdbc/query conn (into [stmt] params) opts))]
+          ;; This thread is interruptable because it's awaiting the other thread (the one actually running the
+          ;; query). Interrupting this thread means that the client has disconnected (or we're shutting down) and so
+          ;; we can give up on the query running in the future
+          @query-future)
+        (catch InterruptedException e
+          (log/warn (tru "Client closed connection, canceling query"))
+          ;; This is what does the real work of canceling the query. We aren't checking the result of
+          ;; `query-future` but this will cause an exception to be thrown, saying the query has been cancelled.
+          (.cancel stmt)
+          (throw e))))))
+                  
+(defn- query-stream
+  "Run the query itself."
+  [driver {sql :query, :keys [params remark max-rows]}, ^TimeZone timezone, connection]
+  (let [sql              (str "-- " remark "\n" (hx/unescape-dots sql))
+        stream (cancellable-run-query-for-download
+                          connection sql params
+                          {:identifiers    identity
+                           :as-arrays?     true
+                           :read-columns   (read-columns driver (some-> timezone Calendar/getInstance))
+                           :set-parameters (set-parameters-with-timezone timezone)
+                           :result-set-fn export/csv-stream-writer
+                           ;:concurrency :read-only
+                           :keywordize? false})]
+    stream))
+
+(defn- do-in-transaction-stream [connection f]
+      (f-jdbc/with-db-transaction-without-auto-close [transaction-connection connection]
+        (do-with-auto-commit-disabled transaction-connection (partial f transaction-connection))))
+
+(defn- run-query-without-timezone-stream [driver _ connection query]
+  (do-in-transaction-stream connection (partial query-stream driver query nil)))
+
+(defn stream-query
+  "Process and run a native (raw SQL) QUERY,and returns a result stream."
+  [driver {settings :settings, query :native, :as outer-query}]
+  (let [query query]
+    (do-with-try-catch
+      (fn []
+        (let [db-connection (sql-jdbc.conn/db->pooled-connection-spec (qp.store/database))]
+          (run-query-without-timezone-stream driver settings db-connection query))))))

@@ -1,7 +1,10 @@
 (ns metabase.util.export
   (:require [cheshire.core :as json]
             [clojure.data.csv :as csv]
-            [dk.ative.docjure.spreadsheet :as spreadsheet])
+            [dk.ative.docjure.spreadsheet :as spreadsheet]
+            [clojure.java.io :as io]
+            [ring.util.io :as ring-io]
+            [clojure.tools.logging :as log])
   (:import [java.io ByteArrayInputStream ByteArrayOutputStream File]
            org.apache.poi.ss.usermodel.Cell))
 
@@ -54,9 +57,25 @@
   (for [row rows]
     (zipmap columns row)))
 
+; (defn stream-csv-format
+;   [result]
+;   (let [csv-stream-writer (fn [writer]
+;                       (csv/write-csv writer result)
+;                       (.flush writer))]
+;     (ring-io/piped-input-stream #(csv-stream-writer (io/make-writer % {})))))
+
+(defn csv-stream-writer
+  [writer results]
+  (let [out (io/make-writer writer {})]
+    (try 
+      (csv/write-csv out results)
+      (.flush out)
+      (catch Exception e
+        (throw e)))))
+
 (def export-formats
   "Map of export types to their relevant metadata"
-  {"csv"  {:export-fn    export-to-csv
+  {"csv"  {:export-fn    csv-stream-writer
            :content-type "text/csv"
            :ext          "csv"
            :context      :csv-download},
