@@ -1,4 +1,7 @@
-
+param (
+    [Parameter(Position=0,mandatory=$true)]
+    [string] $M2
+)
 
 function Verify-Driver {
     param (
@@ -85,7 +88,7 @@ function Delete-OldDrivers() {
 
 # Check if Metabase is installed locally for building drivers; install it if not
 function Install-MetabaseCore() {
-    $UserDir = "$env:USERPROFILE"
+    $UserDir = $M2
     $Result = Get-ChildItem -Path "$UserDir\.m2\repository\metabase-core\metabase-core" -Include '*.jar' -Recurse
     if (!$Result -or $Result.length -eq 0) {
         Write-Host "Building and installing jar locally"
@@ -140,7 +143,7 @@ function Build-Parents () {
         }
 
         # Check whether built parent driver *JAR* exists in local maven repo
-        $UserDir = "$env:USERPROFILE"
+        $UserDir = $M2
         $ParentInstallDir = "$UserDir\.m2\repository\metabase\$($Parent)-driver"
         $ParentInstalledJar = $null
 
@@ -310,7 +313,7 @@ function Checksum-IsSame() {
 
 function Clean-LocalRepo {
 
-    $UserDir = "$env:USERPROFILE"
+    $UserDir = $M2
     Remove-Item -Recurse -Force -Path "$Userdir\.m2\repository\metabase-core" -ErrorAction Ignore
     Remove-Item -Recurse -Force -Path "$Userdir\.m2\repository\*-driver" -ErrorAction Ignore
     Get-ChildItem "$Userdir\.m2\repository\metabase" | Where { $_.Name -Match ".*-driver" } | Remove-Item -Force -Recurse -ErrorAction Ignore
