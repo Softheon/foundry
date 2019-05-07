@@ -89,23 +89,25 @@ function Delete-OldDrivers() {
 # Check if Metabase is installed locally for building drivers; install it if not
 function Install-MetabaseCore() {
     $UserDir = $M2
-    Write-Host "$UserDir\.m2\repository\metabase-core\metabase-core" "Hxia"
-    Write-Host "./m2 content"
-    ls  C:\Windows\ServiceProfiles\NetworkService\.m2
-    $Result = Get-ChildItem -Path "$UserDir\.m2\repository\metabase-core\metabase-core" -Include '*.jar' -Recurse
-    Get-ChildItem -Path "$UserDir\.m2\repository\metabase-core\metabase-core" -Include '*.jar' -Recurse
-    lein clean
-    lein install-for-building-drivers
-    if (!$Result -or $Result.length -eq 0) {
+
+    try {
+        $Result = Get-ChildItem -Path "$UserDir\.m2\repository\metabase-core\metabase-core" -Include '*.jar' -Recurse -ErrorAction Stop
+        if (!$Result -or $Result.length -eq 0) {
+            Write-Host "Building and installing jar locally"
+            lein clean
+            lein install-for-building-drivers
+            return $true;
+        } 
+        else {
+            Write-Host "metabase-core already installed to local Maven repo."
+            return $true
+        } 
+    } catch {
         Write-Host "Building and installing jar locally"
         lein clean
         lein install-for-building-drivers
         return $true;
-    } 
-    else {
-        Write-Host "metabase-core already installed to local Maven repo."
-        return $true
-    } 
+    }
     Write-Host "Failed to install metabase core."
     return $false
 }
@@ -155,7 +157,7 @@ function Build-Parents () {
         $ParentInstalledJar = $null
 
         if (Test-Path $ParentInstallDir) {
-            $ParentInstalledJar = Get-ChildItem -Path $ParentInstallDir -Include "*.jar" -Recurse
+            $ParentInstalledJar = Get-ChildItem -Path $ParentInstallDir -Include "*.jar" -Recurse -ErrorAction Ignore
         }
 
         if (!$ParentInstalledJar -or $ParentInstalledJar.length -eq 0) {
@@ -213,14 +215,14 @@ function Strip-Compress () {
     try {
         # strip out any classes found in the core Metabase uberjar
         $LeinCmd = "lein strip-and-compress $TargetJar"
-        Invoke-Expression -Command $LeinCmd
+        Invoke-Expression -Command $LeinCmd -ErrorAction Stop
 
         # Next, remove any classes found in any of the parent jar
  
         foreach ($Parent in $Parents) {
             Write-Host "Removing duplicate classes with $Parent uberjar..."
             $LeinCmd = "lein strip-and-compress $TargetJr resources\modules\$($Parent).metabase-driver.jar"
-            Invoke-Expression $LeinCmd
+            Invoke-Expression $LeinCmd -ErrorAction Stop
         }
         return $true
     }
@@ -237,7 +239,7 @@ function CopyTargetTo-Dest () {
     )
     Write-Host "Copying $Targetjar to $DestLocation"
     try {
-        Move-Item -Path $TargetJar -Destination $DestLocation
+        Move-Item -Path $TargetJar -Destination $DestLocation -ErrorAction Stop
         return $true
     }
     catch {
@@ -270,16 +272,16 @@ function Calculate-Checksum {
     )
     $TempCombinedFile = ".\.combinedContent" 
     Get-ChildItem  -Path $DriverProjectDir -Include "*.clj"
-    Get-ChildItem  -Path $DriverProjectDir -Include "*.clj" -Recurse | Sort-Object | ForEach-Object {
+    Get-ChildItem  -Path $DriverProjectDir -Include "*.clj" -Recurse -ErrorAction Stop | Sort-Object | ForEach-Object {
         $content = Get-Content $_.FullName;
         $content | Out-File -FilePath $TempCombinedFile -Append 
     }
-    Get-ChildItem -Path $DriverProjectDir -Include "*.yaml" -Recurse | Sort-Object | ForEach-Object {
+    Get-ChildItem -Path $DriverProjectDir -Include "*.yaml" -Recurse -ErrorAction Stop | Sort-Object | ForEach-Object {
         $content = Get-Content $_.FullName;
         $content | Out-File -FilePath $TempCombinedFile -Append
     }
     $checksum = Get-FileHash -Path $TempCombinedFile -Algorithm MD5
-    Remove-Item -Path $TempCombinedFile -Force -ErrorAction Ignore
+    Remove-Item -Path $TempCombinedFile -Force -ErrorAction Stop
     return $checksum.hash
 }
 
@@ -292,7 +294,7 @@ function Save-Checksum() {
     )
     Write-Host "Saving checksum for source files to $ChecksumFile"
     $Cheksum = Calculate-Checksum -DriverProjectDir $DriverProjectDir
-    $Cheksum | Out-File -FilePath $ChecksumFile -Encoding utf8
+    $Cheksum | Out-File -FilePath $ChecksumFile -Encoding utf8 -ErrorAction Stop
     return $true
 }
 
@@ -323,7 +325,7 @@ function Clean-LocalRepo {
     $UserDir = $M2
     Remove-Item -Recurse -Force -Path "$Userdir\.m2\repository\metabase-core" -ErrorAction Ignore
     Remove-Item -Recurse -Force -Path "$Userdir\.m2\repository\*-driver" -ErrorAction Ignore
-    Get-ChildItem "$Userdir\.m2\repository\metabase" | Where { $_.Name -Match ".*-driver" } | Remove-Item -Force -Recurse -ErrorAction Ignore
+    Get-ChildItem "$Userdir\.m2\repository\metabase" -ErrorAction Ignore | Where { $_.Name -Match ".*-driver" } | Remove-Item -Force -Recurse -ErrorAction Stop
 }
 
 function Build-DriverPipeline () {
@@ -353,7 +355,7 @@ function Build-DriverPipeline () {
         return $Result
     }
     catch {
-        return $false
+        return @($false, $false)
     }
 }
 function Build-Driver () {
