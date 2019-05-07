@@ -19,7 +19,7 @@ function Verify-Driver {
 
     $command = "jar -tf $DriverFile"
      
-    $Files = Invoke-Expression -Command $command
+    $Files = Invoke-Expression -Command $command -ErrorAction Stop
     $result = $false
     foreach ($File in $Files) {
         if ($File -eq $DriverMainClass) {
