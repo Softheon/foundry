@@ -3,12 +3,23 @@
              [io :as io]
              [shell :as shell]]
             [clojure.string :as str]
-            [environ.core :as environ])
+            [environ.core :as environ]
+            [cheshire.core :as json])
   (:import clojure.lang.Keyword))
 
 (def ^Boolean is-windows?
   "Are we running on a Windows machine?"
   (str/includes? (str/lower-case (System/getProperty "os.name")) "win"))
+
+(defn configuration
+  "Read and parse a db connection configuration file."
+  [property-key]
+  (let [config-file (:db-connection-file environ/env)
+        config-map  (if (some? config-file)
+                      (with-open [reader (io/reader config-file)]
+                        (json/parse-stream reader true))
+                      nil)]
+    (property-key config-map)))
 
 (def ^:private app-defaults
   "Global application defaults"
@@ -40,7 +51,8 @@
  3.  hard coded `app-defaults`"
   [k]
   (let [k (keyword k)]
-    (or (k environ/env) (k app-defaults))))
+    (or (configuration k)
+        (k environ/env) (k app-defaults))))
 
 
 ;; These are convenience functions for accessing config values that ensures a specific return type
