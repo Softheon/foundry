@@ -160,7 +160,7 @@ export default class LoginApp extends Component {
                   title={
                     Settings.ldapEnabled()
                       ? t`Username or email address`
-                      : t`Email address`
+                      : t`Username or email address`
                   }
                   fieldName={"username"}
                   formError={loginError}
@@ -176,7 +176,7 @@ export default class LoginApp extends Component {
                      * in auth, set the input type to email so we get built in
                      * validation in modern browsers
                      * */
-                    ldapEnabled ? "text" : "email"
+                    ldapEnabled ? "text" : "text"
                   }
                   onChange={e => this.onChange("username", e.target.value)}
                   autoFocus

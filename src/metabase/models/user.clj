@@ -122,7 +122,7 @@
 (def admin-or-self-visible-columns
   "Sequence of columns that we can/should return for admins fetching a list of all Users, or for the current user
   fetching themselves. Needed to power the admin page."
-  (vec (concat default-user-columns [:google_auth :ldap_auth :is_active :updated_at :login_attributes])))
+  (vec (concat default-user-columns [:google_auth :ldap_auth :iam_auth :is_active :updated_at :login_attributes])))
 
 (def non-admin-or-self-visible-columns
   "Sequence of columns that we will allow non-admin Users to see when fetching a list of Users. Why can non-admins see
@@ -183,7 +183,8 @@
    (s/optional-key :password)         (s/maybe su/NonBlankString)
    (s/optional-key :login_attributes) (s/maybe LoginAttributes)
    (s/optional-key :google_auth)      s/Bool
-   (s/optional-key :ldap_auth)        s/Bool})
+   (s/optional-key :ldap_auth)        s/Bool
+   (s/optional-key :iam_auth)         s/Bool})
 
 (def ^:private Invitor
   "Map with info about the admin admin creating the user, used in the new user notification code"
@@ -282,3 +283,11 @@
                                   :join   [[:permissions_group :pg] [:= :pgm.group_id :pg.id]
                                            [:permissions :p]        [:= :p.group_id :pg.id]]
                                   :where  [:= :pgm.user_id user-id]}))))))
+
+(s/defn create-new-iam-auth-user!
+  "Convenience for creating a new user via IAM. This account is considered active immediately; thus
+all active admins will receive an email right away."
+  [new-user :- NewUser]
+  (insert-new-user! (-> new-user
+                        (dissoc :password)
+                        (assoc :iam_auth true))))

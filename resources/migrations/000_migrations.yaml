@@ -5364,3 +5364,16 @@ databaseChangeLog:
             columns:
               - column:
                   name: parent_id
+  - changeSet:
+      id: 102
+      author: hx
+      comment: 'Added IAM auth'
+      changes:
+        - addColumn:
+            tableName: core_user
+            columns:
+              name: iam_auth
+              type: boolean
+              defaultValue: true
+              constraints:
+                nullable: false

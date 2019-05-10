@@ -13,6 +13,7 @@
             [metabase.api.common :as api]
             [metabase.email.messages :as email]
             [metabase.integrations.ldap :as ldap]
+            [metabase.integrations.iam :as iam]
             [metabase.middleware.session :as mw.session]
             [metabase.models
              [session :refer [Session]]
@@ -68,6 +69,23 @@
       (catch LDAPSDKException e
         (log/error e (trs "Problem connecting to LDAP server, will fall back to local authentication"))))))
 
+(def ^:private iam-fail-message (tru "Foundry can't verify your identit. Make sure you enterted correct username/email and password."))
+(def ^:private iam-fail-snippet (tru "can't verify your identity."))
+
+(s/defn ^:private iam-login :- (s/maybe UUID)
+  "If a matching user exists in IAM, then return a new Session for them, or `nil` if they couldn't be 
+authenticated."
+  [username password]
+  (when (iam/iam-configured?)
+    (try (let [user-info (iam/find-user username password)]
+           (when (nil? user-info)
+             (throw (ui18n/ex-info iam-fail-message
+                                   {:status-code  400
+                                    :errors {:password iam-fail-snippet}})))
+           (create-session! (iam/fetch-or-create-user! user-info password)))
+         (catch Exception e
+           (log/error e (trs "Problem connectin to IAM service, will fall back to local authentication if it is enabled"))))))
+
 (s/defn ^:private email-login :- (s/maybe UUID)
   "Find a matching `User` if one exists and return a new Session for them, or `nil` if they couldn't be authenticated."
   [username password]
@@ -88,14 +106,15 @@
   throwing an Exception if login could not be completed."
   [username :- su/NonBlankString, password :- su/NonBlankString]
   ;; Primitive "strategy implementation", should be reworked for modular providers in #3210
-  (or (ldap-login username password)    ; First try LDAP if it's enabled
-      (email-login username password)   ; Then try local authentication
+  (or (iam-login username password)      ; Fist try IAM 
+      ;(ldap-login username password)    ; First try LDAP if it's enabled
+      ;(email-login username password)   ; Then try local authentication
       ;; If nothing succeeded complain about it
       ;; Don't leak whether the account doesn't exist or the password was incorrect
       (throw
        (ui18n/ex-info password-fail-message
-         {:status-code 400
-          :errors      {:password password-fail-snippet}}))))
+                      {:status-code 400
+                       :errors      {:password password-fail-snippet}}))))
 
 (api/defendpoint POST "/"
   "Login."

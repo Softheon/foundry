@@ -25,7 +25,7 @@ export const login = createThunkAction(LOGIN, function(
 ) {
   return async function(dispatch, getState) {
     if (
-      !MetabaseSettings.ldapEnabled() &&
+      !MetabaseSettings.ldapEnabled() && false
       !MetabaseUtils.validEmail(credentials.username)
     ) {
       return {
