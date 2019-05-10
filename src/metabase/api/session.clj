@@ -101,6 +101,17 @@ authenticated."
   (when-not throttling-disabled?
     (throttle/check throttler throttle-key)))
 
+(s/defn ^:private admin-email-login :- (s/maybe UUID)
+  "Find a matching admin `User` if one exists and return a new Session for them, or `nil` if they 
+couldn't be autenticated."
+  [username password]
+  (when-let [user (db/select-one [User :id :password_salt :password :last_login]
+                                 :email username
+                                 :is_active true
+                                 :is_superuser true)]
+    (when (pass/verify-password password (:password_salt user) (:password user))
+      (create-session! user))))
+
 (s/defn ^:private login :- UUID
   "Attempt to login with different avaialable methods with `username` and `password`, returning new Session ID or
   throwing an Exception if login could not be completed."
@@ -108,7 +119,7 @@ authenticated."
   ;; Primitive "strategy implementation", should be reworked for modular providers in #3210
   (or (iam-login username password)      ; Fist try IAM 
       ;(ldap-login username password)    ; First try LDAP if it's enabled
-      ;(email-login username password)   ; Then try local authentication
+      (admin-email-login username password)   ; Then try local authentication
       ;; If nothing succeeded complain about it
       ;; Don't leak whether the account doesn't exist or the password was incorrect
       (throw
