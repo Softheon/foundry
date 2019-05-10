@@ -24,16 +24,16 @@ export const login = createThunkAction(LOGIN, function(
   redirectUrl,
 ) {
   return async function(dispatch, getState) {
-    if (
-      !MetabaseSettings.ldapEnabled() && false
-      !MetabaseUtils.validEmail(credentials.username)
-    ) {
-      return {
-        data: {
-          errors: { email: t`Please enter a valid formatted email address.` },
-        },
-      };
-    }
+    // if (
+    //   !MetabaseSettings.ldapEnabled()
+    //   !MetabaseUtils.validEmail(credentials.username)
+    // ) {
+    //   return {
+    //     data: {
+    //       errors: { email: t`Please enter a valid formatted email address.` },
+    //     },
+    //   };
+    // }
 
     try {
       let newSession = await SessionApi.create(credentials);

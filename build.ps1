@@ -24,8 +24,10 @@ Param (
 	yarn install --production=false --network-timeout 1000000
 	echo "Running 'webpack' with NODE_ENV=production assemble and minify frontend assets..." 
     $env:NODE_ENV="production"
-	./node_modules/.bin/webpack --bail
+	# ./node_modules/.bin/webpack --bail
 
+	$build_frontend = "./node_modules/.bin/webpack --bail"
+	Invoke-Expression -Command $build_frontend -ErrorAction Stop
 
 	$SAMPLEDATASET="resources/sample-dataset.db.mv.db"
 	$HASSAMPLEDATASET= Test-Path $SAMPLEDATASET
@@ -36,7 +38,7 @@ Param (
 		echo "Sample Dataset already generated."
 	}
 
-	Invoke-Expression  "$PSScriptRoot\build-drivers.ps1 -M2 $M2"
+	Invoke-Expression  "$PSScriptRoot\build-drivers.ps1 -M2 $M2" -ErrorAction Stop
 	
 	echo "Running 'lein uberjar'..."
 	lein uberjar
