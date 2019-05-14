@@ -164,11 +164,15 @@ couldn't be autenticated."
   (throttle-check (forgot-password-throttlers :ip-address) remote-address)
   (throttle-check (forgot-password-throttlers :email)      email)
   ;; Don't leak whether the account doesn't exist, just pretend everything is ok
-  (when-let [{user-id :id, google-auth? :google_auth} (db/select-one [User :id :google_auth]
+  (when-let [{user-id :id, google-auth? :google_auth, iam-auth? :iam_auth} (db/select-one [User :id :google_auth :iam_auth]
                                                         :email email, :is_active true)]
-    (let [reset-token        (user/set-password-reset-token! user-id)
-          password-reset-url (str (public-settings/site-url) "/auth/reset_password/" reset-token)]
-      (email/send-password-reset-email! email google-auth? server-name password-reset-url)
+    (let [reset-token        (if iam-auth?
+                               nil
+                               (user/set-password-reset-token! user-id))
+          password-reset-url (if reset-token
+                               (str (public-settings/site-url) "/auth/reset_password/" reset-token)
+                               (config/config-str :iam-password-reset-url))]
+      (email/send-password-reset-email! email google-auth? iam-auth? server-name password-reset-url)
       (log/info password-reset-url))))
 
 
