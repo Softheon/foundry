@@ -1,6 +1,6 @@
 (ns metabase.driver.googleanalytics.query-processor
   "The Query Processor is responsible for translating the Metabase Query Language into Google Analytics request format.
-  See https://developers.google.com/analytics/devguides/reporting/core/v3"
+See https://developers.google.com/analytics/devguides/reporting/core/v3"
   (:require [clojure.string :as str]
             [clojure.tools.reader.edn :as edn]
             [metabase.mbql.util :as mbql.u]
@@ -50,7 +50,9 @@
     (and (= unit :day) (= amount 0))  "today"
     (and (= unit :day) (= amount -1)) "yesterday"
     (and (= unit :day) (< amount -1)) (str (- amount) "daysAgo")
-    :else                             (du/format-date "yyyy-MM-dd" (du/date-trunc unit (du/relative-date unit amount)))))
+    :else                             (du/format-date
+                                       "yyyy-MM-dd"
+                                       (du/date-trunc unit (du/relative-date unit amount)))))
 
 (defmethod ->rvalue :value [[_ value _]]
   value)
@@ -107,8 +109,8 @@
                  ""
                  (str/join "," (for [breakout-field breakout-clause]
                                  (mbql.u/match-one breakout-field
-                                   [:datetime-field _ unit] (unit->ga-dimension unit)
-                                   _                        (->rvalue &match)))))})
+                                                   [:datetime-field _ unit] (unit->ga-dimension unit)
+                                                   _                        (->rvalue &match)))))})
 
 
 ;;; ----------------------------------------------------- filter -----------------------------------------------------
@@ -161,19 +163,42 @@
 
 (defn- handle-filter:filters [{filter-clause :filter}]
   (when filter-clause
-    ;; remove all clauses that operate on datetime fields or built-in segments because we don't want to handle them
-    ;; here, we'll do that seperately with the filter:interval and handle-filter:built-in-segment stuff below
-    ;;
-    ;; (Recall that `auto-bucket-datetimes` guarantees all datetime Fields will be wrapped by `:datetime-field`
-    ;; clauses in a fully-preprocessed query.)
+  ;; remove all clauses that operate on datetime fields or built-in segments because we don't want to handle them
+  ;; here, we'll do that seperately with the filter:interval and handle-filter:built-in-segment stuff below
+  ;;
+  ;; (Recall that `auto-bucket-datetimes` guarantees all datetime Fields will be wrapped by `:datetime-field`
+  ;; clauses in a fully-preprocessed query.)
     (let [filter (parse-filter (mbql.u/replace filter-clause
-                                 [:segment (_ :guard mbql.u/ga-id?)] nil
-                                 [_ [:datetime-field & _] & _] nil))]
+                                               [:segment (_ :guard mbql.u/ga-id?)] nil
+                                               [_ [:datetime-field & _] & _] nil))]
 
       (when-not (str/blank? filter)
         {:filters filter}))))
 
 ;;; ----------------------------------------------- filter (intervals) -----------------------------------------------
+
+(defn- date-add-days
+  "Add `n-days` to a datetime clause (`:absolute-datetime` or `:relative-datetime`) Done to fix off-by-one issues with
+GA. See #9904"
+  [[clause-name time-component unit, :as datetime-clause] n-days]
+  (case clause-name
+    :absolute-datetime
+    [:absolute-datetime (du/relative-date :day n-days (du/date-trunc unit time-component)) unit]
+
+    :relative-datetime
+    (if (= unit :day)
+      [clause-name (+ time-component n-days) unit]
+      [:absolute-datetime
+       (du/relative-date :day n-days (du/date-trunc unit (du/relative-date unit time-component))) :day])
+
+    datetime-clause))
+
+(defn- date-sub-day [datetime-clause]
+  (date-add-days datetime-clause -1))
+
+(defn- date-add-day [datetime-clause]
+  (date-add-days datetime-clause 1))
+
 
 (defmulti ^:private parse-filter:interval mbql.u/dispatch-by-clause-name-or-class)
 
@@ -183,19 +208,23 @@
   {:start-date (->rvalue min-val), :end-date (->rvalue max-val)})
 
 (defmethod parse-filter:interval :> [[_ field value]]
-  {:start-date (->rvalue value), :end-date latest-date})
+  {:start-date (->rvalue (date-add-day value))})
 
 (defmethod parse-filter:interval :< [[_ field value]]
-  {:start-date earliest-date, :end-date (->rvalue value)})
+  {:end-date (->rvalue (date-sub-day value))})
 
-;; TODO - why we don't support `:>=` or `:<=` in GA?
+(defmethod parse-filter:interval :>= [[_ field value]]
+  {:start-date (->rvalue value)})
+
+(defmethod parse-filter:interval :<= [[_ field value]]
+  {:end-date (->rvalue value)})
 
 (defmethod parse-filter:interval := [[_ field value]]
   {:start-date (->rvalue value)
    :end-date   (->rvalue
                 (cond-> value
-                  ;; for relative datetimes, inc the end date so we'll get a proper date range once everything is
-                  ;; bucketed
+                ;; for relative datetimes, inc the end date so we'll get a proper date range once everything is
+                ;; bucketed
                   (mbql.u/is-clause? :relative-datetime value)
                   (mbql.u/add-datetime-units 1)))})
 
@@ -205,8 +234,16 @@
       (throw (Exception. (str (tru "Multiple date filters are not supported")))))
     (first filters)))
 
+(defn- try-reduce-filters [[filter1 filter2]]
+  (merge-with
+   (fn [_ _] (throw (Exception. (str (tru "Multiple date filters are not supported in filters: ") filter1 filter2))))
+   filter1 filter2))
+
 (defmethod parse-filter:interval :and [[_ & subclauses]]
-  (maybe-get-only-filter-or-throw (map parse-filter:interval subclauses)))
+  (let [filters (map parse-filter:interval subclauses)]
+    (if (= (count filters) 2)
+      (try-reduce-filters filters)
+      (maybe-get-only-filter-or-throw filters))))
 
 (defmethod parse-filter:interval :or [[_ & subclauses]]
   (maybe-get-only-filter-or-throw (map parse-filter:interval subclauses)))
@@ -218,19 +255,37 @@
   "Replace any filter clauses that operate on a non-datetime Field with `nil`."
   [filter-clause]
   (mbql.u/replace filter-clause
-    ;; we don't support any of the following as datetime filters
-    #{:!= :<= :>= :starts-with :ends-with :contains}
-    nil
+  ;; we don't support any of the following as datetime filters
+                  #{:!= :starts-with :ends-with :contains}
+                  nil
 
-    [(_ :guard #{:< :> :between :=}) [(_ :guard (partial not= :datetime-field)) & _] & _]
-    nil))
+                  [(_ :guard #{:< :> :<= :>= :between :=}) [(_ :guard (partial not= :datetime-field)) & _] & _]
+                  nil))
+
+(defn- normalize-unit [unit]
+  (if (= unit :default) :day unit))
+
+(defn- normalize-datetime-units
+  "Replace all unsupported datetime units with the default"
+  [filter-clause]
+  (mbql.u/replace filter-clause
+
+                  [:datetime-field field unit]        [:datetime-field field (normalize-unit unit)]
+                  [:absolute-datetime timestamp unit] [:absolute-datetime timestamp (normalize-unit unit)]
+                  [:relative-datetime amount unit]    [:relative-datetime amount (normalize-unit unit)]))
+
+(defn- add-start-end-dates [filter-clause]
+  (merge {:start-date earliest-date, :end-date latest-date} filter-clause))
 
 (defn- handle-filter:interval
   "Handle datetime filter clauses. (Anything that *isn't* a datetime filter will be removed by the
-  `handle-builtin-segment` logic)."
+`handle-builtin-segment` logic)."
   [{filter-clause :filter}]
   (or (when filter-clause
-        (parse-filter:interval (remove-non-datetime-filter-clauses filter-clause)))
+        (add-start-end-dates
+         (parse-filter:interval
+          (normalize-datetime-units
+           (remove-non-datetime-filter-clauses filter-clause)))))
       {:start-date earliest-date, :end-date latest-date}))
 
 
@@ -245,7 +300,7 @@
 
 (defn- handle-filter:built-in-segment
   "Handle a built-in GA segment (a `[:segment <ga id>]` filter clause), if present. This is added to the native query
-  under a separate `:segment` key."
+under a separate `:segment` key."
   [inner-query]
   (when-let [built-in-segment (built-in-segment inner-query)]
     {:segment built-in-segment}))
@@ -262,9 +317,9 @@
                      :asc  ""
                      :desc "-")
                    (mbql.u/match-one field
-                     [:datetime-field _ unit] (unit->ga-dimension unit)
-                     [:aggregation index]     (mbql.u/aggregation-at-index query index)
-                     [& _]                    (->rvalue &match)))))}))
+                                     [:datetime-field _ unit] (unit->ga-dimension unit)
+                                     [:aggregation index]     (mbql.u/aggregation-at-index query index)
+                                     [& _]                    (->rvalue &match)))))}))
 
 
 ;;; ----------------------------------------------------- limit ------------------------------------------------------
@@ -278,7 +333,7 @@
   "Transpile MBQL query into parameters required for a Google Analytics request."
   [{inner-query :query, :as raw}]
   {:query (into
-           ;; set to false to match behavior of other drivers
+         ;; set to false to match behavior of other drivers
            {:include-empty-rows false}
            (for [f [handle-source-table
                     handle-aggregation
