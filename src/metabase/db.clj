@@ -125,8 +125,9 @@
                      :host (config/config-str :mb-db-host)
                      :port (config/config-int :mb-db-port)
                      :dbname (config/config-str :mb-db-dbname)
-                     :user (config/config-str :mb-db-user)
-                     :password (config/config-str :mb-db-pass)}))))
+                     ;:user (config/config-str :mb-db-user)
+                     ;:password (config/config-str :mb-db-pass)
+                     }))))
 
 (defn jdbc-details
   "Takes our own MB details map and formats them properly for connection details for JDBC."
@@ -401,6 +402,23 @@
   forever after, making all other connnections \"safe\"."
   false)
 
+(def ^:private can-connect-timeout-ms
+"Consider `can-connect?`/`can-connect-with-details?` to have failed after this many milliseconds.
+By default, this is 5 seconds. You can configure this value by setting the env var 
+`MB_DB_CONNECTION_TIMEOUT_MS`."
+(or (config/config-int :mb-db-connection-timeout-ms)
+    5000))
+
+(defn- can-connect-with-windows-authentication?
+[driver db-spec]
+(try
+  (u/with-timeout can-connect-timeout-ms
+    (let [[first-row] (jdbc/query db-spec ["SELECT 1"])
+          [result] (vals first-row)]
+      (= 1 result)))
+  (catch Throwable e
+    (throw (Exception. (.getMessage e) e)))))
+
 (defn- verify-db-connection
   "Test connection to database with DETAILS and throw an exception if we have any troubles connecting."
   ([db-details]
@@ -408,10 +426,12 @@
   ([driver details]
    {:pre [(keyword? driver) (map? details)]}
    (log/info (u/format-color 'cyan (trs "Verifying {0} Database Connection ..." (name driver))))
-   (assert (binding [*allow-potentailly-unsafe-connections* true]
-             (require 'metabase.driver.util)
-             ((resolve 'metabase.driver.util/can-connect-with-details?) driver details :throw-exceptions))
-     (trs "Unable to connect to Foundry {0} DB." (name driver)))
+   (assert (if (= :sqlserver driver)
+             (can-connect-with-windows-authentication? driver (jdbc-details details))
+             (binding [*allow-potentailly-unsafe-connections* true]
+               (require 'metabase.driver.util)
+               ((resolve 'metabase.driver.util/can-connect-with-details?) driver details :throw-exceptions)))
+           (trs "Unable to connect to Foundry {0} DB." (name driver)))
    (log/info (trs "Verify Database Connection ... ") (u/emoji "✅"))))
 
 

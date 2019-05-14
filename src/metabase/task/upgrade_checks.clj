@@ -34,14 +34,14 @@
 (def ^:private job-key     "metabase.task.upgrade-checks.job")
 (def ^:private trigger-key "metabase.task.upgrade-checks.trigger")
 
-(defmethod task/init! ::CheckForNewVersions [_]
-  (let [job     (jobs/build
-                 (jobs/of-type CheckForNewVersions)
-                 (jobs/with-identity (jobs/key job-key)))
-        trigger (triggers/build
-                 (triggers/with-identity (triggers/key trigger-key))
-                 (triggers/start-now)
-                 (triggers/with-schedule
-                   ;; run twice a day
-                   (cron/cron-schedule "0 15 6,18 * * ? *")))]
-    (task/schedule-task! job trigger)))
+; (defmethod task/init! ::CheckForNewVersions [_]
+;   (let [job     (jobs/build
+;                  (jobs/of-type CheckForNewVersions)
+;                  (jobs/with-identity (jobs/key job-key)))
+;         trigger (triggers/build
+;                  (triggers/with-identity (triggers/key trigger-key))
+;                  (triggers/start-now)
+;                  (triggers/with-schedule
+;                    ;; run twice a day
+;                    (cron/cron-schedule "0 15 6,18 * * ? *")))]
+;     (task/schedule-task! job trigger)))
