@@ -617,7 +617,7 @@ default implementation is an identity function."
 (defmethod splice-parameters-into-native-query ::driver [_ query]
   query)
 
-
+;; TODO - we should just have some sort of `core.async` channel to handle DB update notifications instead
 (defmulti notify-database-updated
   "Notify the driver that the attributes of a `database` have changed, or that `database was deleted. This is
 specifically relevant in the event that the driver was doing some caching or connection pooling; the driver should

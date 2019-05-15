@@ -8,6 +8,7 @@
              [util :as u]]
             [metabase.async.util :as async.u]
             [metabase.middleware.util :as middleware.u]
+            [metabase.query-processor.middleware.async :as qp.middleware.async]
             [metabase.util
              [date :as du]
              [i18n :refer [trs]]]
@@ -48,7 +49,8 @@
              (.getBusyThreads pool)
              (.getIdleThreads pool)
              (.getQueueSize pool)))
-   (format "(%d total active threads)" (Thread/activeCount))))
+   (format "(%d total active threads)" (Thread/activeCount))
+   (format "Queries in flight: %d" (qp.middleware.async/in-flight))))
 
 (defn- format-error-info [{{:keys [body]} :response} {:keys [error?]}]
   (when (and error?
