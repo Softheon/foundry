@@ -14,7 +14,7 @@
              [schema :as su]])
   (:import java.awt.Color
            java.awt.image.BufferedImage
-           java.io.ByteArrayOutputStream
+           [java.io ByteArrayInputStream ByteArrayOutputStream]
            javax.imageio.ImageIO))
 
 ;;; --------------------------------------------------- CONSTANTS ----------------------------------------------------
@@ -135,15 +135,33 @@
         y             (Integer/parseInt y)
         lat-col-idx   (Integer/parseInt lat-col-idx)
         lon-col-idx   (Integer/parseInt lon-col-idx)
-        query         (normalize/normalize (json/parse-string query keyword))
-        updated-query (update query :query (u/rpartial query-with-inside-filter lat-field-id lon-field-id x y zoom))
-        result        (qp/process-query-and-save-execution! updated-query {:executed-by api/*current-user-id*, :context :map-tiles})
-        points        (for [row (-> result :data :rows)]
-                        [(nth row lat-col-idx) (nth row lon-col-idx)])]
+
+        query
+        (normalize/normalize (json/parse-string query keyword))
+
+        updated-query
+        (-> query
+            (update :query query-with-inside-filter lat-field-id lon-field-id x y zoom)
+            (assoc :async? true))
+        {:keys [status], {:keys [rows]} :data, :as result}
+        (qp/process-query-and-save-execution! updated-query
+                                              {:executed-by api/*current-user-id*
+                                               :context :map-tiles})
+        ;; make sure query completed successfully, or API endpoint should return 400
+        _
+        (when-not (= status :completed)
+          (throw (ex-info (str (tru "Query failed"))
+                          ;; `result` might be a `core.async` chanel or something we're not
+                          ;; expecting
+                          (assoc (when (map? result) result) :status-code 400))))
+
+        points
+        (for [row rows]
+          [(nth row lat-col-idx) (nth row lon-col-idx)])]
     ;; manual ring response here.  we simply create an inputstream from the byte[] of our image
     {:status  200
      :headers {"Content-Type" "image/png"}
-     :body    (java.io.ByteArrayInputStream. (tile->byte-array (create-tile zoom points)))}))
+     :body    (ByteArrayInputStream. (tile->byte-array (create-tile zoom points)))}))
 
 
 (api/define-routes)

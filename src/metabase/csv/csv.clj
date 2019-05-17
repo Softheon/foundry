@@ -2,7 +2,8 @@
 (ns
 metabase.csv.csv
  (:require [clojure [string :as str]]
-           [clojure.tools.logging :as log])
+           [clojure.tools.logging :as log]
+           [metabase.util.date :as du])
  (:import (java.io PushbackReader Reader Writer StringReader EOFException)))
 
 ;(set! *warn-on-reflection* true)
@@ -91,7 +92,15 @@ Valid options are
 
 ;; Writing
 (defn- write-cell [^Writer writer obj sep quote quote?]
- (let [string (str obj)
+ (let [timezone (System/getProperty "user.timezone")
+       string (cond
+                (du/is-time? obj)
+                (du/format-time obj timezone)
+
+                (du/is-temporal? obj)
+                (du/->iso-8601-datetime obj timezone)
+
+                :else (str obj))
        must-quote (quote? string)]
    (when must-quote (.write writer (int quote)))
    (.write writer (if must-quote

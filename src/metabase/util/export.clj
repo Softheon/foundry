@@ -1,6 +1,6 @@
 (ns metabase.util.export
   (:require [cheshire.core :as json]
-            [clojure.data.csv :as csv]
+            [metabase.csv.csv :as csv]
             [dk.ative.docjure.spreadsheet :as spreadsheet]
             [clojure.java.io :as io]
             [ring.util.io :as ring-io]
