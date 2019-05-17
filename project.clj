@@ -50,7 +50,8 @@
    [amalloy/ring-gzip-middleware "0.1.3"]                             ; Ring middleware to GZIP responses if client can handle it
    [aleph "0.4.6" :exclusions [org.clojure/tools.logging]]            ; Async HTTP library; WebSockets
    [bigml/histogram "4.1.3"]                                          ; Histogram data structure
-   [buddy/buddy-core "1.5.0"]                                         ; various cryptograhpic functions
+   [buddy/buddy-core "1.5.0"
+    :exclusions [commons-codec]]                                         ; various cryptograhpic functions
    [buddy/buddy-sign "3.0.0"]                                         ; JSON Web Tokens; High-Level message signing library
    [cheshire "5.8.1"]                                                 ; fast JSON encoding (used by Ring JSON middleware)
    [clj-http "3.9.1"                                                  ; HTTP client
@@ -76,6 +77,12 @@
    [com.microsoft.sqlserver/mssql-jdbc "7.2.1.jre8"]
    [com.mchange/c3p0 "0.9.5.3"]                                       ; connection pooling library
    [com.taoensso/nippy "2.14.0"]                                      ; Fast serialization (i.e., GZIP) library for Clojure
+   [commons-codec/commons-codec "1.12"]                               ; Apache Commons -- useful code util fns
+   [commons-io/commons-io "2.6"]                                      ; Apache Commons -- useful IO uitl fns
+   [commons-validator/commons-validator "1.6"                        ; Apache Commons -- useful validation util fns
+    :exclusions [commons-codec
+                 commons-digester
+                 commons-logging]]
    [compojure "1.6.1" :exclusions [ring/ring-codec]]                  ; HTTP Routing library built on Ring
    [crypto-random "1.2.0"]                                            ; library for generating cryptographically secure random bytes and strings
    [dk.ative/docjure "1.13.0"]                                        ; Excel export
@@ -113,8 +120,7 @@
    [org.eclipse.jetty/jetty-server "9.4.15.v20190215"]                ; We require JDK 8 which allows us to run Jetty 9.4, ring-jetty-adapter runs on 1.7 which forces an older version
    [ring/ring-json "0.4.0"]                                           ; Ring middleware for reading/writing JSON automatically
    [stencil "0.5.0"]                                                  ; Mustache templates for Clojure
-   [toucan "1.11.0" :exclusions [org.clojure/java.jdbc honeysql]]
-   ]    ; Model layer, hydration, and DB utilities
+   [toucan "1.11.0" :exclusions [org.clojure/java.jdbc honeysql]]]    ; Model layer, hydration, and DB utilities
 
   :main ^:skip-aot metabase.core
 
