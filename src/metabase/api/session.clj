@@ -117,15 +117,18 @@ couldn't be autenticated."
   throwing an Exception if login could not be completed."
   [username :- su/NonBlankString, password :- su/NonBlankString]
   ;; Primitive "strategy implementation", should be reworked for modular providers in #3210
-  (or (iam-login username password)      ; Fist try IAM 
-      ;(ldap-login username password)    ; First try LDAP if it's enabled
-      (admin-email-login username password)   ; Then try local authentication
+  (or
+   (if (config/config-bool :mb-enable-iam)
+     (iam-login username password)
+     (email-login username password))
+  ;(ldap-login username password)    ; First try LDAP if it's enabled
+   (admin-email-login username password)   ; Then try local authentication
       ;; If nothing succeeded complain about it
       ;; Don't leak whether the account doesn't exist or the password was incorrect
-      (throw
-       (ui18n/ex-info password-fail-message
-                      {:status-code 400
-                       :errors      {:password password-fail-snippet}}))))
+   (throw
+    (ui18n/ex-info password-fail-message
+                   {:status-code 400
+                    :errors      {:password password-fail-snippet}}))))
 
 (api/defendpoint POST "/"
   "Login."
