@@ -76,6 +76,7 @@ type Props = {
     reload: boolean,
     clear: boolean,
   }) => Promise<void>,
+  cancelFetchDashboardCardData: () => Promise<void>,
 
   setEditingParameter: (parameterId: ?ParameterId) => void,
   setEditingDashboard: (isEditing: boolean) => void,
@@ -171,6 +172,10 @@ export default class Dashboard extends Component {
     }
   }
 
+  componentWillUnmount() {
+    this.props.cancelFetchDashboardCardData();
+  }
+  
   async loadDashboard(dashboardId: DashboardId) {
     this.props.initialize();
 

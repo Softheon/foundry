@@ -39,6 +39,10 @@ const DATE_WIDGETS = {
   "date/all-options": DateAllOptionsWidget,
 };
 
+const CROSS_FILTER_WIDGETS = {
+  "cross_filter": CategoryWidget
+}
+
 const makeMapStateToProps = () => {
   const getMergedParameterFieldValues = makeGetMergedParameterFieldValues();
   const mapStateToProps = (state, props) => ({
@@ -92,6 +96,8 @@ export default class ParameterValueWidget extends Component {
     const { parameter, values } = this.props;
     if (DATE_WIDGETS[parameter.type]) {
       return DATE_WIDGETS[parameter.type];
+    } else if (CROSS_FILTER_WIDGETS[parameter.type]) {
+      return CROSS_FILTER_WIDGETS[parameter.type];
     } else if (this.getField()) {
       return ParameterFieldWidget;
     } else if (values && values.length > 0) {

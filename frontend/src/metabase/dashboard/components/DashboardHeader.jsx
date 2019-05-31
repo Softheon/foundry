@@ -207,6 +207,7 @@ export default class DashboardHeader extends Component {
       buttons.push(parametersWidget);
     }
 
+    // Add question to dashboard button.
     if (!isFullscreen && canEdit) {
       buttons.push(
         <ModalWithTrigger
@@ -376,6 +377,8 @@ export default class DashboardHeader extends Component {
         }
         onHeaderModalDone={() => this.props.setEditingParameter(null)}
       />
+
+
     );
   }
 }

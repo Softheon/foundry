@@ -80,6 +80,10 @@ export const PARAMETER_OPTIONS: Array<ParameterOption> = [
     type: "category",
     name: t`Category`,
   },
+  {
+    type: "cross_filter",
+    name: t`Cross Filter`,
+  }
 ];
 
 export type ParameterSection = {
@@ -114,6 +118,12 @@ export const PARAMETER_SECTIONS: Array<ParameterSection> = [
     description: t`Category, Type, Model, Rating, etc.`,
     options: [],
   },
+  {
+    id:"cross_filter",
+    name: t`Dynamic Filter`,
+    description: t`Query Source`,
+    options:[]
+  }
 ];
 
 for (const option of PARAMETER_OPTIONS) {
