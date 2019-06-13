@@ -206,7 +206,6 @@ export const getCrossFilterValues = createSelector(
     const cfDatabaseId = crossfilterParameter.database_id;
     const dashcardsWithTheSQLQueryString = [];
     const sourceQueryString = dashcards[cfDashcardId].card.dataset_query.native.query;
-    console.log("xia:sourceQueryString", sourceQueryString);
     if (!sourceQueryString){
       return dimensionNames;
     }

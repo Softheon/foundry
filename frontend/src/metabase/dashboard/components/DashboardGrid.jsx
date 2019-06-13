@@ -21,10 +21,12 @@ import {
 
 import _ from "underscore";
 import cx from "classnames";
-
+import DashboardCrossfilterControl from "../hoc/DashboardCrossfilterControl";
+import DashboardControls from "../hoc/DashboardControls";
 const MOBILE_ASPECT_RATIO = 3 / 2;
 const MOBILE_TEXT_CARD_ROW_HEIGHT = 40;
 
+@DashboardCrossfilterControl
 @ExplicitSize()
 export default class DashboardGrid extends Component {
   constructor(props, context) {

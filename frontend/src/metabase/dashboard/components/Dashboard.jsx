@@ -12,7 +12,7 @@ import { t } from "c-3po";
 import Parameters from "metabase/parameters/components/Parameters.jsx";
 
 import DashboardControls from "../hoc/DashboardControls";
-
+import DashboardCrossfilterControls from "../hoc/DashboardCrossfilterControl"
 import _ from "underscore";
 import cx from "classnames";
 

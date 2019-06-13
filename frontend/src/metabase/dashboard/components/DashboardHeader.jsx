@@ -240,20 +240,7 @@ export default class DashboardHeader extends Component {
   updateCrossFilterParameterSection (parameterSections) {
     for(const section of parameterSections) {
       if (section.id === "crossfilter") {
-        let options = {}
-        // let { dashboard } = this.props;
-        // for(const order_card of dashboard.ordered_cards){
-        //   const card = order_card.card;
-        //   options[card.id] = { 
-        //           card_id: card.id,
-        //           dashcard_id: order_card.id,
-        //           name: card.name,
-        //           database_id: card.database_id,
-        //           type: "crossfilter"}
-        // }
-        // options = Object.values(options);
-        options = this.getUniqueCrossfilterSources();
-
+        let options = this.getUniqueCrossfilterSources();
         section.options = options;
         return parameterSections;
       }
