@@ -16,12 +16,15 @@ import DateAllOptionsWidget from "./widgets/DateAllOptionsWidget.jsx";
 import CategoryWidget from "./widgets/CategoryWidget.jsx";
 import TextWidget from "./widgets/TextWidget.jsx";
 import ParameterFieldWidget from "./widgets/ParameterFieldWidget";
+import CrossfilterWidget from "./widgets/CrossfilterWidget";
 
 import { fetchField, fetchFieldValues } from "metabase/redux/metadata";
 import {
   getMetadata,
   makeGetMergedParameterFieldValues,
 } from "metabase/selectors/metadata";
+
+import { getCrossFilterValues } from "metabase/dashboard/selectors";
 
 import { getParameterIconName } from "metabase/meta/Parameter";
 
@@ -40,15 +43,25 @@ const DATE_WIDGETS = {
 };
 
 const CROSS_FILTER_WIDGETS = {
-  "cross_filter": CategoryWidget
+  "crossfilter": CrossfilterWidget,
 }
 
 const makeMapStateToProps = () => {
   const getMergedParameterFieldValues = makeGetMergedParameterFieldValues();
-  const mapStateToProps = (state, props) => ({
-    metadata: getMetadata(state),
-    values: getMergedParameterFieldValues(state, props),
-  });
+
+  const mapStateToProps = (state, props) => {
+    let values = getMergedParameterFieldValues(state,props);
+    if (props.parameter.type === "crossfilter") {
+      let crossFilterValues = getCrossFilterValues(state,props);
+      values = crossFilterValues.map(crossFilterValue => {
+       return [crossFilterValue]
+      })
+    }
+    return {
+      metadata: getMetadata(state),
+      values
+    }
+  }
   return mapStateToProps;
 };
 
@@ -245,7 +258,7 @@ export default class ParameterValueWidget extends Component {
       let placeholderText = isEditing
         ? t`Select a default value…`
         : placeholder || t`Select…`;
-
+      
       return (
         <PopoverWithTrigger
           ref="valuePopover"

@@ -15,6 +15,7 @@ type Props = {
   values: any[],
   setValue: () => void,
   onClose: () => void,
+  multi: ?boolean
 };
 type State = {
   searchText: string,
@@ -42,6 +43,10 @@ export default class CategoryWidget extends Component {
     setValue: PropTypes.func.isRequired,
     onClose: PropTypes.func.isRequired,
   };
+
+  static defaultProps = {
+    multi: true
+  }
 
   updateSearchText = (value: string) => {
     let regex = null;
@@ -95,7 +100,7 @@ export default class CategoryWidget extends Component {
           options={options}
           values={(selectedValues: Array<string>)}
           onValuesChange={this.onSelectedValuesChange}
-          multi={true}
+          multi={this.props.multi}
         />
         <div className="p1">
           <button

@@ -18,6 +18,7 @@ import Dashboards from "metabase/entities/dashboards";
 
 import {
   createParameter,
+  createCrossfilterParameter,
   setParameterName as setParamName,
   setParameterDefaultValue as setParamDefaultValue,
 } from "metabase/meta/Dashboard";
@@ -118,6 +119,8 @@ export const SET_PARAMETER_VALUE = "metabase/dashboard/SET_PARAMETER_VALUE";
 export const SET_PARAMETER_INDEX = "metabase/dashboard/SET_PARAMETER_INDEX";
 export const SET_PARAMETER_DEFAULT_VALUE =
   "metabase/dashboard/SET_PARAMETER_DEFAULT_VALUE";
+export const ADD_CROSSFILTER_PARAMETER = "metabase/dashboard/ADD_CROSSFILTER_PARAMETER";
+export const REMOVE_CROSSFILTER_PARAMETER = "metabase/dashboard/REMOVE_CROSSFILTER_PARAMETER";
 
 function getDashboardType(id) {
   if (Utils.isUUID(id)) {
@@ -757,7 +760,12 @@ export const addParameter = createThunkAction(
   parameterOption => (dispatch, getState) => {
     let parameter;
     updateParameters(dispatch, getState, parameters => {
-      parameter = createParameter(parameterOption, parameters);
+      if (parameterOption.type === "crossfilter") {
+        parameter = createCrossfilterParameter(parameterOption, parameters);
+        console.log("add cross filter parameter", parameter);
+      } else {
+        parameter = createParameter(parameterOption, parameters);
+      }
       return parameters.concat(parameter);
     });
     return parameter;
@@ -773,6 +781,7 @@ export const removeParameter = createThunkAction(
     return { id: parameterId };
   },
 );
+
 
 export const setParameterName = createThunkAction(
   SET_PARAMETER_NAME,

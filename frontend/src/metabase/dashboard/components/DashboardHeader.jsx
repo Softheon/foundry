@@ -36,6 +36,8 @@ import type {
 } from "metabase/meta/types/Dashboard";
 import type { RevisionId } from "metabase/meta/types/Revision";
 import { Link } from "react-router";
+import { PARAMETER_SECTIONS } from "metabase/meta/Dashboard";
+import { consolidateStreamedStyles } from "styled-components";
 
 type Props = {
   location: LocationDescriptor,
@@ -185,6 +187,80 @@ export default class DashboardHeader extends Component {
     ];
   }
 
+  getUniqueCrossfilterSources() {
+    const { parameters } = this.props.dashboard;
+    const { dashcards, nativeDashcards } = this.props;
+    
+    // maps the values of crossfilter parameters  to its corresonding cards.
+    const crossfilterParameters = parameters.filter(parameter => {
+      return parameter.type === "crossfilter"
+    });
+    const cfSourceMap = new Map();
+    crossfilterParameters.map(parameter => {
+      const dashcard = dashcards[parameter.dashcard_id];
+      if (dashcard && dashcard.card) {
+        const card = dashcard.card;
+        const datasetQuery = card.dataset_query
+        const queryString = datasetQuery && datasetQuery.native.query;
+        if (queryString) {
+          cfSourceMap.set(queryString, card);
+        }
+      }
+    })
+    // gets a list of cards to be used as source of a new crossfilter excluding the cards that have
+    // been used as source of existing crossfilters.
+    const result = [];
+    nativeDashcards.map(nativeDashcard => {
+      const { dashcard_id, card } = nativeDashcard;
+      const { dataset_query: { native : {query} }, database_id} = card;
+      if (!cfSourceMap.has(query)) {
+          result.push({
+            card_id: card.id,
+            dashcard_id: dashcard_id,
+            database_id: card.database_id,
+            name: card.name,
+            type: "crossfilter"
+          });
+      } else {
+          const cfSourceCard = cfSourceMap.get(query);
+          if (cfSourceCard.dataset_query.database !== database_id){
+            result.push({
+              card_id: card.id,
+              dashcard_id: dashcard_id,
+              database_id: database_id,
+              name: card.name,
+              type: "crossfilter"
+            });
+          }
+      }
+    })
+    return result;
+  }
+
+  updateCrossFilterParameterSection (parameterSections) {
+    for(const section of parameterSections) {
+      if (section.id === "crossfilter") {
+        let options = {}
+        // let { dashboard } = this.props;
+        // for(const order_card of dashboard.ordered_cards){
+        //   const card = order_card.card;
+        //   options[card.id] = { 
+        //           card_id: card.id,
+        //           dashcard_id: order_card.id,
+        //           name: card.name,
+        //           database_id: card.database_id,
+        //           type: "crossfilter"}
+        // }
+        // options = Object.values(options);
+        options = this.getUniqueCrossfilterSources();
+
+        section.options = options;
+        return parameterSections;
+      }
+    }
+    return parameterSections;
+  } 
+
   getHeaderButtons() {
     const {
       dashboard,
@@ -265,6 +341,7 @@ export default class DashboardHeader extends Component {
                 <ParametersPopover
                   onAddParameter={this.props.addParameter}
                   onClose={() => this.setState({ modal: null })}
+                  parameterSections={this.updateCrossFilterParameterSection(PARAMETER_SECTIONS)}
                 />
               </Popover>
             )}

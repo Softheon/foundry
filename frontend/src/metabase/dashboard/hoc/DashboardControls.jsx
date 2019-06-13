@@ -29,7 +29,6 @@ type State = {
 };
 
 const TICK_PERIOD = 0.25; // seconds
-
 /* This contains some state for dashboard controls on both private and embedded dashboards.
  * It should probably be in Redux?
  */

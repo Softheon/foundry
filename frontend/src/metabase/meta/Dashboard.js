@@ -79,10 +79,6 @@ export const PARAMETER_OPTIONS: Array<ParameterOption> = [
   {
     type: "category",
     name: t`Category`,
-  },
-  {
-    type: "cross_filter",
-    name: t`Cross Filter`,
   }
 ];
 
@@ -119,10 +115,11 @@ export const PARAMETER_SECTIONS: Array<ParameterSection> = [
     options: [],
   },
   {
-    id:"cross_filter",
+    id:"crossfilter",
     name: t`Dynamic Filter`,
     description: t`Query Source`,
-    options:[]
+    options:[
+    ]
   }
 ];
 
@@ -386,6 +383,25 @@ export function createParameter(
     type: option.type,
   };
   return setParameterName(parameter, name);
+}
+
+export function createCrossfilterParameter(
+  option: ParameterOption,
+  parameters: Array<ParameterOpton> = []
+) {
+  let name = option.name;
+  let nameIndex = 0;
+  while(_.any(parameters, p => p.name === name)) {
+    name = option.name + " " + ++nameIndex;
+  }
+  let parameter = {
+    ...option,
+    name,
+    slug: slugify(name),
+    id: Math.floor(Math.random() * Math.pow(2, 32)).toString(16),
+    type: option.type,
+  }
+  return parameter;
 }
 
 export function setParameterName(

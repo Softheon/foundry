@@ -1,13 +1,14 @@
 /* @flow */
 import React, { Component } from "react";
 import { t } from "c-3po";
-import { PARAMETER_SECTIONS } from "metabase/meta/Dashboard";
+//import { PARAMETER_SECTIONS } from "metabase/meta/Dashboard";
 
 import type { Parameter, ParameterOption } from "metabase/meta/types/Parameter";
 
 import _ from "underscore";
 
 import type { ParameterSection } from "metabase/meta/Dashboard";
+import cx from "classnames";
 
 export default class ParametersPopover extends Component {
   props: {
@@ -25,13 +26,13 @@ export default class ParametersPopover extends Component {
 
   render() {
     const { section } = this.state;
-    const { onClose, onAddParameter } = this.props;
+    const { onClose, onAddParameter, parameterSections  } = this.props;
     if (section == null) {
       return (
         <ParameterOptionsSectionsPane
-          sections={PARAMETER_SECTIONS}
+          sections={parameterSections}
           onSelectSection={selectedSection => {
-            let parameterSection = _.findWhere(PARAMETER_SECTIONS, {
+            let parameterSection = _.findWhere(parameterSections, {
               id: selectedSection.id,
             });
             if (parameterSection && parameterSection.options.length === 1) {
@@ -44,7 +45,8 @@ export default class ParametersPopover extends Component {
         />
       );
     } else {
-      let parameterSection = _.findWhere(PARAMETER_SECTIONS, { id: section });
+      let parameterSection = _.findWhere(parameterSections, { id: section });
+      let isCrossFilterSection = parameterSection.id === "crossfilter";
       return (
         <ParameterOptionsPane
           options={parameterSection && parameterSection.options}
@@ -52,6 +54,7 @@ export default class ParametersPopover extends Component {
             onAddParameter(option);
             onClose();
           }}
+          isCrossFilterSection= {isCrossFilterSection}
         />
       );
     }
@@ -64,12 +67,27 @@ export const ParameterOptionsSection = ({
 }: {
   section: ParameterSection,
   onClick: () => any,
-}) => (
-  <li onClick={onClick} className="p1 px2 cursor-pointer brand-hover">
-    <div className="text-brand text-bold">{section.name}</div>
-    <div>{section.description}</div>
-  </li>
-);
+}) =>{
+  const isCrossfilterSection = section.id === "crossfilter";
+  const hasCrossfilterOptions = isCrossfilterSection && section.options.length > 1;
+  let onClickHandler = null;
+  if (!isCrossfilterSection || (isCrossfilterSection && hasCrossfilterOptions)) {
+    onClickHandler = onClick;
+  } else {
+    onClickHandler = null;
+  }
+  return  (
+    <li onClick={onClickHandler} className={cx("p1 px2", {
+      "cursor-pointer": onClickHandler,
+      "brand-hover": onClickHandler,
+      "disabled": !onClickHandler,
+      "no-decoration": !onClickHandler,
+    })} >
+      <div className="text-brand text-bold">{section.name}</div>
+      <div>{section.description}</div>
+    </li>
+  )
+};
 
 export const ParameterOptionsSectionsPane = ({
   sections,
@@ -107,12 +125,18 @@ export const ParameterOptionItem = ({
 export const ParameterOptionsPane = ({
   options,
   onSelectOption,
+  isCrossFilterSection,
 }: {
   options: ?Array<ParameterOption>,
   onSelectOption: ParameterOption => any,
+  isCrossFilterSection: ?boolean,
 }) => (
   <div className="pb2">
-    <h3 className="p2">{t`What kind of filter?`}</h3>
+    { !isCrossFilterSection 
+      ? <h3 className="p2">{t`What kind of filter?`}</h3>
+    : <h3 className="p2">{t`What is the data source?`}</h3> }
+
+    
     <ul>
       {options &&
         options.map(option => (

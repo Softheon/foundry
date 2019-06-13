@@ -1,7 +1,7 @@
 /* @flow weak */
 
 import _ from "underscore";
-import { setIn } from "icepick";
+import { setIn, getIn } from "icepick";
 
 import { createSelector } from "reselect";
 
@@ -11,6 +11,7 @@ import * as Dashboard from "metabase/meta/Dashboard";
 
 import { getParameterTargetFieldId } from "metabase/meta/Parameter";
 
+
 import type { CardId, Card } from "metabase/meta/types/Card";
 import type { DashCardId } from "metabase/meta/types/Dashboard";
 import type {
@@ -19,6 +20,10 @@ import type {
   ParameterMapping,
   ParameterMappingUIOption,
 } from "metabase/meta/types/Parameter";
+import { getComputedSettingsForSeries } from "metabase/visualizations/lib/settings/visualization";
+import { getFriendlyName } from "metabase/visualizations/lib/utils";
+import { getVisualizationTransformed, extractRemappings } from  "metabase/visualizations";
+import { create } from "domain";
 
 export type AugmentedParameterMapping = ParameterMapping & {
   dashcard_id: DashCardId,
@@ -77,6 +82,184 @@ export const getIsDirty = createSelector(
               dashcards[id].isRemoved),
         ))
     ),
+);
+
+const getCrossfilterParameter = (state, props) => {
+  return props.parameter;
+};
+export const getDashboardState = state => state.dashboard;
+export const getEntitiesState = state => state.entities;
+
+
+const isTheSameNativeQuery = (a, b) => {
+  // check if two native queries are from The same database
+  if (a.database !== b.database) {
+    return false;
+  }
+  // check if the two native queries are the same
+  if (a.native.query !== b.native.query) {
+    return false;
+  }
+  return true;
+}
+const isTheSameStructureQuery = (a, b) => {
+  if (a.database !== b.database) {
+    return false;
+  }
+  if (a.query["source-table"] !== b.query["source-table"]) {
+    return false;
+  }
+  return true;
+}
+
+// export const getCrossFilterValues = createSelector(
+//   [getDashcards, getCardData, getCrossfilterParameter],
+//   (dashcards, dashcardData, crossfilterParameter) => {
+//     const dimensionNames = [];
+//     const {dashcard_id, card_id} = crossfilterParameter
+//     const dashcardsWithTheSameQuerySrc = [];
+//     const isNative = dashcards[dashcard_id].card.query_type === "native";
+//     const sourceQuery = dashcards[dashcard_id].card.dataset_query;
+//     if (!sourceQuery) {
+//       return [];
+//     }
+//     Object.values(dashcards).map(dashcard => {
+//       let currSrcQuery = dashcard.card.dataset_query;
+//       if (isNative && dashcard.card.query_type === "native") {
+//          if (isTheSameNativeQuery(sourceQuery, currSrcQuery)) {
+//            dashcardsWithTheSameQuerySrc.push(dashcard);
+//          }
+//       } else if (!isNative && dashcard.card.query_type === "query"){
+//         if (isTheSameStructureQuery(sourceQuery, currSrcQuery)) {
+//           dashcardsWithTheSameQuerySrc.push(dashcard);
+//         }
+//       }
+//     })
+
+//     for(const dashcard of dashcardsWithTheSameQuerySrc) {
+//       const card = dashcard.card;
+//       const mainCard = {
+//         ...card,
+//         visualization_settings: {
+//           ...card.visualization_settings,
+//           ...dashcard.visualization_settings,
+//         },
+//       };
+//       const cards = [mainCard].concat(dashcard.series || []);
+//       let series = cards.map(card => ({
+//         ...getIn(dashcardData, [dashcard.id, card.id]),
+//         card: card,
+//       }));
+
+//       const loading = !(series.length > 0 && _.every(series, s => s.data));
+      
+//       // don't try to load settings unless data is loaded
+//       if (loading) {
+//         continue;
+//       }
+//       const visualizationTransformed = getVisualizationTransformed(extractRemappings(series));
+//       series = visualizationTransformed.series;
+//       const settings = getComputedSettingsForSeries(series);
+//       const [{ data: {cols} }] = series;
+//       const displayType = card.display;
+//       if (displayType === "pie" &&  settings["pie._dimensionIndex"]) {
+//         const dimensionIndex = settings["pie._dimensionIndex"];
+//         const name = getFriendlyName(cols[dimensionIndex]);
+//         dimensionNames.push(name);
+//       }
+//       else if (settings["graph.dimensions"]){
+//         const dimensions = (settings["graph.dimensions"] || []).filter(
+//           name => name
+//         );
+//         if (dimensions.length > 0) {
+//           dimensionNames.push(dimensions[0])
+//         }
+//       }
+//     }
+//     return _.unique(dimensionNames);
+//   },
+// );
+
+export const getSQLDashcards = createSelector(
+  [getDashcards],
+  (dashcards) => {
+    const nativeCards = [];
+    Object.values(dashcards).map(dashcard => {
+        const card = dashcard.card;
+        const { query_type } = card;
+        if (query_type === "native") {
+          nativeCards.push({
+            card,
+            dashcard_id: dashcard.id
+          });
+        }
+    });
+    return nativeCards;
+  }
+)
+
+export const getCrossFilterValues = createSelector(
+  [getDashcards, getSQLDashcards, getCardData, getCrossfilterParameter],
+  (dashcards, sqlDashcards, dashcardData, crossfilterParameter) => {
+    const dimensionNames = [];
+    const cfDashcardId = crossfilterParameter.dashcard_id;
+    const cfDatabaseId = crossfilterParameter.database_id;
+    const dashcardsWithTheSQLQueryString = [];
+    const sourceQueryString = dashcards[cfDashcardId].card.dataset_query.native.query;
+    console.log("xia:sourceQueryString", sourceQueryString);
+    if (!sourceQueryString){
+      return dimensionNames;
+    }
+
+    sqlDashcards.map(sqlDashcard => {
+      const query = sqlDashcard.card.dataset_query.native.query;
+      if (sqlDashcard.card.database_id === cfDatabaseId && query === sourceQueryString ) {
+        dashcardsWithTheSQLQueryString.push(sqlDashcard);
+      }
+    })
+    dashcardsWithTheSQLQueryString.map(sqlDashcard => {
+      const card = sqlDashcard.card;
+      const dashcard = dashcards[sqlDashcard.dashcard_id];
+      const mainCard = {
+          ...card,
+          visualization_settings:{
+            ...card.visualization_settings,
+            ...dashcard.visualization_settings,
+          }
+      }
+      const cards = [mainCard].concat(dashcard.series || []);
+      let  series = cards.map(card => ({
+        ...getIn(dashcardData, [dashcard.id, card.id]),
+        card: card
+      }));
+
+      const loading = !(series.length > 0 && _.every(series, s => s.data));
+      if (loading) {
+          return;
+      }
+      const visualizationTransformed = getVisualizationTransformed(extractRemappings(series));
+      series = visualizationTransformed.series;
+      const settings = getComputedSettingsForSeries(series);
+      
+      const [{ data: {cols} }] = series;
+      const displayType = card.display;
+      if (displayType === "pie") {
+        const dimensionIndex = settings["pie._dimensionIndex"];
+        const name = getFriendlyName(cols[dimensionIndex]);
+        dimensionNames.push(name);
+      } else if (settings["graph.dimensions"]){
+        const dimensions = (settings["graph.dimensions"] || []).filter(
+          name => name
+        );
+        if (dimensions.length > 0) {
+          dimensionNames.push(dimensions[0])
+        }
+      }
+
+
+    })
+    return _.unique(dimensionNames);
+  }
 );
 
 export const getCardList = createSelector(
