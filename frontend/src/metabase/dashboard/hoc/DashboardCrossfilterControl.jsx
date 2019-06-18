@@ -7,7 +7,6 @@ import { getIn } from "icepick";
 import type { LocationDescriptor } from "metabase/meta/types";
 
 /* This contains some state for dashboard controls on both private and embedded dashboards.
- * It should probably be in Redux?
  */
 export default (ComposedComponent: ReactClass<any>) =>
   connect(null, { replace })(
@@ -21,7 +20,8 @@ export default (ComposedComponent: ReactClass<any>) =>
       };
 
       componentWillMount() {
-        this.charMap = {}
+        this.chartMap = {}
+        this.chartGroupMapping = new Map();
       }
 
       getCrossfilterParameters() {
@@ -106,15 +106,19 @@ export default (ComposedComponent: ReactClass<any>) =>
       }
 
     
-      resetCrossfilter() {
+      resetCrossfilter(dashcardId, cardId) {
         const cfParameters = this.getCrossfilterParameters();
         const cfParameterIdSet = new Set();
         cfParameters.map(cfParameter => {
           cfParameterIdSet.add(cfParameter.card_id);
         });
-        for(const crossfilterId in this.charMap) {
+        for(const crossfilterId in this.chartMap) {
           if (!cfParameterIdSet.has(crossfilterId)) {
-              delete this.charMap[crossfilterId];
+              delete this.chartMap[crossfilterId];
+              const native = this.getNativeQuery(dashcardId);
+              if (native && this.chartGroupMapping.has(native)) {
+                this.chartGroupMapping.delete(native);
+              }
           }
         }
       }
@@ -125,18 +129,40 @@ export default (ComposedComponent: ReactClass<any>) =>
         return dashcard;
       }
 
+      getNativeQuery (dashcardId) {
+        const dashcard = this.getDashcard(dashcardId);
+        const card = dashcard.card;
+        const native = card.dataset_query && card.dataset_query.query && 
+          card.dataset_query.query.native;
+        return native;
+      }
       addCrossfilter(dashcardId, cardId, data) {
-        this.resetCrossfilter();
-        this.charMap[cardId] = {
+        this.resetCrossfilter(dashcardId, cardId);
+        this.chartMap[cardId] = {
           card_id: cardId,
           crossfilter: crossfilter(data),
           group: [],
           dashcard: this.getDashcard(dashcardId, cardId),
         }
+
+        const native = this.getNativeQuery(dashcardId);
+        if (native && native.length > 0) {
+          if (!this.chartGroupMapping.has(native)) {
+            this.chartGroupMapping.set(native, this.chartMap[cardId]);
+          }        
+        }
         this.setState({redrawAt : new Date()});
       }
 
-
+      getCrossfilter(dashcard) {
+        const native = this.getNativeQuery(dashcardId);
+        if (native && native.length > 0 ) {
+          if (this.chartGroupMapping.has(native)){
+            return this.chartGroupMapping.get(native);
+          }
+        }
+        return null;
+      }
 
       // normalize a card data to an array of record thats can be understood by crossfilter
       normalizeCardData(crossfilterParamter) {
@@ -173,8 +199,10 @@ export default (ComposedComponent: ReactClass<any>) =>
 
       render() {
         return <ComposedComponent {...this.props} 
-        charMap={this.charMap}
-        addCrossfilter = {this.addCrossfilter}/>;
+        chartMap={this.chartMap}
+        addCrossfilter = {this.addCrossfilter}
+        getCrossfilter = {this.getCrossfilter}
+        />;
       }
     },
   );
