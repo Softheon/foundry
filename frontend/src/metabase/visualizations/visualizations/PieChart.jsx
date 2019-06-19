@@ -41,7 +41,6 @@ export default class PieChart extends Component {
   static uiName = t`Pie`;
   static identifier = "pie";
   static iconName = "pie";
-
   static minSize = { width: 4, height: 4 };
 
   static isSensible({ cols, rows }) {
@@ -140,6 +139,33 @@ export default class PieChart extends Component {
       detailElement.classList.add("hide");
     } else {
       detailElement.classList.remove("hide");
+    }
+  }
+
+  componentWillMount() {
+    this.renderCount = 0;
+    this.dimensionCount = 0;
+    this._enableCrossfilter = false;
+  }
+
+  componentWillUnmount() {}
+
+  componentDidMount() {
+    let slices = this._slices;
+    let series = this._series;
+    const enableCrossfilter = (this._enableCrossfilter = this.props.enableCrossfilter);
+    if (enableCrossfilter) {
+      // when the card is first loaded, initialize a crossfilter instance with the formated data
+      // and add the instance to the global crossfilter registry.
+      if (!this.props.isCrossfilterLoaded()) {
+        const card = series[0].card;
+        if (
+          this.props.isCrossfilterSource &&
+          this.props.isCrossfilterSource(card.id)
+        ) {
+          this.props.addCrossfilter(card.id, slices);
+        }
+      }
     }
   }
 
@@ -320,6 +346,54 @@ export default class PieChart extends Component {
       onVisualizationClick && visualizationIsClickable(getSliceClickObject(0));
     const getSliceIsClickable = index =>
       isClickable && slices[index] !== otherSlice;
+
+    this._slices = slices;
+    this._series = series;
+    const card = series[0].card;
+    if (this._enableCrossfilter && card.id === 441) {
+      // if needed, initialize dimension and group for the current crossfilter.
+
+      const crossfilterInfo = this.props.getCrossfilter();
+      console.log("xia: [PieChart] crossfiltreInfo", crossfilterInfo);
+      let dimension = this.props.crossfilterDimension();
+      console.log("xia:[PieChart] check dimension", dimension);
+      if (!dimension) {
+        dimension =
+          crossfilterInfo && crossfilterInfo.crossfilter.dimension(d => d.key);
+        console.log("xia: [PieChart] adding dimension", dimension);
+        this.props.crossfilterDimension(dimension);
+        console.log("xia: [PieChart] dimensionCount", ++this.dimensionCount);
+        console.log("xia: [PieChart] after adding dimension", this.props.crossfilterDimension())
+      }
+      let group = this.props.crossfilterGroup();
+      if (!group) {
+        group = dimension.group().reduce(
+          function(p, v) {
+            p.key = v.key;
+            p.value = v.value;
+            p.percentage = v.percentage;
+            p.color = v.color;
+            return p;
+          },
+          function(p, v) {
+            p.key = null;
+            p.value = null;
+            p.percentage = null;
+            p.color = null;
+            return p;
+          },
+          function() {
+            return { key: null, value: null, percentage: null, color: null };
+          },
+        );
+        this.props.crossfilterGroup(group);
+      }
+      // update chart to use the crossfilter data as its source data.
+      if (this.props.isCrossfilterLoaded()) {
+        const data = this.props.crossfilterData();  
+        slices = data.map(d => d.value);
+      }
+    }
 
     return (
       <ChartWithLegend

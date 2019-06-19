@@ -23,6 +23,7 @@ import _ from "underscore";
 import { getIn } from "icepick";
 import { getParametersBySlug } from "metabase/meta/Parameter";
 import Utils from "metabase/lib/utils";
+import connectCrossfilter from "../hoc/connectCrossfilter.js";
 
 const DATASET_USUALLY_FAST_THRESHOLD = 15 * 1000;
 
@@ -32,6 +33,7 @@ const HEADER_ACTION_STYLE = {
   padding: 4,
 };
 
+@connectCrossfilter
 export default class DashCard extends Component {
   static propTypes = {
     dashcard: PropTypes.object.isRequired,
@@ -199,6 +201,26 @@ export default class DashCard extends Component {
                 }
               : null
           }
+          crossfilterDimension={this.props.crossfilterDimension}
+          crossfilterDisposeDimension={this.props.crossfilterDisposeDimension}
+          crossfilterGroup={this.props.crossfilterGroup}
+          crossfilterData={this.props.crossfilterData}
+          crossfilterKeyAccessor={this.props.crossfilterKeyAccessor}
+          crossfilterValueAccessor={this.props.crossfilterValueAccessor}
+          crossfilterTransitionDuration={
+            this.props.crossfilterTransitionDuration
+          }
+          crossfilterTransitionDelay={this.props.crossfilterTransitionDelay}
+          onCrossfilterClick={this.props.onCrossfilterClick}
+
+          
+          isCrossfilterLoaded={this.props.isCrossfilterLoaded}
+          getCrossfilter={this.props.getCrossfilter}
+
+          addCrossfilter={this.props.addCrossfilter}
+          disposeDimensionAndGroup={this.props.disposeDimensionAndGroup}
+          enableCrossfilter= {this.props.enableCrossfilter}
+          isCrossfilterSource={this.props.isCrossfilterSource}
         />
       </div>
     );

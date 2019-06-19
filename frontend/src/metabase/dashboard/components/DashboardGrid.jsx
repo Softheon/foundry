@@ -205,43 +205,41 @@ export default class DashboardGrid extends Component {
   }
 
   renderDashCard(dc, isMobile) {
-    const { chartMap } = this.props;
-    const { dashcards } = this.state.dashcards;
-    const dashcardId = dc.id;
-    const crossfilter = this.props.getCrossfilter(dashcardId);
-  
-    if (!crossfilter) {
-      return (
-        <DashCard
-          dashcard={dc}
-          dashcardData={this.props.dashcardData}
-          parameterValues={this.props.parameterValues}
-          slowCards={this.props.slowCards}
-          fetchCardData={this.props.fetchCardData}
-          markNewCardSeen={this.props.markNewCardSeen}
-          isEditing={this.props.isEditing}
-          isEditingParameter={this.props.isEditingParameter}
-          isFullscreen={this.props.isFullscreen}
-          isMobile={isMobile}
-          onRemove={this.onDashCardRemove.bind(this, dc)}
-          onAddSeries={this.onDashCardAddSeries.bind(this, dc)}
-          onUpdateVisualizationSettings={this.props.onUpdateDashCardVisualizationSettings.bind(
-            this,
-            dc.id,
-          )}
-          onReplaceAllVisualizationSettings={this.props.onReplaceAllDashCardVisualizationSettings.bind(
-            this,
-            dc.id,
-          )}
-          navigateToNewCardFromDashboard={
-            this.props.navigateToNewCardFromDashboard
-          }
-          metadata={this.props.metadata}
-          dashboard={this.props.dashboard}
-        />
-      );
-    }
-    
+    return (
+      <DashCard
+        dashcard={dc}
+        dashcardData={this.props.dashcardData}
+        parameterValues={this.props.parameterValues}
+        slowCards={this.props.slowCards}
+        fetchCardData={this.props.fetchCardData}
+        markNewCardSeen={this.props.markNewCardSeen}
+        isEditing={this.props.isEditing}
+        isEditingParameter={this.props.isEditingParameter}
+        isFullscreen={this.props.isFullscreen}
+        isMobile={isMobile}
+        onRemove={this.onDashCardRemove.bind(this, dc)}
+        onAddSeries={this.onDashCardAddSeries.bind(this, dc)}
+        onUpdateVisualizationSettings={this.props.onUpdateDashCardVisualizationSettings.bind(
+          this,
+          dc.id,
+        )}
+        onReplaceAllVisualizationSettings={this.props.onReplaceAllDashCardVisualizationSettings.bind(
+          this,
+          dc.id,
+        )}
+        navigateToNewCardFromDashboard={
+          this.props.navigateToNewCardFromDashboard
+        }
+        metadata={this.props.metadata}
+        dashboard={this.props.dashboard}
+        addCrossfilter={this.props.addCrossfilter}
+        removeCrossfilter={this.props.removeCrossfilter}
+        getCrossfilter={this.props.getCrossfilter}
+        isCrossfilterSource={this.props.isCrossfilterSource}
+        redrawGroup={this.props.redrawGroup}
+        belongToACrossfilterGroup={this.props.belongToACrossfilterGroup}
+      />
+    );
   }
 
   renderMobile() {
