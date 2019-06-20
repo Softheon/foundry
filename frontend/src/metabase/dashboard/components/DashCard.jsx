@@ -201,9 +201,11 @@ export default class DashCard extends Component {
                 }
               : null
           }
-          crossfilterDimension={this.props.crossfilterDimension}
-          crossfilterDisposeDimension={this.props.crossfilterDisposeDimension}
-          crossfilterGroup={this.props.crossfilterGroup}
+          disposeCrossfilterDimension={this.props.disposeCrossfilterDimension}
+          setCrossfilterDimension={this.props.setCrossfilterDimension}
+          getCrossfilterDimension={this.props.getCrossfilterDimension}
+          setCrossfilterGroup={this.props.setCrossfilterGroup}
+          getCrossfilterGroup={this.props.getCrossfilterGroup}
           crossfilterData={this.props.crossfilterData}
           crossfilterKeyAccessor={this.props.crossfilterKeyAccessor}
           crossfilterValueAccessor={this.props.crossfilterValueAccessor}
@@ -212,15 +214,17 @@ export default class DashCard extends Component {
           }
           crossfilterTransitionDelay={this.props.crossfilterTransitionDelay}
           onCrossfilterClick={this.props.onCrossfilterClick}
-
-          
           isCrossfilterLoaded={this.props.isCrossfilterLoaded}
           getCrossfilter={this.props.getCrossfilter}
-
           addCrossfilter={this.props.addCrossfilter}
           disposeDimensionAndGroup={this.props.disposeDimensionAndGroup}
-          enableCrossfilter= {this.props.enableCrossfilter}
+          enableCrossfilter={this.props.enableCrossfilter}
           isCrossfilterSource={this.props.isCrossfilterSource}
+          redrawCrossfilterGroup={this.props.redrawCrossfilterGroup}
+          setCrossfilterKeyAccessor={this.props.setCrossfilterKeyAccessor}
+          addSourceCrossfilterDimensionAndGroup={this.props.addSourceCrossfilterDimensionAndGroup}
+          getSourceCrossfilterDimension= {this.props.getSourceCrossfilterDimension}
+          hasFilter={this.props.hasFilter}
         />
       </div>
     );

@@ -238,6 +238,7 @@ export default class DashboardGrid extends Component {
         isCrossfilterSource={this.props.isCrossfilterSource}
         redrawGroup={this.props.redrawGroup}
         belongToACrossfilterGroup={this.props.belongToACrossfilterGroup}
+        addSourceCrossfilterDimensionAndGroup={this.props.addSourceCrossfilterDimensionAndGroup}
       />
     );
   }

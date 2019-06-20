@@ -151,10 +151,9 @@ export default class PieChart extends Component {
   componentWillUnmount() {}
 
   componentDidMount() {
-    let slices = this._slices;
-    let series = this._series;
-    const enableCrossfilter = (this._enableCrossfilter = this.props.enableCrossfilter);
-    if (enableCrossfilter) {
+    let series = this.props.series;
+    this._enableCrossfilter = this.props.enableCrossfilter;
+    if (this._enableCrossfilter) {
       // when the card is first loaded, initialize a crossfilter instance with the formated data
       // and add the instance to the global crossfilter registry.
       if (!this.props.isCrossfilterLoaded()) {
@@ -163,9 +162,105 @@ export default class PieChart extends Component {
           this.props.isCrossfilterSource &&
           this.props.isCrossfilterSource(card.id)
         ) {
-          this.props.addCrossfilter(card.id, slices);
+          const [{ data: { cols, rows } }] = series;
+          const records = this.toCrossfilterRecords(rows, cols);
+          this.props.addCrossfilter(card.id, records);
+          const crossfilterInfo = this.props.getCrossfilter();
+          const crossfilter = crossfilterInfo.crossfilter;
+          const dimension = this.initializeDimension(crossfilter);
+          const group = this.initializeGroup(dimension);
+          this.props.setCrossfilterKeyAccessor(d => d.dimensions[0].value);
+          console.log(
+            "xia: adding dimension and group",
+            this.props.addSourceCrossfilterDimensionAndGroup,
+          );
+          this.props.addSourceCrossfilterDimensionAndGroup(dimension, group);
+          this.props.redrawCrossfilterGroup();
         }
       }
+    }
+  }
+
+  toCrossfilterRecords = (rows, cols) => {
+    const records = [];
+    const rowCount = rows.length;
+    const colCount = cols.length;
+    for (let i = 0; i < rowCount; i++) {
+      const rowData = rows[i];
+      const record = {};
+      for (let j = 0; j < colCount; j++) {
+        record[j] = rowData[j];
+      }
+      records.push(record);
+    }
+    return records;
+  };
+
+  initializeDimension(crossfilter) {
+    console.log("initialize dimension");
+    const { settings } = this.props;
+    const dimensionIndex = settings["pie._dimensionIndex"];
+    const dimension = crossfilter.dimension(d => d[dimensionIndex]);
+    this.props.setCrossfilterDimension(dimension);
+    return dimension;
+  }
+
+  initializeGroup(dimension) {
+    const { settings } = this.props;
+    const dimensionIndex = settings["pie._dimensionIndex"];
+
+    const reduceAdd = function(p, v) {
+      const dimensionValue = v[dimensionIndex];
+      p[dimensionValue] = Object.values(v);
+      return p;
+    };
+
+    const reduceRemove = function(p, v) {
+      const dimensionValue = v[dimensionIndex];
+      if (p[dimensionValue]) {
+        delete p[dimensionValue];
+      }
+      return p;
+    };
+
+    const reduceInitial = function() {
+      return {};
+    };
+
+    const group = dimension
+      .group()
+      .reduce(reduceAdd, reduceRemove, reduceInitial);
+    this.props.setCrossfilterGroup(group);
+    return group;
+  }
+
+  getFilteredRows = () => {
+    const data = this.props.crossfilterData();
+    let values = data.map(d => d.value);
+    values = values.map(v => Object.values(v)[0]);
+    return values;
+  };
+
+  isSelectedSlice(d) {
+    return this.props.hasFilter(d);
+  }
+
+  getSliceOpacity(key, index) {
+    if (this.props.enableCrossfilter) {
+        if (this.props.hasFilter()) {
+          return this.isSelectedSlice(key)
+                  ? 1
+                  : 0.3;
+        }
+        else {
+          return 1;
+        }
+    } else {
+      const { hovered } = this.props;
+
+      return hovered && hovered.index != null && hovered.index !== index
+        ? 0.3
+        : 1;
     }
   }
 
@@ -181,9 +276,13 @@ export default class PieChart extends Component {
       settings,
     } = this.props;
 
-    const [{ data: { cols, rows } }] = series;
+    let [{ data: { cols, rows } }] = series;
     const dimensionIndex = settings["pie._dimensionIndex"];
     const metricIndex = settings["pie._metricIndex"];
+
+    if (this.props.enableCrossfilter && this.props.getCrossfilterGroup()) {
+      rows = this.getFilteredRows();
+    }
 
     const formatDimension = (dimension, jsx = true) =>
       formatValue(dimension, {
@@ -347,54 +446,6 @@ export default class PieChart extends Component {
     const getSliceIsClickable = index =>
       isClickable && slices[index] !== otherSlice;
 
-    this._slices = slices;
-    this._series = series;
-    const card = series[0].card;
-    if (this._enableCrossfilter && card.id === 441) {
-      // if needed, initialize dimension and group for the current crossfilter.
-
-      const crossfilterInfo = this.props.getCrossfilter();
-      console.log("xia: [PieChart] crossfiltreInfo", crossfilterInfo);
-      let dimension = this.props.crossfilterDimension();
-      console.log("xia:[PieChart] check dimension", dimension);
-      if (!dimension) {
-        dimension =
-          crossfilterInfo && crossfilterInfo.crossfilter.dimension(d => d.key);
-        console.log("xia: [PieChart] adding dimension", dimension);
-        this.props.crossfilterDimension(dimension);
-        console.log("xia: [PieChart] dimensionCount", ++this.dimensionCount);
-        console.log("xia: [PieChart] after adding dimension", this.props.crossfilterDimension())
-      }
-      let group = this.props.crossfilterGroup();
-      if (!group) {
-        group = dimension.group().reduce(
-          function(p, v) {
-            p.key = v.key;
-            p.value = v.value;
-            p.percentage = v.percentage;
-            p.color = v.color;
-            return p;
-          },
-          function(p, v) {
-            p.key = null;
-            p.value = null;
-            p.percentage = null;
-            p.color = null;
-            return p;
-          },
-          function() {
-            return { key: null, value: null, percentage: null, color: null };
-          },
-        );
-        this.props.crossfilterGroup(group);
-      }
-      // update chart to use the crossfilter data as its source data.
-      if (this.props.isCrossfilterLoaded()) {
-        const data = this.props.crossfilterData();  
-        slices = data.map(d => d.value);
-      }
-    }
-
     return (
       <ChartWithLegend
         className={className}
@@ -429,11 +480,8 @@ export default class PieChart extends Component {
                     d={arc(slice)}
                     fill={slices[index].color}
                     opacity={
-                      hovered &&
-                      hovered.index != null &&
-                      hovered.index !== index
-                        ? 0.3
-                        : 1
+                      this.getSliceOpacity(slices[index].key, index)
+                  
                     }
                     onMouseMove={e =>
                       onHoverChange && onHoverChange(hoverForIndex(index, e))
@@ -443,12 +491,21 @@ export default class PieChart extends Component {
                       "cursor-pointer": getSliceIsClickable(index),
                     })}
                     onClick={
-                      getSliceIsClickable(index) &&
-                      (e =>
-                        onVisualizationClick({
-                          ...getSliceClickObject(index),
-                          event: e.nativeEvent,
-                        }))
+                      this.props.enableCrossfilter &&
+                      this.props.getCrossfilterGroup()
+                        ? e => {
+                            console.log("xia: crossfilter click");
+                            this.props.onCrossfilterClick(
+                              getSliceClickObject(index),
+                              e.nativeEvent,
+                            );
+                          }
+                        : getSliceIsClickable(index) &&
+                          (e =>
+                            onVisualizationClick({
+                              ...getSliceClickObject(index),
+                              event: e.nativeEvent,
+                            }))
                     }
                   />
                 ))}

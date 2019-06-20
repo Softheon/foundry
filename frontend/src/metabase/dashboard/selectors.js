@@ -112,74 +112,6 @@ const isTheSameStructureQuery = (a, b) => {
   return true;
 }
 
-// export const getCrossFilterValues = createSelector(
-//   [getDashcards, getCardData, getCrossfilterParameter],
-//   (dashcards, dashcardData, crossfilterParameter) => {
-//     const dimensionNames = [];
-//     const {dashcard_id, card_id} = crossfilterParameter
-//     const dashcardsWithTheSameQuerySrc = [];
-//     const isNative = dashcards[dashcard_id].card.query_type === "native";
-//     const sourceQuery = dashcards[dashcard_id].card.dataset_query;
-//     if (!sourceQuery) {
-//       return [];
-//     }
-//     Object.values(dashcards).map(dashcard => {
-//       let currSrcQuery = dashcard.card.dataset_query;
-//       if (isNative && dashcard.card.query_type === "native") {
-//          if (isTheSameNativeQuery(sourceQuery, currSrcQuery)) {
-//            dashcardsWithTheSameQuerySrc.push(dashcard);
-//          }
-//       } else if (!isNative && dashcard.card.query_type === "query"){
-//         if (isTheSameStructureQuery(sourceQuery, currSrcQuery)) {
-//           dashcardsWithTheSameQuerySrc.push(dashcard);
-//         }
-//       }
-//     })
-
-//     for(const dashcard of dashcardsWithTheSameQuerySrc) {
-//       const card = dashcard.card;
-//       const mainCard = {
-//         ...card,
-//         visualization_settings: {
-//           ...card.visualization_settings,
-//           ...dashcard.visualization_settings,
-//         },
-//       };
-//       const cards = [mainCard].concat(dashcard.series || []);
-//       let series = cards.map(card => ({
-//         ...getIn(dashcardData, [dashcard.id, card.id]),
-//         card: card,
-//       }));
-
-//       const loading = !(series.length > 0 && _.every(series, s => s.data));
-      
-//       // don't try to load settings unless data is loaded
-//       if (loading) {
-//         continue;
-//       }
-//       const visualizationTransformed = getVisualizationTransformed(extractRemappings(series));
-//       series = visualizationTransformed.series;
-//       const settings = getComputedSettingsForSeries(series);
-//       const [{ data: {cols} }] = series;
-//       const displayType = card.display;
-//       if (displayType === "pie" &&  settings["pie._dimensionIndex"]) {
-//         const dimensionIndex = settings["pie._dimensionIndex"];
-//         const name = getFriendlyName(cols[dimensionIndex]);
-//         dimensionNames.push(name);
-//       }
-//       else if (settings["graph.dimensions"]){
-//         const dimensions = (settings["graph.dimensions"] || []).filter(
-//           name => name
-//         );
-//         if (dimensions.length > 0) {
-//           dimensionNames.push(dimensions[0])
-//         }
-//       }
-//     }
-//     return _.unique(dimensionNames);
-//   },
-// );
-
 export const getSQLDashcards = createSelector(
   [getDashcards],
   (dashcards) => {
@@ -423,3 +355,22 @@ export const makeGetParameterMappingOptions = () => {
   );
   return getParameterMappingOptions;
 };
+
+
+export const nativeQueryGroupsBySQL = createSelector(
+  [getSQLDashcards],
+  (nativeDashcards) => {
+    const map = new Map();
+    console.log("xia: selectors, nativeDashcards", nativeDashcards);
+    nativeDashcards.map(nativeDashcard => {
+      const { card } = nativeDashcard;
+      const query = card.dataset_query.native.query;
+      if (!map.has(query)) {
+        map.set(query, new Set())
+      }
+      const group = map.get(query);
+      group.add(card.id);
+    })
+    return map;
+  }
+)

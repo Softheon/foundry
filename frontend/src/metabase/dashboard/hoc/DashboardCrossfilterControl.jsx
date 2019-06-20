@@ -2,25 +2,35 @@ import React, { Component } from "react";
 import crossfilter from "crossfilter";
 import { connect } from "react-redux";
 import { replace } from "react-router-redux";
-
 import { getIn } from "icepick";
+
 import type { LocationDescriptor } from "metabase/meta/types";
+import { nativeQueryGroupsBySQL } from "../selectors";
+
+const mapStateToProps = (state, props) => {
+  return {
+    nativeQueryGroupsBySQL: nativeQueryGroupsBySQL(state, props),
+  };
+};
 
 export default (ComposedComponent: ReactClass<any>) =>
-  connect(null, { replace })(
+  connect(mapStateToProps, { replace })(
     class extends Component {
       static displayName = "DashboardCrossfilterControl[" +
         (ComposedComponent.displayName || ComposedComponent.name) +
         "]";
 
       state = {
-        updateAt: new Date(),
+        activeGroup: new Set(),
       };
 
       componentWillMount() {
-        this.chartMap = new Map();
-        this.chartGroupMapping = new Map();
         this._crossfilterMap = new Map();
+        this.updateCrossfilterMap();
+      }
+
+      componentWillUpdate() {
+        this.updateCrossfilterMap();
       }
 
       getCrossfilterParameters() {
@@ -31,78 +41,13 @@ export default (ComposedComponent: ReactClass<any>) =>
         });
       }
 
-      // updateDashboardCrossfilters() {
-      //   const cfParameters = this.getCrossfilterParameters();
-      //   const oldCrossfilters = this.state.crossfitlers;
-      //   // remove any inactive crossfilters;
-      //   const cfParameterIdSet = new Set();
-      //   let isDirty = false;
-      //   cfParameters.map(cfParameter => {
-      //     cfParameterIdSet.add(cfParameter.card_id);
-      //   });
-
-      //   for (const crossfilterId in oldCrossfilters) {
-      //     if (!cfParameterIdSet.has(crossfilterId)) {
-      //       isDirty = true;
-      //       delete oldCrossfilters[crossfilterId];
-      //     }
-      //   }
-
-      //   const newCrossfilters = {
-      //     ...oldCrossfilters,
-      //   };
-
-      //   // initialize any new crossfilter
-      //   cfParameters.map(cfParameter => {
-      //     const { card_id, dashcard_id } = cfParameter;
-      //     if (!newCrossfilters[card_id]) {
-      //       const data = this.normalizeCardData(cfParameter);
-      //       if (data.length === 0) {
-      //         return;
-      //       }
-      //       const crossfilterObject = crossfilter(data);
-      //       newCrossfilters[card_id] = {
-      //         crossfilter: crossfilterObject,
-      //         dimensions: {},
-      //         card_id: card_id,
-      //         dashcard_id: dashcard_id,
-      //         updateAt: new Date(),
-      //       };
-      //       isDirty = true;
-      //     }
-      //     const currentCrossfilter = newCrossfilters[card_id];
-      //     const selectedDimensionValues = this.selectedDimensionValues(
-      //       cfParameter,
-      //     );
-      //     const dimensionValueSet = new Set(selectedDimensionValues);
-      //     const dimensions = currentCrossfilter.dimensions;
-      //     // dispose inactive dimensions
-      //     for (const dimensionName in dimensions) {
-      //       if (!dimensionValueSet.has(dimensionName)) {
-      //         dimensions[dimensionName].dispose();
-      //         delete dimensions[dimensionName];
-      //         isDirty = true;
-      //       }
-      //     }
-      //     // add new dimensions
-      //     const crossfilterObject = currentCrossfilter.crossfilter;
-      //     for (const dimensionName of selectedDimensionValues) {
-      //       if (!dimensions[dimensionName]) {
-      //         dimensions[dimensionName] = crossfilterObject.dimension(d => {
-      //           return d[dimensionName];
-      //         });
-      //         isDirty = true;
-      //       }
-      //     }
-      //   });
-
-      //   if (isDirty) {
-      //     this.setState({
-      //       crossfilters: newCrossfilters,
-      //     });
-      //     //console.log("xia: current crossfilter", newCrossfilters);
-      //   }
-      // }
+      getCardIdSetBySQL(nativeSql) {
+        const groups = this.props.nativeQueryGroupsBySQL;
+        if (groups.has(nativeSql)) {
+          return groups.get(nativeSql);
+        }
+        return new Set();
+      }
 
       getNativeQuery(cardId) {
         let { dashcards } = this.props;
@@ -123,39 +68,6 @@ export default (ComposedComponent: ReactClass<any>) =>
         return native;
       }
 
-      resetCrossfilter(cardId) {
-        const cfParameters = this.getCrossfilterParameters();
-        const cfParameterCardIdSet = new Set();
-        cfParameters.map(cfParameter => {
-          cfParameterCardIdSet.add(cfParameter.card_id);
-        });
-        for (const crossfilterId in this.chartMap) {
-          if (!cfParameterCardIdSet.has(crossfilterId)) {
-            delete this.chartMap[crossfilterId];
-            const native = this.getNativeQuery(cardId);
-            if (native && this.chartGroupMapping.has(native)) {
-              this.chartGroupMapping.delete(native);
-            }
-          }
-        }
-      }
-
-      // selectedDimensionValues(crossfilterParameter) {
-      //   const { parameterValues } = this.props;
-      //   const parameterId = crossfilterParameter.id;
-      //   let dimensionValues = parameterValues[parameterId];
-      //   if (!Array.isArray(dimensionValues)) {
-      //     dimensionValues = [dimensionValues];
-      //   }
-      //   return dimensionValues ? dimensionValues : [];
-      // }
-
-      redrawGroup = () => {
-        this.setState({
-          updateAt: new Date(),
-        });
-      };
-      
       updateCrossfilterMap() {
         const cfParameter = this.getCrossfilterParameters();
         const crossfilterCardIds = new Set();
@@ -167,9 +79,11 @@ export default (ComposedComponent: ReactClass<any>) =>
           if (!crossfilterMap.has(nativeQuery)) {
             crossfilterMap.set(nativeQuery, {
               crossfilter: null,
+              dimension: null,
+              group: null,
               cardId: parameter.card_id,
-              //cardGroup: new Set([parameter.card_id])
-            })
+              cardIdSetOfTheSameSQL: this.getCardIdSetBySQL(nativeQuery),
+            });
           }
         });
 
@@ -183,7 +97,6 @@ export default (ComposedComponent: ReactClass<any>) =>
           }
         }
         invalidCrossfilters.map(key => crossfilterMap.delete(key));
-      
         this._crossfilterMap = crossfilterMap;
       }
 
@@ -200,7 +113,7 @@ export default (ComposedComponent: ReactClass<any>) =>
       };
 
       isCrossfilterSource = id => {
-        for(let crossfilterInfo of this._crossfilterMap) {
+        for (let crossfilterInfo of this._crossfilterMap) {
           const { cardId } = crossfilterInfo[1];
           if (cardId === id) {
             return true;
@@ -210,9 +123,8 @@ export default (ComposedComponent: ReactClass<any>) =>
       };
 
       addCrossfilter = (cardId, data, native) => {
-        console.log("xia: adding crossfilterxxx")
         if (this.isCrossfilterSource(cardId)) {
-            const crossfilterInstance = crossfilter(data);
+          const crossfilterInstance = crossfilter(data);
           if (!native) {
             native = this.getNativeQuery(cardId);
           }
@@ -220,9 +132,30 @@ export default (ComposedComponent: ReactClass<any>) =>
             const crossfilterInfo = this._crossfilterMap.get(native);
             crossfilterInfo.crossfilter = crossfilterInstance;
           }
-          console.log("xia: current crossfitler map after adding a new crossfilter",
-           this._crossfilterMap)
-          this.setState({ updateAt: new Date() });
+        }
+        console.log(
+          "xia: current crossfilter map after adding a crossfilter,",
+          this._crossfilterMap,
+        );
+      };
+
+      addSourceCrossfilterDimensionAndGroup = (
+        cardId,
+        native,
+        dimension,
+        group,
+      ) => {
+        if (this.isCrossfilterSource(cardId)) {
+          if (!native) {
+            native = this.getNativeQuery(cardId);
+          }
+          if (this._crossfilterMap.has(native)) {
+            const crossfilterInfo = this._crossfilterMap.get(native);
+            crossfilterInfo.dimension = dimension;
+            crossfilterInfo.group = group;
+            console.log("xia: added source crossfilter dimension");
+            console.log(this._crossfilterMap);
+          }
         }
       };
 
@@ -233,18 +166,29 @@ export default (ComposedComponent: ReactClass<any>) =>
         return this._crossfilterMap.has(native);
       };
 
-      render() {
-        this.updateCrossfilterMap();
+      redrawGroup = group => {
+        if (this._crossfilterMap.has(group)) {
+          const crossfilterGroup = this._crossfilterMap.get(group);
+          this.setState({
+            activeGroup: crossfilterGroup.cardIdSetOfTheSameSQL,
+          });
+        }
+      };
 
+      render() {
         return (
           <ComposedComponent
             {...this.props}
             addCrossfilter={this.addCrossfilter}
             removeCrossfilter={this.removeCrossfilter}
             getCrossfilter={this.getCrossfilter}
-            redrawGroup={this.redrawGroup}
             isCrossfilterSource={this.isCrossfilterSource}
             belongToACrossfilterGroup={this.belongToACrossfilterGroup}
+            redrawGroup={this.redrawGroup}
+            activeGroup={this.state.activeGroup}
+            addSourceCrossfilterDimensionAndGroup={
+              this.addSourceCrossfilterDimensionAndGroup
+            }
           />
         );
       }

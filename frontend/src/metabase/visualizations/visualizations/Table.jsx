@@ -234,7 +234,8 @@ export default class Table extends Component {
     // TODO: remove use of deprecated "card" and "data" props
     if (
       newProps.data !== this.props.data ||
-      !_.isEqual(newProps.settings, this.props.settings)
+      !_.isEqual(newProps.settings, this.props.settings) ||
+      (this.props.enableCrossfilter && this.props.getSourceCrossfilterDimension())
     ) {
       this._updateData(newProps);
     }
@@ -247,6 +248,12 @@ export default class Table extends Component {
     data: DatasetData,
     settings: VisualizationSettings,
   }) {
+    if (this.props.enableCrossfilter && this.props.getSourceCrossfilterDimension()) { 
+      const dimension = this.props.getSourceCrossfilterDimension();
+      let records = dimension.top(Infinity);
+      let rows = records.map(record => Object.values(record));
+      data.rows = rows;
+    }
     if (settings["table.pivot"]) {
       const pivotIndex = _.findIndex(
         data.cols,
@@ -308,6 +315,13 @@ export default class Table extends Component {
     }
   };
 
+  getFilteredRows = () => {
+    const data = this.props.crossfilterData();
+    let values = data.map(d => d.value);
+    values = values.map(v => Object.values(v)[0]); 
+    return values;
+  }
+
   render() {
     const { card, isDashboard, settings } = this.props;
     const { data } = this.state;
@@ -320,6 +334,7 @@ export default class Table extends Component {
     if (!data) {
       return null;
     }
+
 
     if (isColumnsDisabled) {
       return (

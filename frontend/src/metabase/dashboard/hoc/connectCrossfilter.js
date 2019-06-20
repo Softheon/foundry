@@ -25,15 +25,17 @@ export default function connectCrossfilter(WrappedComponent) {
 
     getNativeQuery() {
       const { dashcard } = this.props;
-      if (dashcard.card &&
+      if (
+        dashcard.card &&
         dashcard.card.dataset_query &&
         dashcard.card.dataset_query.native &&
-        dashcard.card.dataset_query.native.query) {
-          return dashcard.card.dataset_query.native.query;
-        }
+        dashcard.card.dataset_query.native.query
+      ) {
+        return dashcard.card.dataset_query.native.query;
+      }
       return null;
     }
-    
+
     filterHandler(dimension, filters) {
       if (filters.length === 0) {
         dimension.filter(null);
@@ -70,7 +72,7 @@ export default function connectCrossfilter(WrappedComponent) {
       });
     }
 
-    hasFilter(filter) {
+    hasFilter = (filter) => {
       return this.hasFilterHandler(this._filters, filter);
     }
 
@@ -96,7 +98,7 @@ export default function connectCrossfilter(WrappedComponent) {
     }
 
     applyFilters(filters) {
-      if (this._dimension && this.dimension.filter) {
+      if (this._dimension && this._dimension.filter) {
         const fs = this.filterHandler(this._dimension, filters);
         if (fs) {
           filters = fs;
@@ -120,31 +122,27 @@ export default function connectCrossfilter(WrappedComponent) {
       this.dimension = null;
     };
 
-    dimension = dimension => {
-      if (!arguments.length) {
-        console.log("xia: [connectCrossfilter] current dimension", dimension);
-        return this._dimension;
-      }
-      console.log("xia: [connectCrossfilter] adding dimension", dimension)
+    setDimension = dimension => {
       this._dimension = dimension;
     };
 
-     
+    getDimension = () => {
+      return this._dimension;
+    };
+
     data = () => {
       return this._group.all();
     };
 
-    group = group => {
-      if (!arguments.length) {
-        return this._group;
-      }
+    setGroup = group => {
       this._group = group;
     };
 
+    getGroup = () => {
+      return this._group;
+    };
+
     filter = filter => {
-      if (!arguments.length) {
-        return this._filters.length > 0 ? this._filters[0] : null;
-      }
       let filters = this._filters;
       // filter by a set of values
       if (
@@ -168,6 +166,7 @@ export default function connectCrossfilter(WrappedComponent) {
           filters = this.addFilterHandler(filters, filter);
         }
       }
+      console.log("xia: applied filters", filters);
       this._filters = this.applyFilters(filters);
     };
 
@@ -175,24 +174,26 @@ export default function connectCrossfilter(WrappedComponent) {
       return this._filters;
     };
 
-    keyAccessor = keyAccessor => {
-      if (!arguments.length) {
-        return this._keyAccessor;
-      }
+    setKeyAccessor = keyAccessor => {
       this._keyAccessor = keyAccessor;
     };
 
-    valueAccessor = valueAccessor => {
-      if (!arguments.length) {
-        return this._valueAccessor;
-      }
+    getKeyAccessor = () => {
+      return this._keyAccessor;
+    }
+
+    setValueAccessor = valueAccessor => {
       this._valueAccessor = valueAccessor;
     };
 
-    onCrossfilterClick = datum => {
-      const datumKey = this.keyAccessor()(datum);
+    getValueAccessor = () => {
+      return this._valueAccessor;
+    }
+
+    onCrossfilterClick = (datum, event) => {
+      const datumKey = this.getKeyAccessor()(datum);
       this.filter(datumKey);
-      this.props.redrawGroup();
+      this.redrawCrossfilterGroup();
     };
 
     transitionDuration = duration => {
@@ -210,57 +211,108 @@ export default function connectCrossfilter(WrappedComponent) {
     };
 
     isCrossfilterLoaded = () => {
-  
-      return this._crossfilter 
-      && !!this._crossfilter.crossfilter;
+      return this._crossfilter && !!this._crossfilter.crossfilter;
     };
 
     disposeDimensionAndGroup = () => {
       if (this._dimension) {
         this._dimension.dispose();
       }
-      if(this._group) {
+      if (this._group) {
+        this._group.dispose();
+      }
+    };
+
+    onAddCrossfilter = (cardId, data) => {
+      this.props.addCrossfilter(cardId, data, this._nativeQuery);
+    };
+
+    shouldTurnOnCrossfilter = () => {
+      return this.props.belongToACrossfilterGroup(
+        this._cardId,
+        this._nativeQuery,
+      );
+    };
+
+    getCrossfilter = () => {
+      return this._crossfilter;
+    };
+
+    unregisterCrossfilter() {
+      this._crossfilter = null;
+      if (this._dimension) {
+        this._dimension.dispose();
+      }
+      if (this._group) {
         this._group.dispose();
       }
     }
 
-    onAddCrossfilter = (cardId, data) => {
-      this.props.addCrossfilter(cardId, data, this._nativeQuery);
-    }
-    
-    shouldTurnOnCrossfilter = () => {
-     // return this.props.belongToACrossfilterGroup(this._cardId, this._nativeQuery);
-      return this._cardId === 441;
+    redrawCrossfilterGroup = () => {
+      this.props.redrawGroup(this._nativeQuery);
     }
 
-    getCrossfilter = () => {
-      return this._crossfilter;
+    addSourceCrossfilterDimensionAndGroup = (dimension, group) => {
+      console.log("xia: [connectCrossfilter]", dimension, group);
+      this.props.addSourceCrossfilterDimensionAndGroup(
+        this._cardId, 
+        this._nativeQuery,
+        dimension, 
+        group);
     }
+
+    getSourceCrossfilterDimension = () => {
+      if (this._crossfilter) {
+        return this._crossfilter.dimension;
+      }
+      return null;
+    }
+
+    componentDidUpdate() {
+      if (!this.shouldTurnOnCrossfilter()) {
+        this.unregisterCrossfilter();
+      }
+    }
+
+    componentWillMount() {
+      this.unregisterCrossfilter();
+    }
+
     render() {
-      this._crossfilter = this.props.getCrossfilter(this._cardId, this._nativeQuery);
-      console.log("connectCrossfilter: dashcard id ", this.props.dashcard);
-      console.log("connectCrossfilter: enable crossfilter", this.shouldTurnOnCrossfilter());
+      this._crossfilter = this.props.getCrossfilter(
+        this._cardId,
+        this._nativeQuery,
+      );
+      
+      
       return (
         <WrappedComponent
           {...this.props}
           onCrossfilterClick={this.onCrossfilterClick}
           crossfilterTurnOnResetControl={this.turnOnResetControl}
           crossfilterTurnOffResetControl={this.turnOffResetControl}
-          crossfilterDimension={this.dimension}
-          crossfilterDisposeDimension={this.disposeDimension}
-          crossfilterGroup={this.group}
+          setCrossfilterDimension={this.setDimension}
+          getCrossfilterDimension={this.getDimension}
+          setCrossfilterGroup={this.setGroup}
+          getCrossfilterGroup={this.getGroup}
+          disposeCrossfilterDimension={this.disposeDimension}
           crossfilterData={this.data}
           crossfilterKeyAccessor={this.keyAccessor}
           crossfilterValueAccessor={this.valueAccessor}
           crossfilterTransitionDuration={this.transitionDuration}
           crossfilterTransitionDelay={this.transitionDelay}
-
           isCrossfilterLoaded={this.isCrossfilterLoaded}
           getCrossfilter={this.getCrossfilter}
           addCrossfilter={this.onAddCrossfilter}
           disposeDimensionAndGroup={this.disposeDimensionAndGroup}
-          enableCrossfilter= {this.shouldTurnOnCrossfilter()}
+          enableCrossfilter={this.shouldTurnOnCrossfilter()}
           isCrossfilterSource={this.props.isCrossfilterSource}
+          redrawCrossfilterGroup={this.redrawCrossfilterGroup}
+          setCrossfilterKeyAccessor={this.setKeyAccessor}
+          addSourceCrossfilterDimensionAndGroup={this.addSourceCrossfilterDimensionAndGroup}
+          getSourceCrossfilterDimension= {this.getSourceCrossfilterDimension}
+          hasFilter={this.hasFilter}
+          // activeGroup={this.state.activeGroup}
         />
       );
     }
