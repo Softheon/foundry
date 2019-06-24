@@ -42,7 +42,8 @@ import { getIn } from "icepick";
 import type { DatasetData } from "metabase/meta/types/Dataset";
 import type { Card, VisualizationSettings } from "metabase/meta/types/Card";
 import type { SettingDefs } from "metabase/visualizations/lib/settings";
-
+import crossfilter from "crossfilter";
+import connectWithCrossfilter from "../lib/connectWithCrossfilter.js";
 type Props = {
   card: Card,
   data: DatasetData,
@@ -53,7 +54,8 @@ type State = {
   data: ?DatasetData,
 };
 
-export default class Table extends Component {
+@connectWithCrossfilter
+export default class CrossfilterTable extends Component {
   props: Props;
   state: State;
 
@@ -224,6 +226,22 @@ export default class Table extends Component {
     this.state = {
       data: null,
     };
+
+    const { isCrossfilterSource } = this.props;
+    let dataset = null;
+    if (isCrossfilterSource) {
+      const { rawSeries } = this.props;
+      const [{ data: { cols, rows } }] = rawSeries;
+      dataset = crossfilter(rows);
+      this.props.addSourceCrossfilter({
+        crossfilter: dataset,
+        dimension: dataset.dimension(d => d[0]),
+        group: null,
+        dimensionIndex: null,
+        metricIndex: null,
+      });  
+    } 
+
   }
 
   componentWillMount() {
@@ -234,10 +252,20 @@ export default class Table extends Component {
     // TODO: remove use of deprecated "card" and "data" props
     if (
       newProps.data !== this.props.data ||
-      !_.isEqual(newProps.settings, this.props.settings)
+      !_.isEqual(newProps.settings, this.props.settings) ||
+      (this.props.activeGroup && this.props.crossfilterGroup)
     ) {
       this._updateData(newProps);
     }
+  }
+
+  componentDidUpdate() {}
+
+  componentDidMount() {
+      const { isCrossfilterSource } = this.props;
+      if (isCrossfilterSource) {
+          this.props.redrawCrossfilterGroup();
+      }
   }
 
   _updateData({
@@ -247,8 +275,8 @@ export default class Table extends Component {
     data: DatasetData,
     settings: VisualizationSettings,
   }) {
-
-
+    const dimension = this.props.getSharedCrossfilterDimension();
+    data.rows = dimension.top(Infinity);
     if (settings["table.pivot"]) {
       const pivotIndex = _.findIndex(
         data.cols,
@@ -369,10 +397,10 @@ export default class Table extends Component {
  * TableInteractive uses react-virtualized library which requires a real browser viewport.
  */
 export const TestTable = (props: Props) => (
-  <Table {...props} isDashboard={true} />
+  <CrossfilterTable {...props} isDashboard={true} />
 );
-TestTable.uiName = Table.uiName;
-TestTable.identifier = Table.identifier;
-TestTable.iconName = Table.iconName;
-TestTable.minSize = Table.minSize;
-TestTable.settings = Table.settings;
+TestTable.uiName = CrossfilterTable.uiName;
+TestTable.identifier = CrossfilterTable.identifier;
+TestTable.iconName = CrossfilterTable.iconName;
+TestTable.minSize = CrossfilterTable.minSize;
+TestTable.settings = CrossfilterTable.settings;

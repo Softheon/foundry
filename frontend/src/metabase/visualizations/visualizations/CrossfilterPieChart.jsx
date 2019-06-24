@@ -2,8 +2,13 @@
 
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
-import styles from "./PieChart.css";
 import { t } from "c-3po";
+import cx from "classnames";
+import d3 from "d3";
+import _ from "underscore";
+import crossfilter from "crossfilter";
+
+import styles from "./PieChart.css";
 import ChartTooltip from "../components/ChartTooltip.jsx";
 import ChartWithLegend from "../components/ChartWithLegend.jsx";
 
@@ -18,11 +23,9 @@ import { columnSettings } from "metabase/visualizations/lib/settings/column";
 import { formatValue } from "metabase/lib/formatting";
 
 import colors, { getColorsForValues } from "metabase/lib/colors";
+import type { VisualizationProps } from "metabase/meta/types/Visualization";
 
-import cx from "classnames";
-
-import d3 from "d3";
-import _ from "underscore";
+import connectWithCrossfilter from "../lib/connectWithCrossfilter.js";
 
 const OUTER_RADIUS = 50; // within 100px canvas
 const INNER_RADIUS_RATIO = 3 / 5;
@@ -33,8 +36,7 @@ const OTHER_SLICE_MIN_PERCENTAGE = 0.003;
 
 const PERCENT_REGEX = /percent/i;
 
-import type { VisualizationProps } from "metabase/meta/types/Visualization";
-
+@connectWithCrossfilter
 export default class CrossfilterPieChart extends Component {
   props: VisualizationProps;
 
@@ -134,11 +136,36 @@ export default class CrossfilterPieChart extends Component {
 
   constructor(props) {
     super(props);
-    const { enableCrossfilter } = this.props;
-    if (enableCrossfilter) {
-        this.initChartcCrossfilter();
+    const { isCrossfilterSource } = this.props;
+
+    const { rawSeries } = this.props;
+    let dataset = null;
+    if (isCrossfilterSource) {
+      const { rawSeries } = this.props;
+      const [{ data: { cols, rows } }] = rawSeries;
+      dataset = crossfilter(rows);
+      
+    } else {
+      dataset = this.props.getSourceCrossfilter();
     }
+    const { dimension, dimensionIndex } = this.initializeDimension(dataset);
+    const { group, metricIndex } = this.initializeGroup(dimension);
+    if (isCrossfilterSource) {
+      this.props.addSourceCrossfilter({
+        crossfilter: dataset,
+        dimension,
+        group,
+        dimensionIndex,
+        metricIndex,
+      });
+    } else {
+      this.props.setDimension(dimension);
+      this.props.setGroup(group);
+    }
+
+    this.props.setKeyAccessor(d => d.dimensions[0].value);
   }
+
   componentDidUpdate() {
     let groupElement = ReactDOM.findDOMNode(this.refs.group);
     let detailElement = ReactDOM.findDOMNode(this.refs.detail);
@@ -148,161 +175,39 @@ export default class CrossfilterPieChart extends Component {
       detailElement.classList.remove("hide");
     }
   }
-
-  componentWillMount() {
-    this.renderCount = 0;
-    this.dimensionCount = 0;
-    this._enableCrossfilter = false;
-  }
-
-  componentWillUnmount() {}
-
+ 
   componentDidMount() {
-    let series = this.props.series;
-    this._enableCrossfilter = this.props.enableCrossfilter;
-    if (this._enableCrossfilter) {
-      // when the card is first loaded, initialize a crossfilter instance with the formated data
-      // and add the instance to the global crossfilter registry.
-      if (!this.props.isCrossfilterLoaded()) {
-        const card = series[0].card;
-        if (
-          this.props.isCrossfilterSource &&
-          this.props.isCrossfilterSource(card.id)
-        ) {
-          const [{ data: { cols, rows } }] = series;
-          // const records = this.toCrossfilterRecords(rows, cols);
-          // this.props.addCrossfilter(card.id, records);
-          // const crossfilterInfo = this.props.getCrossfilter();
-          // const crossfilter = crossfilterInfo.crossfilter;
-          // const dimension = this.initializeDimension(crossfilter);
-          // const group = this.initializeGroup(dimension);
-
-          const records = this.toCrossfilterRecords(rows, cols);
-          this.props.addCrossfilter(card.id, rows);
-          const crossfilterInfo = this.props.getCrossfilter();
-          const crossfilter = crossfilterInfo.crossfilter;
-          const dimension = this.initializeDimension(crossfilter);
-          const group = this.initializeGroup2(dimension);
-
-          this.props.setCrossfilterKeyAccessor(d => d.dimensions[0].value);
-          console.log(
-            "xia: adding dimension and group",
-            this.props.addSourceCrossfilterDimensionAndGroup,
-          );
-          const { settings } = this.props;
-          const dimensionIndex = settings["pie._dimensionIndex"];
-          const metricIndex = settings["pie._metricIndex"];
-          this.props.addSourceCrossfilterDimensionAndGroup(
-            dimension,
-            group,
-            dimensionIndex,
-            metricIndex,
-          );
-          this.props.redrawCrossfilterGroup();
-        }
-      }
+    const { isCrossfilterSource } = this.props;
+    
+    if (isCrossfilterSource) {
+      this.props.redrawCrossfilterGroup();
     }
   }
 
-  initChartcCrossfilter() {
-    this.crossfilter = null;
-    this.dimension = null;
-    this.group=null;
-  }
-  toCrossfilterRecords = (rows, cols) => {
-    const records = [];
-    const rowCount = rows.length;
-    const colCount = cols.length;
-    for (let i = 0; i < rowCount; i++) {
-      const rowData = rows[i];
-      const record = {};
-      for (let j = 0; j < colCount; j++) {
-        record[j] = rowData[j];
-      }
-      records.push(record);
+  shouldComponentUpdate(nextProps, nextState) {
+    if (nextProps.activeGroup === this.props.crossfilterGroup) {
+      return true;
     }
-    return records;
-  };
-
+  }
   initializeDimension(crossfilter) {
-    console.log("initialize dimension");
     const { settings } = this.props;
     const dimensionIndex = settings["pie._dimensionIndex"];
     const dimension = crossfilter.dimension(d => d[dimensionIndex]);
-    this.props.setCrossfilterDimension(dimension);
-    return dimension;
+    return { dimension, dimensionIndex };
   }
 
   initializeGroup(dimension) {
     const { settings } = this.props;
-    const dimensionIndex = settings["pie._dimensionIndex"];
-
-    const reduceAdd = function(p, v) {
-      const dimensionValue = v[dimensionIndex];
-      p[dimensionValue] = Object.values(v);
-      return p;
-    };
-
-    const reduceRemove = function(p, v) {
-      const dimensionValue = v[dimensionIndex];
-      if (p[dimensionValue]) {
-        delete p[dimensionValue];
-      }
-      return p;
-    };
-
-    const reduceInitial = function() {
-      return {};
-    };
-
-    const group = dimension
-      .group()
-      .reduce(reduceAdd, reduceRemove, reduceInitial);
-    this.props.setCrossfilterGroup(group);
-    return group;
-  }
-
-  initializeGroup2(dimension) {
-    const { settings } = this.props;
-    const dimensionIndex = settings["pie._dimensionIndex"];
-
-    const reduceAdd = function(p, v) {
-      const dimensionValue = v[dimensionIndex];
-      p[dimensionValue] = Object.values(v);
-      return p;
-    };
-
-    const reduceRemove = function(p, v) {
-      const dimensionValue = v[dimensionIndex];
-      if (p[dimensionValue]) {
-        delete p[dimensionValue];
-      }
-      return p;
-    };
-
-    const reduceInitial = function() {
-      return {};
-    };
-
     const metricIndex = settings["pie._metricIndex"];
     let group = dimension.group().reduceSum(d => d[metricIndex]);
 
-    this.props.setCrossfilterGroup(group);
-    return group;
+    return { group, metricIndex };
   }
 
-  getFilteredRows2 = () => {
+  getFilteredRows = () => {
     const filteredRecords = this.props.crossfilterData();
     let rows = filteredRecords.map(d => [d.key, d.value]);
-    console.log("xia: [getFilteredRows2]", rows);
     return rows;
-  };
-
-  getFilteredRows = () => {
-    const data = this.props.crossfilterData();
-    let values = data.map(d => d.value);
-    values = values.map(v => Object.values(v)[0]);
-    return values;
   };
 
   isSelectedSlice(d) {
@@ -310,18 +215,10 @@ export default class CrossfilterPieChart extends Component {
   }
 
   getSliceOpacity(key, index) {
-    if (this.props.enableCrossfilter) {
-      if (this.props.hasFilter()) {
-        return this.isSelectedSlice(key) ? 1 : 0.3;
-      } else {
-        return 1;
-      }
+    if (this.props.hasFilter()) {
+      return this.isSelectedSlice(key) ? 1 : 0.3;
     } else {
-      const { hovered } = this.props;
-
-      return hovered && hovered.index != null && hovered.index !== index
-        ? 0.3
-        : 1;
+      return 1;
     }
   }
 
@@ -340,14 +237,9 @@ export default class CrossfilterPieChart extends Component {
     let [{ data: { cols, rows } }] = series;
     const dimensionIndex = settings["pie._dimensionIndex"];
     const metricIndex = settings["pie._metricIndex"];
-    let dataRowDimensionIndex = dimensionIndex;
-    let dataRowMetricIndex = metricIndex;
-
-    if (this.props.enableCrossfilter && this.props.getCrossfilterGroup()) {
-      rows = this.getFilteredRows2();
-      dataRowDimensionIndex = 0;
-      dataRowMetricIndex = 1;
-    }
+    let dataRowDimensionIndex = 0;
+    let dataRowMetricIndex = 1;
+    rows = this.getFilteredRows();
 
     const formatDimension = (dimension, jsx = true) =>
       formatValue(dimension, {
@@ -555,23 +447,12 @@ export default class CrossfilterPieChart extends Component {
                     className={cx({
                       "cursor-pointer": getSliceIsClickable(index),
                     })}
-                    onClick={
-                      this.props.enableCrossfilter &&
-                      this.props.getCrossfilterGroup()
-                        ? e => {
-                            console.log("xia: crossfilter click");
-                            this.props.onCrossfilterClick(
-                              getSliceClickObject(index),
-                              e.nativeEvent,
-                            );
-                          }
-                        : getSliceIsClickable(index) &&
-                          (e =>
-                            onVisualizationClick({
-                              ...getSliceClickObject(index),
-                              event: e.nativeEvent,
-                            }))
-                    }
+                    onClick={e => {
+                      this.props.onClick(
+                        getSliceClickObject(index),
+                        e.nativeEvent,
+                      );
+                    }}
                   />
                 ))}
               </g>

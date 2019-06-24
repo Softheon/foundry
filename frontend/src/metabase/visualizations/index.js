@@ -17,6 +17,7 @@ import Funnel from "./visualizations/Funnel.jsx";
 import Gauge from "./visualizations/Gauge.jsx";
 import ObjectDetail from "./visualizations/ObjectDetail.jsx";
 import CrossfilterPieChart from "./visualizations/CrossfilterPieChart.jsx"
+import CrossfilterTable from "./visualizations/CrossfilterTable.jsx";
 import { t } from "c-3po";
 import _ from "underscore";
 
@@ -52,6 +53,36 @@ export function registerVisualization(visualization) {
   }
 }
 
+const crossfilterVisualizations = new Map();
+const crossfilterAliases = new Map();
+
+crossfilterVisualizations.get  = function(key) {
+  return Map.prototype.get.call(this, key) || crossfilterAliases.get(key) | Table;
+}
+
+export function registerCrossfilterVisualization(visualization) {
+  if (visualization == null) {
+    throw new Error(t`Crossfilter Visualization is null`);
+  }
+  let identifier = visualization.identifier;
+  if (identifier == null) {
+    throw new Error(
+      t`Crossfilter Visualization must define an 'identifier' static variable: ` +
+        visualization.name,
+    );
+  }
+  if (crossfilterVisualizations.has(identifier)) {
+    throw new Error(
+      t`Crossfilter Visualization with that identifier is already registered: ` +
+        visualization.name,
+    );
+  }
+  crossfilterVisualizations.set(identifier, visualization);
+  for (let alias of visualization.aliases || []) {
+    crossfilterAliases.set(alias, visualization);
+  }
+}
+
 export function getVisualizationRaw(series: Series) {
   return {
     series: series,
@@ -67,6 +98,7 @@ export function getVisualizationTransformed(series: Series) {
 
   // if a visualization has a transformSeries function, do the transformation until it returns the same visualization / series
   let CardVisualization, lastSeries;
+  let CrossfilterCardVisualization = crossfilterVisualizations.get(series[0].card.display);
   do {
     CardVisualization = visualizations.get(series[0].card.display);
     if (!CardVisualization) {
@@ -83,7 +115,7 @@ export function getVisualizationTransformed(series: Series) {
     }
   } while (series !== lastSeries);
 
-  return { series, CardVisualization };
+  return { series, CardVisualization, CrossfilterCardVisualization };
 }
 
 export const extractRemappings = series => {
@@ -143,4 +175,6 @@ registerVisualization(MapViz);
 registerVisualization(Funnel);
 registerVisualization(ObjectDetail);
 
+registerCrossfilterVisualization(CrossfilterPieChart);
+registerCrossfilterVisualization(CrossfilterTable);
 export default visualizations;

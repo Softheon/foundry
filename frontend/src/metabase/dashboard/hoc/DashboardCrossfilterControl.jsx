@@ -135,10 +135,39 @@ export default (ComposedComponent: ReactClass<any>) =>
             crossfilterInfo.crossfilter = crossfilterInstance;
           }
         }
-        console.log(
-          "xia: current crossfilter map after adding a crossfilter,",
-          this._crossfilterMap,
-        );
+      };
+
+      addCrossfilterGroup = ({
+        cardId,
+        native,
+        crossfilter,
+        dimension,
+        group,
+        dimensionIndex,
+        metricIndex,
+      } = {}) => {
+        if (this.isCrossfilterSource(cardId)) {
+          if (!native) {
+            native = this.getNativeQuery(cardId);
+          }
+        }
+        if (this._crossfilterMap.has(native)) {
+          const crossfilterGroup = this._crossfilterMap.get(native);
+          crossfilterGroup.crossfilter = crossfilter;
+          if (crossfilterGroup.dimension) {
+            crossfilterGroup.dimension.dispose();
+          } else {
+            crossfilterGroup.dimension = dimension;
+            crossfilterGroup.dimensionIndex = dimensionIndex;
+            crossfilterGroup.metricIndex = metricIndex;
+          }
+          if (crossfilterGroup.group) {
+            crossfilterGroup.group.dispose();
+          } else {
+            crossfilterGroup.group = group;
+          }
+        }
+        console.log("xia: current crossfilter group", this._crossfilterMap);
       };
 
       addSourceCrossfilterDimensionAndGroup = (
@@ -147,7 +176,7 @@ export default (ComposedComponent: ReactClass<any>) =>
         dimension,
         group,
         dimensionIndex,
-        metricIndex
+        metricIndex,
       ) => {
         if (this.isCrossfilterSource(cardId)) {
           if (!native) {
@@ -159,7 +188,6 @@ export default (ComposedComponent: ReactClass<any>) =>
             crossfilterInfo.group = group;
             crossfilterInfo.dimensionIndex = dimensionIndex;
             crossfilterInfo.metricIndex = metricIndex;
-            console.log(this._crossfilterMap);
           }
         }
       };
@@ -178,26 +206,73 @@ export default (ComposedComponent: ReactClass<any>) =>
           });
         } else {
           this.setState({
-            activeGroup: null
-          })
+            activeGroup: null,
+          });
         }
       };
 
-      
+      shouldEnableCrossfilter = (cardId, native) => {
+        return this.belongToACrossfilterGroup(cardId, native);
+      }
+
+      isSourceCrossfilterLoaded = (cardId, native) => {
+        if (!native) {
+          native = this.getNativeQuery(cardId);
+        }
+        if (this._crossfilterMap.has(native)) {
+          const crossfilterGroup = this._crossfilterMap.get(native);
+          if (crossfilterGroup.crossfilter) {
+            return true;
+          }
+        }
+        return false;
+      }
+
+      getSharedCrossfilter = (cardId, native) => {
+        if (!native) {
+          native = this.getNativeQuery(cardId);
+        }
+        if (native && native.length > 0) {
+          if (this._crossfilterMap.has(native)) {
+            return this._crossfilterMap.get(native).crossfilter;
+          }
+        }
+        return null;
+      };
+
+      getSharedCrossfilterDimension = (cardId, native) => {
+        if (!native) {
+          native = this.getNativeQuery(cardId);
+        }
+        if (native && native.length > 0) {
+          if (this._crossfilterMap.has(native)) {
+            return this._crossfilterMap.get(native).dimension;
+          }
+        }
+        return null;
+      }
+
       render() {
         return (
           <ComposedComponent
             {...this.props}
-            addCrossfilter={this.addCrossfilter}
-            removeCrossfilter={this.removeCrossfilter}
-            getCrossfilter={this.getCrossfilter}
-            isCrossfilterSource={this.isCrossfilterSource}
-            belongToACrossfilterGroup={this.belongToACrossfilterGroup}
+            //addCrossfilter={this.addCrossfilter}
+           // removeCrossfilter={this.removeCrossfilter}
+            //getCrossfilter={this.getCrossfilter}
+           
+           // belongToACrossfilterGroup={this.belongToACrossfilterGroup}
+
+            // addSourceCrossfilterDimensionAndGroup={
+            //   this.addSourceCrossfilterDimensionAndGroup
+            // }
             redrawGroup={this.redrawGroup}
             activeGroup={this.state.activeGroup}
-            addSourceCrossfilterDimensionAndGroup={
-              this.addSourceCrossfilterDimensionAndGroup
-            }
+            isCrossfilterSource={this.isCrossfilterSource}
+            addCrossfilterGroup={this.addCrossfilterGroup}
+            isSourceCrossfilterLoaded={this.isSourceCrossfilterLoaded}
+            getSharedCrossfilter={this.getSharedCrossfilter}
+            shouldEnableCrossfilter={this.shouldEnableCrossfilter}
+            getSharedCrossfilterDimension={this.getSharedCrossfilterDimension}
           />
         );
       }

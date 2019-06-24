@@ -33,7 +33,7 @@ const HEADER_ACTION_STYLE = {
   padding: 4,
 };
 
-@connectCrossfilter
+//@connectCrossfilter
 export default class DashCard extends Component {
   static propTypes = {
     dashcard: PropTypes.object.isRequired,
@@ -201,34 +201,14 @@ export default class DashCard extends Component {
                 }
               : null
           }
-          disposeCrossfilterDimension={this.props.disposeCrossfilterDimension}
-          setCrossfilterDimension={this.props.setCrossfilterDimension}
-          getCrossfilterDimension={this.props.getCrossfilterDimension}
-          setCrossfilterGroup={this.props.setCrossfilterGroup}
-          getCrossfilterGroup={this.props.getCrossfilterGroup}
-          crossfilterData={this.props.crossfilterData}
-          crossfilterKeyAccessor={this.props.crossfilterKeyAccessor}
-          crossfilterValueAccessor={this.props.crossfilterValueAccessor}
-          crossfilterTransitionDuration={
-            this.props.crossfilterTransitionDuration
-          }
-          crossfilterTransitionDelay={this.props.crossfilterTransitionDelay}
-          onCrossfilterClick={this.props.onCrossfilterClick}
-          isCrossfilterLoaded={this.props.isCrossfilterLoaded}
-          getCrossfilter={this.props.getCrossfilter}
-          addCrossfilter={this.props.addCrossfilter}
-          disposeDimensionAndGroup={this.props.disposeDimensionAndGroup}
-          enableCrossfilter={this.props.enableCrossfilter}
-          isCrossfilterSource={this.props.isCrossfilterSource}
-          redrawCrossfilterGroup={this.props.redrawCrossfilterGroup}
-          setCrossfilterKeyAccessor={this.props.setCrossfilterKeyAccessor}
-          addSourceCrossfilterDimensionAndGroup={this.props.addSourceCrossfilterDimensionAndGroup}
-          getSourceCrossfilterDimension= {this.props.getSourceCrossfilterDimension}
-          hasFilter={this.props.hasFilter}
           activeGroup={this.props.activeGroup}
-          crossfilterGroup={this.props.crossfilterGroup}
-          resetActiveCrossfilterGroup={this.props.resetActiveCrossfilterGroup}
-          isCrossfilterSourceCard={this.props.isCrossfilterSourceCard}
+          redrawGroup={this.props.redrawGroup}
+          addCrossfilterGroup={this.props.addCrossfilterGroup}
+          enableCrossfilter={this.props.enableCrossfilter}
+          isCrossfilterSource={this.props.enableCrossfilter && this.props.isCrossfilterSource}
+          isSourceCrossfilterLoaded = {this.props.isSourceCrossfilterLoaded}
+          getSharedCrossfilter={this.props.getSharedCrossfilter}
+          getSharedCrossfilterDimension={this.props.getSharedCrossfilterDimension}
         />
       </div>
     );

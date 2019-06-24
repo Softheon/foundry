@@ -204,6 +204,44 @@ export default class DashboardGrid extends Component {
     this.setState({ addSeriesModalDashCard: dc });
   }
 
+  getNativeQuery(dc) {
+    if (
+      dc.card &&
+      dc.card.dataset_query &&
+      dc.card.dataset_query.native &&
+      dc.card.dataset_query.native.query
+    ) {
+      return dc.card.dataset_query.native.query;
+    }
+    return null;
+  }
+
+  getSharedCrossfilterDimension = (cardId, native) => () => {
+    return this.props.getSharedCrossfilterDimension(cardId, native);
+  };
+
+  isSourceCrossfilterLoaded = (cardId, native) => () => {
+    return this.props.isSourceCrossfilterLoaded(cardId, native);
+  };
+
+  addCrossfilterGroup = (cardId, native) => ({
+    crossfilter,
+    dimension,
+    group,
+    dimensionIndex,
+    metricIndex,
+  }) => {
+    return this.props.addCrossfilterGroup({
+      cardId,
+      native,
+      crossfilter,
+      dimension,
+      group,
+      dimensionIndex,
+      metricIndex,
+    });
+  };
+
   renderDashCard(dc, isMobile) {
     return (
       <DashCard
@@ -232,14 +270,27 @@ export default class DashboardGrid extends Component {
         }
         metadata={this.props.metadata}
         dashboard={this.props.dashboard}
-        addCrossfilter={this.props.addCrossfilter}
-        removeCrossfilter={this.props.removeCrossfilter}
-        getCrossfilter={this.props.getCrossfilter}
-        isCrossfilterSource={this.props.isCrossfilterSource}
+
         redrawGroup={this.props.redrawGroup}
-        belongToACrossfilterGroup={this.props.belongToACrossfilterGroup}
-        addSourceCrossfilterDimensionAndGroup={this.props.addSourceCrossfilterDimensionAndGroup}
         activeGroup={this.props.activeGroup}
+        isCrossfilterSource={this.props.isCrossfilterSource(dc.card.id)}
+        enableCrossfilter={this.props.shouldEnableCrossfilter(
+          dc.card.id,
+          this.getNativeQuery(dc),
+        )}
+        getSharedCrossfilter={this.props.getSharedCrossfilter}
+        isSourceCrossfilterLoaded={this.isSourceCrossfilterLoaded(
+          dc.card.id,
+          this.getNativeQuery(dc),
+        )}
+        getSharedCrossfilterDimension={this.getSharedCrossfilterDimension(
+          dc.card.id,
+          this.getNativeQuery(dc),
+        )}
+        addCrossfilterGroup={this.addCrossfilterGroup (
+          dc.card.id,
+          this.getNativeQuery(dc)
+        )}
       />
     );
   }
