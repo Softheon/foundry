@@ -72,9 +72,9 @@ export default function connectCrossfilter(WrappedComponent) {
       });
     }
 
-    hasFilter = (filter) => {
+    hasFilter = filter => {
       return this.hasFilterHandler(this._filters, filter);
-    }
+    };
 
     removeFilterHandler(filters, filter) {
       const length = filters.length;
@@ -180,7 +180,7 @@ export default function connectCrossfilter(WrappedComponent) {
 
     getKeyAccessor = () => {
       return this._keyAccessor;
-    }
+    };
 
     setValueAccessor = valueAccessor => {
       this._valueAccessor = valueAccessor;
@@ -188,7 +188,7 @@ export default function connectCrossfilter(WrappedComponent) {
 
     getValueAccessor = () => {
       return this._valueAccessor;
-    }
+    };
 
     onCrossfilterClick = (datum, event) => {
       const datumKey = this.getKeyAccessor()(datum);
@@ -196,19 +196,21 @@ export default function connectCrossfilter(WrappedComponent) {
       this.redrawCrossfilterGroup();
     };
 
-    transitionDuration = duration => {
-      if (!arguments.length) {
-        return this._transitionDuration;
-      }
+    setTransitionDuration = duration => {
       this._transitionDuration = duration;
     };
 
-    transitionDelay = delay => {
-      if (!arguments.length) {
-        return this._transitionDelay;
-      }
+    getTransitionDuration = () => {
+      return this._transitionDuration;
+    }
+
+    setTransitionDelay = delay => {
       this._transitionDelay = delay;
     };
+
+    getTransitionDelay = () => {
+      return this._transitionDelay;
+    }
 
     isCrossfilterLoaded = () => {
       return this._crossfilter && !!this._crossfilter.crossfilter;
@@ -250,22 +252,37 @@ export default function connectCrossfilter(WrappedComponent) {
 
     redrawCrossfilterGroup = () => {
       this.props.redrawGroup(this._nativeQuery);
-    }
+    };
 
-    addSourceCrossfilterDimensionAndGroup = (dimension, group) => {
-      console.log("xia: [connectCrossfilter]", dimension, group);
+    resetActiveCrossfilterGroup = () => {
+      this.props.redrawGroup(null);
+    };
+
+    addSourceCrossfilterDimensionAndGroup = (
+      dimension,
+      group,
+      dimensionIndex,
+      metricIndex,
+    ) => {
       this.props.addSourceCrossfilterDimensionAndGroup(
-        this._cardId, 
+        this._cardId,
         this._nativeQuery,
-        dimension, 
-        group);
-    }
+        dimension,
+        group,
+        dimensionIndex,
+        metricIndex,
+      );
+    };
 
     getSourceCrossfilterDimension = () => {
       if (this._crossfilter) {
         return this._crossfilter.dimension;
       }
       return null;
+    };
+
+    isCrossfilterSourceCard = () => {
+      return this.props.isCrossfilterSource(this._cardId);
     }
 
     componentDidUpdate() {
@@ -283,8 +300,7 @@ export default function connectCrossfilter(WrappedComponent) {
         this._cardId,
         this._nativeQuery,
       );
-      
-      
+
       return (
         <WrappedComponent
           {...this.props}
@@ -307,12 +323,17 @@ export default function connectCrossfilter(WrappedComponent) {
           disposeDimensionAndGroup={this.disposeDimensionAndGroup}
           enableCrossfilter={this.shouldTurnOnCrossfilter()}
           isCrossfilterSource={this.props.isCrossfilterSource}
+          isCrossfilterSourceCard={this.isCrossfilterSourceCard()}
           redrawCrossfilterGroup={this.redrawCrossfilterGroup}
           setCrossfilterKeyAccessor={this.setKeyAccessor}
-          addSourceCrossfilterDimensionAndGroup={this.addSourceCrossfilterDimensionAndGroup}
-          getSourceCrossfilterDimension= {this.getSourceCrossfilterDimension}
+          addSourceCrossfilterDimensionAndGroup={
+            this.addSourceCrossfilterDimensionAndGroup
+          }
+          getSourceCrossfilterDimension={this.getSourceCrossfilterDimension}
           hasFilter={this.hasFilter}
-          // activeGroup={this.state.activeGroup}
+          activeGroup={this.props.activeGroup}
+          crossfilterGroup={this._nativeQuery}
+          resetActiveCrossfilterGroup={this.resetActiveCrossfilterGroup}
         />
       );
     }

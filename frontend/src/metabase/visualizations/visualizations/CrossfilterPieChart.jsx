@@ -35,7 +35,7 @@ const PERCENT_REGEX = /percent/i;
 
 import type { VisualizationProps } from "metabase/meta/types/Visualization";
 
-export default class PieChart extends Component {
+export default class CrossfilterPieChart extends Component {
   props: VisualizationProps;
 
   static uiName = t`Pie`;
@@ -132,6 +132,13 @@ export default class PieChart extends Component {
     },
   };
 
+  constructor(props) {
+    super(props);
+    const { enableCrossfilter } = this.props;
+    if (enableCrossfilter) {
+        this.initChartcCrossfilter();
+    }
+  }
   componentDidUpdate() {
     let groupElement = ReactDOM.findDOMNode(this.refs.group);
     let detailElement = ReactDOM.findDOMNode(this.refs.detail);

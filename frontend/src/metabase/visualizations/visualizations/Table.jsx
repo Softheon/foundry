@@ -248,11 +248,10 @@ export default class Table extends Component {
     data: DatasetData,
     settings: VisualizationSettings,
   }) {
-    if (this.props.enableCrossfilter && this.props.getSourceCrossfilterDimension()) { 
+    if (this.props.enableCrossfilter && this.props.getSourceCrossfilterDimension()) {
       const dimension = this.props.getSourceCrossfilterDimension();
       let records = dimension.top(Infinity);
-      let rows = records.map(record => Object.values(record));
-      data.rows = rows;
+      data.rows = records;
     }
     if (settings["table.pivot"]) {
       const pivotIndex = _.findIndex(

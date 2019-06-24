@@ -354,6 +354,16 @@ export default class Visualization extends Component {
     );
     let noResults = false;
 
+    if(!this.props.enableCrossfilter) {
+      if (!loading ) {
+        if (this.props.isCrossfilterSourceCard) {
+          loading = false;
+        } else if (!this.props.isCrossfilterLoaded){
+          loading = true;
+        }
+      }
+    }
+
     // don't try to load settings unless data is loaded
     let settings = this.props.settings || {};
 

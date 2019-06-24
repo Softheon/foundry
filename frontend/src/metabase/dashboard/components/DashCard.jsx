@@ -225,6 +225,10 @@ export default class DashCard extends Component {
           addSourceCrossfilterDimensionAndGroup={this.props.addSourceCrossfilterDimensionAndGroup}
           getSourceCrossfilterDimension= {this.props.getSourceCrossfilterDimension}
           hasFilter={this.props.hasFilter}
+          activeGroup={this.props.activeGroup}
+          crossfilterGroup={this.props.crossfilterGroup}
+          resetActiveCrossfilterGroup={this.props.resetActiveCrossfilterGroup}
+          isCrossfilterSourceCard={this.props.isCrossfilterSourceCard}
         />
       </div>
     );

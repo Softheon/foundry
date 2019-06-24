@@ -21,7 +21,7 @@ export default (ComposedComponent: ReactClass<any>) =>
         "]";
 
       state = {
-        activeGroup: new Set(),
+        activeGroup: null,
       };
 
       componentWillMount() {
@@ -81,8 +81,10 @@ export default (ComposedComponent: ReactClass<any>) =>
               crossfilter: null,
               dimension: null,
               group: null,
+              dimensionIndex: null,
+              metricIndex: null,
               cardId: parameter.card_id,
-              cardIdSetOfTheSameSQL: this.getCardIdSetBySQL(nativeQuery),
+              //cardIdSetOfTheSameSQL: this.getCardIdSetBySQL(nativeQuery),
             });
           }
         });
@@ -144,6 +146,8 @@ export default (ComposedComponent: ReactClass<any>) =>
         native,
         dimension,
         group,
+        dimensionIndex,
+        metricIndex
       ) => {
         if (this.isCrossfilterSource(cardId)) {
           if (!native) {
@@ -153,7 +157,8 @@ export default (ComposedComponent: ReactClass<any>) =>
             const crossfilterInfo = this._crossfilterMap.get(native);
             crossfilterInfo.dimension = dimension;
             crossfilterInfo.group = group;
-            console.log("xia: added source crossfilter dimension");
+            crossfilterInfo.dimensionIndex = dimensionIndex;
+            crossfilterInfo.metricIndex = metricIndex;
             console.log(this._crossfilterMap);
           }
         }
@@ -167,14 +172,18 @@ export default (ComposedComponent: ReactClass<any>) =>
       };
 
       redrawGroup = group => {
-        if (this._crossfilterMap.has(group)) {
-          const crossfilterGroup = this._crossfilterMap.get(group);
+        if (group && this._crossfilterMap.has(group)) {
           this.setState({
-            activeGroup: crossfilterGroup.cardIdSetOfTheSameSQL,
+            activeGroup: group,
           });
+        } else {
+          this.setState({
+            activeGroup: null
+          })
         }
       };
 
+      
       render() {
         return (
           <ComposedComponent

@@ -16,6 +16,7 @@ import ScatterPlot from "./visualizations/ScatterPlot.jsx";
 import Funnel from "./visualizations/Funnel.jsx";
 import Gauge from "./visualizations/Gauge.jsx";
 import ObjectDetail from "./visualizations/ObjectDetail.jsx";
+import CrossfilterPieChart from "./visualizations/CrossfilterPieChart.jsx"
 import { t } from "c-3po";
 import _ from "underscore";
 
