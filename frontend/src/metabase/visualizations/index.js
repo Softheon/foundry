@@ -18,6 +18,7 @@ import Gauge from "./visualizations/Gauge.jsx";
 import ObjectDetail from "./visualizations/ObjectDetail.jsx";
 import CrossfilterPieChart from "./visualizations/CrossfilterPieChart.jsx"
 import CrossfilterTable from "./visualizations/CrossfilterTable.jsx";
+import CrossfilterRowChart from "./visualizations/CrossfilterRowChart.jsx"
 import { t } from "c-3po";
 import _ from "underscore";
 
@@ -177,4 +178,5 @@ registerVisualization(ObjectDetail);
 
 registerCrossfilterVisualization(CrossfilterPieChart);
 registerCrossfilterVisualization(CrossfilterTable);
+registerCrossfilterVisualization(CrossfilterRowChart);
 export default visualizations;

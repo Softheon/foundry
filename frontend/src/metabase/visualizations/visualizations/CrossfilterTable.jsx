@@ -277,6 +277,7 @@ export default class CrossfilterTable extends Component {
   }) {
     const dimension = this.props.getSharedCrossfilterDimension();
     data.rows = dimension.top(Infinity);
+    console.log("xia: table data", data.rows)
     if (settings["table.pivot"]) {
       const pivotIndex = _.findIndex(
         data.cols,
