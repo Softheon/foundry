@@ -40,7 +40,12 @@ export default function connectWithCrossfilter(WrappedComponent) {
 
     getNativeQuery() {
       const { card } = this.props;
-      if (card && card.dataset_query && card.dataset_query.native && card.dataset_query.native.query) {
+      if (
+        card &&
+        card.dataset_query &&
+        card.dataset_query.native &&
+        card.dataset_query.native.query
+      ) {
         return card.dataset_query.native.query;
       }
       return null;
@@ -51,7 +56,10 @@ export default function connectWithCrossfilter(WrappedComponent) {
         dimension.filter(null);
       } else if (filters.length === 1 && !filters[0].isFiltered) {
         dimension.filterExact(filters[0]);
-      } else if (filters.length === 1 && filters[0].filterType === "RangedFilter") {
+      } else if (
+        filters.length === 1 &&
+        filters[0].filterType === "RangedFilter"
+      ) {
         dimension.filterRange(filters[0]);
       } else {
         dimension.filterFunction(value => {
@@ -160,7 +168,11 @@ export default function connectWithCrossfilter(WrappedComponent) {
     filter = filter => {
       let filters = this._filters;
       // filter by a set of values
-      if (filter instanceof Array && filter[0] instanceof Array && !filter.isFiltered) {
+      if (
+        filter instanceof Array &&
+        filter[0] instanceof Array &&
+        !filter.isFiltered
+      ) {
         filter[0].foreach(value => {
           if (this.hasFilterHandler(filters, value)) {
             filters = this.removeFilterHandler(filters, value);
@@ -245,7 +257,10 @@ export default function connectWithCrossfilter(WrappedComponent) {
     };
 
     shouldTurnOnCrossfilter = () => {
-      return this.props.belongToACrossfilterGroup(this._cardId, this._nativeQuery);
+      return this.props.belongToACrossfilterGroup(
+        this._cardId,
+        this._nativeQuery
+      );
     };
 
     unregisterCrossfilter() {
@@ -266,7 +281,13 @@ export default function connectWithCrossfilter(WrappedComponent) {
       this.props.redrawGroup(null);
     };
 
-    addSourceCrossfilter = ({ crossfilter, dimension, group, dimensionIndex, metricIndex } = {}) => {
+    addSourceCrossfilter = ({
+      crossfilter,
+      dimension,
+      group,
+      dimensionIndex,
+      metricIndex
+    } = {}) => {
       this.setCrossfilter(crossfilter);
       this.setDimension(dimension);
       this.setGroup(group);
@@ -288,7 +309,36 @@ export default function connectWithCrossfilter(WrappedComponent) {
     };
 
     render() {
-      return <WrappedComponent {...this.props} onClick={this.onCrossfilterClick} turnOnResetControl={this.turnOnResetControl} turnOffResetControl={this.turnOffResetControl} setDimension={this.setDimension} getDimension={this.getDimension} setGroup={this.setGroup} getGroup={this.getGroup} crossfilterData={this.data} getKeyAccessor={this.getKeyAccessor} setKeyAccessor={this.setKeyAccessor} getValueAccessor={this.getValueAccessor} setValueAccessor={this.setValueAccessor} setTransitionDuration={this.setTransitionDuration} getTransitionDuration={this.getTransitionDuration} setTransitionDelay={this.setTransitionDelay} getTransitionDelay={this.getTransitionDelay} isCrossfilterSource={this.props.isCrossfilterSource} addSourceCrossfilter={this.addSourceCrossfilter} getSourceCrossfilter={this.getSourceCrossfilter} redrawCrossfilterGroup={this.redrawCrossfilterGroup} getSourceCrossfilterDimension={this.getSourceCrossfilterDimension} hasFilter={this.hasFilter} activeCrossfilterGroup={this.props.activeGroup} crossfilterGroup={this._nativeQuery} resetActiveCrossfilterGroup={this.resetActiveCrossfilterGroup} />;
+      return (
+        <WrappedComponent
+          {...this.props}
+          onClick={this.onCrossfilterClick}
+          turnOnResetControl={this.turnOnResetControl}
+          turnOffResetControl={this.turnOffResetControl}
+          setDimension={this.setDimension}
+          getDimension={this.getDimension}
+          setGroup={this.setGroup}
+          getGroup={this.getGroup}
+          crossfilterData={this.data}
+          getKeyAccessor={this.getKeyAccessor}
+          setKeyAccessor={this.setKeyAccessor}
+          getValueAccessor={this.getValueAccessor}
+          setValueAccessor={this.setValueAccessor}
+          setTransitionDuration={this.setTransitionDuration}
+          getTransitionDuration={this.getTransitionDuration}
+          setTransitionDelay={this.setTransitionDelay}
+          getTransitionDelay={this.getTransitionDelay}
+          isCrossfilterSource={this.props.isCrossfilterSource}
+          addSourceCrossfilter={this.addSourceCrossfilter}
+          getSourceCrossfilter={this.getSourceCrossfilter}
+          redrawCrossfilterGroup={this.redrawCrossfilterGroup}
+          getSourceCrossfilterDimension={this.getSourceCrossfilterDimension}
+          hasFilter={this.hasFilter}
+          activeCrossfilterGroup={this.props.activeGroup}
+          crossfilterGroup={this._nativeQuery}
+          resetActiveCrossfilterGroup={this.resetActiveCrossfilterGroup}
+        />
+      );
     }
   };
 }

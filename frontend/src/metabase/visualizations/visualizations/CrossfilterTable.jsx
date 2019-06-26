@@ -240,7 +240,11 @@ export default class CrossfilterTable extends Component {
         dimensionIndex: null,
         metricIndex: null,
       });  
-    } 
+    } else {
+       dataset = this.props.getSourceCrossfilter();
+       const dimension = dataset.dimension(d => d[0]);
+       this.props.setDimension(dimension);
+    }
 
   }
 
@@ -275,7 +279,11 @@ export default class CrossfilterTable extends Component {
     data: DatasetData,
     settings: VisualizationSettings,
   }) {
-    const dimension = this.props.getSharedCrossfilterDimension();
+    const dimension = this.props.getDimension();
+    
+    data = {
+      ...data
+    }
     data.rows = dimension.top(Infinity);
     console.log("xia: table data", data.rows)
     if (settings["table.pivot"]) {
@@ -378,6 +386,9 @@ export default class CrossfilterTable extends Component {
         </div>
       );
     } else {
+      if (data.rows.length === 0){
+        return null;
+      }
       return (
         // $FlowFixMe
         <TableComponent
