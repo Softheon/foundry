@@ -41,3 +41,15 @@
 :local(.Donut) path {
   transition: opacity 0.3s linear;
 }
+
+:local .selected path {
+  stroke-width: 3;
+  stroke: #ccc;
+  fill-opacity: 1;
+}
+
+:local .deselected path {
+  stroke-width: none;
+  stroke: #ccc;
+  fill-opacity: 0.3;
+}

@@ -16,7 +16,7 @@ import { ChartSettingsError } from "metabase/visualizations/lib/errors";
 import { getFriendlyName } from "metabase/visualizations/lib/utils";
 import {
   metricSetting,
-  dimensionSetting
+  dimensionSetting,
 } from "metabase/visualizations/lib/settings/utils";
 import { columnSettings } from "metabase/visualizations/lib/settings/column";
 
@@ -26,6 +26,7 @@ import colors, { getColorsForValues } from "metabase/lib/colors";
 import type { VisualizationProps } from "metabase/meta/types/Visualization";
 
 import connectWithCrossfilter from "../lib/connectWithCrossfilter.js";
+import CrossfilterPie from "../components/CrossfilterPie.jsx";
 
 const OUTER_RADIUS = 50; // within 100px canvas
 const INNER_RADIUS_RATIO = 3 / 5;
@@ -52,7 +53,7 @@ export default class CrossfilterPieChart extends Component {
   static checkRenderable([{ data: { cols, rows } }], settings) {
     if (!settings["pie.dimension"] || !settings["pie.metric"]) {
       throw new ChartSettingsError(t`Which columns do you want to use?`, {
-        section: `Data`
+        section: `Data`,
       });
     }
   }
@@ -62,29 +63,29 @@ export default class CrossfilterPieChart extends Component {
     ...dimensionSetting("pie.dimension", {
       section: t`Data`,
       title: t`Dimension`,
-      showColumnSetting: true
+      showColumnSetting: true,
     }),
     ...metricSetting("pie.metric", {
       section: t`Data`,
       title: t`Measure`,
-      showColumnSetting: true
+      showColumnSetting: true,
     }),
     "pie.show_legend": {
       section: t`Display`,
       title: t`Show legend`,
-      widget: "toggle"
+      widget: "toggle",
     },
     "pie.show_legend_perecent": {
       section: t`Display`,
       title: t`Show percentages in legend`,
       widget: "toggle",
-      default: true
+      default: true,
     },
     "pie.slice_threshold": {
       section: t`Display`,
       title: t`Minimum slice percentage`,
       widget: "number",
-      default: SLICE_THRESHOLD * 100
+      default: SLICE_THRESHOLD * 100,
     },
     "pie.colors": {
       section: t`Display`,
@@ -95,10 +96,10 @@ export default class CrossfilterPieChart extends Component {
           ? getColorsForValues(settings["pie._dimensionValues"])
           : [],
       getProps: (series, settings) => ({
-        seriesTitles: settings["pie._dimensionValues"] || []
+        seriesTitles: settings["pie._dimensionValues"] || [],
       }),
       getDisabled: (series, settings) => !settings["pie._dimensionValues"],
-      readDependencies: ["pie._dimensionValues"]
+      readDependencies: ["pie._dimensionValues"],
     },
     // this setting recomputes color assignment using pie.colors as the existing
     // assignments in case the user previous modified pie.colors and a new value
@@ -108,19 +109,19 @@ export default class CrossfilterPieChart extends Component {
       getValue: (series, settings) =>
         getColorsForValues(
           settings["pie._dimensionValues"],
-          settings["pie.colors"]
+          settings["pie.colors"],
         ),
-      readDependencies: ["pie._dimensionValues", "pie.colors"]
+      readDependencies: ["pie._dimensionValues", "pie.colors"],
     },
     "pie._metricIndex": {
       getValue: ([{ data: { cols } }], settings) =>
         _.findIndex(cols, col => col.name === settings["pie.metric"]),
-      readDependencies: ["pie.metric"]
+      readDependencies: ["pie.metric"],
     },
     "pie._dimensionIndex": {
       getValue: ([{ data: { cols } }], settings) =>
         _.findIndex(cols, col => col.name === settings["pie.dimension"]),
-      readDependencies: ["pie.dimension"]
+      readDependencies: ["pie.dimension"],
     },
     "pie._dimensionValues": {
       getValue: ([{ data: { rows } }], settings) => {
@@ -130,8 +131,8 @@ export default class CrossfilterPieChart extends Component {
             rows.map(row => String(row[dimensionIndex]))
           : null;
       },
-      readDependencies: ["pie._dimensionIndex"]
-    }
+      readDependencies: ["pie._dimensionIndex"],
+    },
   };
 
   constructor(props) {
@@ -155,31 +156,33 @@ export default class CrossfilterPieChart extends Component {
         dimension,
         group,
         dimensionIndex,
-        metricIndex
+        metricIndex,
       });
     } else {
       this.props.setDimension(dimension);
       this.props.setGroup(group);
     }
 
-    this.props.setKeyAccessor(d => d.dimensions[0].value);
+   // this.props.setKeyAccessor(d => d.dimensions[0].value);
   }
 
   componentDidUpdate() {
-    let groupElement = ReactDOM.findDOMNode(this.refs.group);
-    let detailElement = ReactDOM.findDOMNode(this.refs.detail);
-    if (groupElement.getBoundingClientRect().width < 100) {
-      detailElement.classList.add("hide");
-    } else {
-      detailElement.classList.remove("hide");
-    }
+    // let groupElement = ReactDOM.findDOMNode(this.refs.group);
+    // let detailElement = ReactDOM.findDOMNode(this.refs.detail);
+    // if (groupElement.getBoundingClientRect().width < 100) {
+    //   detailElement.classList.add("hide");
+    // } else {
+    //   detailElement.classList.remove("hide");
+    // }
   }
 
   componentDidMount() {
-    console.log("xia:  PieChartSVG ref", this.refs.PieChartSVG);
+   // console.log("xia:  PieChartSVG ref", this.refs.PieChartSVG);
+
     const { isCrossfilterSource } = this.props;
 
     if (isCrossfilterSource) {
+      console.log("xia:  redraw" );
       this.props.redrawCrossfilterGroup();
     }
   }
@@ -231,7 +234,7 @@ export default class CrossfilterPieChart extends Component {
       onVisualizationClick,
       className,
       gridSize,
-      settings
+      settings,
     } = this.props;
 
     let [{ data: { cols, rows } }] = series;
@@ -245,39 +248,38 @@ export default class CrossfilterPieChart extends Component {
       formatValue(dimension, {
         ...settings.column(cols[dimensionIndex]),
         jsx,
-        majorWidth: 0
+        majorWidth: 0,
       });
     const formatMetric = (metric, jsx = true) =>
       formatValue(metric, {
         ...settings.column(cols[metricIndex]),
         jsx,
-        majorWidth: 0
+        majorWidth: 0,
       });
     const formatPercent = (percent, jsx = true) =>
       formatValue(percent, {
         ...settings.column(cols[metricIndex]),
         jsx,
-        majorWidth: 0,
+        majorWidth: 3,
         number_style: "percent",
         minimumSignificantDigits: 3,
-        maximumSignificantDigits: 3
+        maximumSignificantDigits: 3,
+        maximumFractionDigits:3,
       });
 
     const showPercentInTooltip =
       !PERCENT_REGEX.test(cols[metricIndex].name) &&
       !PERCENT_REGEX.test(cols[metricIndex].display_name);
 
-    // let total: number = rows.reduce(
-    //   (sum, row) => sum + row[dataRowMetricIndex],
-    //   0,
-    // );
     const ndx = this.props.getSourceCrossfilter();
     const all = ndx.groupAll();
     const groupAll = all.reduceSum(d => d[metricIndex]);
     let total = groupAll.value();
     all.dispose();
     groupAll.dispose();
+
     console.log("xia: total", total);
+
     let sliceThreshold =
       typeof settings["pie.slice_threshold"] === "number"
         ? settings["pie.slice_threshold"] / 100
@@ -291,12 +293,12 @@ export default class CrossfilterPieChart extends Component {
           (this.props.hasFilter() &&
           !this.props.hasFilter(row[dataRowDimensionIndex])
             ? 0
-            : row[dataRowMetricIndex]) / total,
-        color: settings["pie._colors"][row[dataRowDimensionIndex]]
+            : row[dataRowMetricIndex]) * 1.0 / total,
+        color: settings["pie._colors"][row[dataRowDimensionIndex]],
       }))
-      .partition(d => d.percentage > -1)
+      .partition(d => d.percentage > sliceThreshold)
       .value();
-    console.log("xia: slices", slices);
+
     let otherSlice = null;
     if (others && others.length > 1) {
       let otherTotal = others.reduce((acc, o) => acc + o.value, 0);
@@ -305,25 +307,35 @@ export default class CrossfilterPieChart extends Component {
           key: "Other",
           value: otherTotal,
           percentage: otherTotal / total,
-          color: colors["text-light"]
+          color: colors["text-light"],
         };
         slices.push(otherSlice);
       }
     } else {
-      //slices.push(...others);
+      slices.push(...others);
     }
 
+  
     // increase "other" slice so it's barely visible
     // $FlowFixMe
     if (otherSlice && otherSlice.percentage < OTHER_SLICE_MIN_PERCENTAGE) {
       otherSlice.value = total * OTHER_SLICE_MIN_PERCENTAGE;
     }
 
+    slices = slices.map(slice => {
+      return {
+        ...slice,
+        percentage:  (this.props.hasFilter() &&
+        !this.props.hasFilter(slice.key)
+          ? 0
+          : slice.value) / total,
+      }
+    })
     let legendTitles = slices.map(slice => [
       slice.key === "Other" ? slice.key : formatDimension(slice.key, true),
       settings["pie.show_legend_perecent"]
         ? formatPercent(slice.percentage, true)
-        : undefined
+        : undefined,
     ]);
     let legendColors = slices.map(slice => slice.color);
 
@@ -332,57 +344,49 @@ export default class CrossfilterPieChart extends Component {
       otherSlice = {
         value: 1,
         color: colors["text-light"],
-        noHover: true
+        noHover: true,
       };
       slices.push(otherSlice);
     }
 
-    const pie = d3.layout
-      .pie()
-      .sort(null)
-      .padAngle(PAD_ANGLE)
-      .value(d => d.value);
-    const arc = d3.svg
-      .arc()
-      .outerRadius(OUTER_RADIUS)
-      .innerRadius(OUTER_RADIUS * INNER_RADIUS_RATIO);
 
     function hoverForIndex(index, event) {
+      console.log("hoverForIndex event",event);
       const slice = slices[index];
       if (!slice || slice.noHover) {
         return null;
       } else if (slice === otherSlice) {
         return {
           index,
-          event: event && event.nativeEvent,
+          event: event ,
           data: others.map(o => ({
             key: formatDimension(o.key, false),
-            value: formatMetric(o.value, false)
-          }))
+            value: formatMetric(o.value, false),
+          })),
         };
       } else {
         return {
           index,
-          event: event && event.nativeEvent,
+          event: event,
           data: [
             {
               key: getFriendlyName(cols[dimensionIndex]),
-              value: formatDimension(slice.key)
+              value: formatDimension(slice.key),
             },
             {
               key: getFriendlyName(cols[metricIndex]),
-              value: formatMetric(slice.value)
-            }
+              value: formatMetric(slice.value),
+            },
           ].concat(
             showPercentInTooltip && slice.percentage != null
               ? [
                   {
                     key: "Percentage",
-                    value: formatPercent(slice.percentage)
-                  }
+                    value: formatPercent(slice.percentage),
+                  },
                 ]
-              : []
-          )
+              : [],
+          ),
         };
       }
     }
@@ -406,9 +410,9 @@ export default class CrossfilterPieChart extends Component {
       dimensions: [
         {
           value: slices[index].key,
-          column: cols[dimensionIndex]
-        }
-      ]
+          column: cols[dimensionIndex],
+        },
+      ],
     });
 
     const isClickable =
@@ -434,7 +438,7 @@ export default class CrossfilterPieChart extends Component {
             <div
               className={cx(
                 styles.Value,
-                "fullscreen-normal-text fullscreen-night-text"
+                "fullscreen-normal-text fullscreen-night-text",
               )}
             >
               {value}
@@ -442,35 +446,21 @@ export default class CrossfilterPieChart extends Component {
             <div className={styles.Title}>{title}</div>
           </div>
           <div className={styles.Chart}>
-            <svg
-              ref="PieChartSVG"
-              className={styles.Donut + " m1"}
-              viewBox="0 0 100 100"
-            >
-              <g ref="group" transform={`translate(50,50)`}>
-                {pie(slices).map((slice, index) => (
-                  <path
-                    key={index}
-                    d={arc(slice)}
-                    fill={slices[index].color}
-                    opacity={this.getSliceOpacity(slices[index].key, index)}
-                    onMouseMove={e =>
-                      onHoverChange && onHoverChange(hoverForIndex(index, e))
-                    }
-                    onMouseLeave={() => onHoverChange && onHoverChange(null)}
-                    className={cx({
-                      "cursor-pointer": getSliceIsClickable(index)
-                    })}
-                    onClick={e => {
-                      this.props.onClick(
-                        getSliceClickObject(index),
-                        e.nativeEvent
-                      );
-                    }}
-                  />
-                ))}
-              </g>
-            </svg>
+            <CrossfilterPie 
+            data={slices} 
+            onClick={this.props.onClick}
+            hasFilter={this.props.hasFilter}
+            isSelectedSlice={this.isSelectedSlice}
+        
+            highlightSelected = {this.props.highlightSelected}
+            fadeDeselected={this.props.fadeDeselected}
+            resetHighlight={this.props.resetHighlight}
+
+            onMouseMove={(index, e) =>
+              null && onHoverChange && onHoverChange(hoverForIndex(index, e))
+            }
+            onMouseLeave={() => null && onHoverChange && onHoverChange(null)} />
+            
           </div>
         </div>
         <ChartTooltip series={series} hovered={hovered} />

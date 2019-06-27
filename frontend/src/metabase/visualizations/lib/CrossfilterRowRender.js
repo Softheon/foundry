@@ -32,7 +32,6 @@ export default function crossfilterRowRenderer(
   }
 
   const chart = dc.rowChart(element);
-
   // disable clicks
   chart.onClick = (datum) => {
     props.onClick(datum);
@@ -142,6 +141,8 @@ export default function crossfilterRowRenderer(
     });
   }
 
+
+ 
   // inital render
   chart.render();
 

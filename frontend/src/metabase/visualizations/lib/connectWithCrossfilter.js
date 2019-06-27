@@ -1,4 +1,7 @@
 import React, { Component } from "react";
+import d3 from "d3";
+const SELECTED_CLASS = "selected";
+const DESELECTED_CLASS = "deselected";
 
 export default function connectWithCrossfilter(WrappedComponent) {
   return class extends React.Component {
@@ -12,6 +15,7 @@ export default function connectWithCrossfilter(WrappedComponent) {
     static columnSettings = WrappedComponent.columnSettings;
     static seriesAreCompatible = WrappedComponent.seriesAreCompatible;
     static transformSeries = WrappedComponent.transformSeries;
+    static noHeader = WrappedComponent.noHeader;
     constructor(props) {
       super(props);
       this.initializeCharCrossfilter();
@@ -214,10 +218,22 @@ export default function connectWithCrossfilter(WrappedComponent) {
       return this._valueAccessor;
     };
 
+    highlightSelected = e => {
+      d3.select(e).attr("fill-opacity", 1);
+    };
+
+    fadeDeselected = e => {
+      d3.select(e).attr("fill-opacity", 0.3);
+    };
+
+    resetHighlight = e => {
+      d3.select(e).attr("fill-opacity", 1);
+    };
+
     onCrossfilterClick = (datum, event) => {
       console.log("xia onCrossfilter click, datum", datum);
       const datumKey = this.getKeyAccessor()(datum);
-      console.log("xia", this.getKeyAccessor());
+      console.log("xia: datumkey", this.getKeyAccessor());
       console.log("xia onCrossfilterClick, filterdKey", datumKey);
       this.filter(datumKey);
       this.redrawCrossfilterGroup();
@@ -259,7 +275,7 @@ export default function connectWithCrossfilter(WrappedComponent) {
     shouldTurnOnCrossfilter = () => {
       return this.props.belongToACrossfilterGroup(
         this._cardId,
-        this._nativeQuery
+        this._nativeQuery,
       );
     };
 
@@ -286,7 +302,7 @@ export default function connectWithCrossfilter(WrappedComponent) {
       dimension,
       group,
       dimensionIndex,
-      metricIndex
+      metricIndex,
     } = {}) => {
       this.setCrossfilter(crossfilter);
       this.setDimension(dimension);
@@ -296,7 +312,7 @@ export default function connectWithCrossfilter(WrappedComponent) {
         dimension,
         group,
         dimensionIndex,
-        metricIndex
+        metricIndex,
       });
     };
 
@@ -337,6 +353,9 @@ export default function connectWithCrossfilter(WrappedComponent) {
           activeCrossfilterGroup={this.props.activeGroup}
           crossfilterGroup={this._nativeQuery}
           resetActiveCrossfilterGroup={this.resetActiveCrossfilterGroup}
+          highlightSelected={this.highlightSelected}
+          fadeDeselected={this.fadeDeselected}
+          resetHighlight={this.resetHighlight}
         />
       );
     }
