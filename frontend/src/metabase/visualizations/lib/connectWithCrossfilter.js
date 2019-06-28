@@ -126,6 +126,11 @@ export default function connectWithCrossfilter(WrappedComponent) {
       }
     }
 
+    filterAll = () => {
+      this.filter(null);
+      this.redrawCrossfilterGroup();
+    }
+    
     turnOnResetControl = () => {
       this.showResetControl = true;
     };
@@ -356,6 +361,7 @@ export default function connectWithCrossfilter(WrappedComponent) {
           highlightSelected={this.highlightSelected}
           fadeDeselected={this.fadeDeselected}
           resetHighlight={this.resetHighlight}
+          filterAll={this.filterAll}
         />
       );
     }

@@ -163,7 +163,7 @@ export default class CrossfilterPieChart extends Component {
       this.props.setGroup(group);
     }
 
-   // this.props.setKeyAccessor(d => d.dimensions[0].value);
+    // this.props.setKeyAccessor(d => d.dimensions[0].value);
   }
 
   componentDidUpdate() {
@@ -177,12 +177,11 @@ export default class CrossfilterPieChart extends Component {
   }
 
   componentDidMount() {
-   // console.log("xia:  PieChartSVG ref", this.refs.PieChartSVG);
+    // console.log("xia:  PieChartSVG ref", this.refs.PieChartSVG);
 
     const { isCrossfilterSource } = this.props;
 
     if (isCrossfilterSource) {
-      console.log("xia:  redraw" );
       this.props.redrawCrossfilterGroup();
     }
   }
@@ -264,7 +263,7 @@ export default class CrossfilterPieChart extends Component {
         number_style: "percent",
         minimumSignificantDigits: 3,
         maximumSignificantDigits: 3,
-        maximumFractionDigits:3,
+        maximumFractionDigits: 3,
       });
 
     const showPercentInTooltip =
@@ -277,8 +276,6 @@ export default class CrossfilterPieChart extends Component {
     let total = groupAll.value();
     all.dispose();
     groupAll.dispose();
-
-    console.log("xia: total", total);
 
     let sliceThreshold =
       typeof settings["pie.slice_threshold"] === "number"
@@ -293,7 +290,9 @@ export default class CrossfilterPieChart extends Component {
           (this.props.hasFilter() &&
           !this.props.hasFilter(row[dataRowDimensionIndex])
             ? 0
-            : row[dataRowMetricIndex]) * 1.0 / total,
+            : row[dataRowMetricIndex]) *
+          1.0 /
+          total,
         color: settings["pie._colors"][row[dataRowDimensionIndex]],
       }))
       .partition(d => d.percentage > sliceThreshold)
@@ -315,7 +314,6 @@ export default class CrossfilterPieChart extends Component {
       slices.push(...others);
     }
 
-  
     // increase "other" slice so it's barely visible
     // $FlowFixMe
     if (otherSlice && otherSlice.percentage < OTHER_SLICE_MIN_PERCENTAGE) {
@@ -325,12 +323,12 @@ export default class CrossfilterPieChart extends Component {
     slices = slices.map(slice => {
       return {
         ...slice,
-        percentage:  (this.props.hasFilter() &&
-        !this.props.hasFilter(slice.key)
-          ? 0
-          : slice.value) / total,
-      }
-    })
+        percentage:
+          (this.props.hasFilter() && !this.props.hasFilter(slice.key)
+            ? 0
+            : slice.value) / total,
+      };
+    });
     let legendTitles = slices.map(slice => [
       slice.key === "Other" ? slice.key : formatDimension(slice.key, true),
       settings["pie.show_legend_perecent"]
@@ -349,16 +347,15 @@ export default class CrossfilterPieChart extends Component {
       slices.push(otherSlice);
     }
 
-
     function hoverForIndex(index, event) {
-      console.log("hoverForIndex event",event);
+      console.log("hoverForIndex event", event);
       const slice = slices[index];
       if (!slice || slice.noHover) {
         return null;
       } else if (slice === otherSlice) {
         return {
           index,
-          event: event ,
+          event: event,
           data: others.map(o => ({
             key: formatDimension(o.key, false),
             value: formatMetric(o.value, false),
@@ -446,21 +443,28 @@ export default class CrossfilterPieChart extends Component {
             <div className={styles.Title}>{title}</div>
           </div>
           <div className={styles.Chart}>
-            <CrossfilterPie 
-            data={slices} 
-            onClick={this.props.onClick}
-            hasFilter={this.props.hasFilter}
-            isSelectedSlice={this.isSelectedSlice}
-        
-            highlightSelected = {this.props.highlightSelected}
-            fadeDeselected={this.props.fadeDeselected}
-            resetHighlight={this.props.resetHighlight}
-
-            onMouseMove={(index, e) =>
-              null && onHoverChange && onHoverChange(hoverForIndex(index, e))
-            }
-            onMouseLeave={() => null && onHoverChange && onHoverChange(null)} />
-            
+            <CrossfilterPie
+              data={slices}
+              onClick={this.props.onClick}
+              hasFilter={this.props.hasFilter}
+              isSelectedSlice={this.isSelectedSlice}
+              highlightSelected={this.props.highlightSelected}
+              fadeDeselected={this.props.fadeDeselected}
+              resetHighlight={this.props.resetHighlight}
+              onMouseMove={(index, e) =>
+                null && onHoverChange && onHoverChange(hoverForIndex(index, e))
+              }
+              onMouseLeave={() => null && onHoverChange && onHoverChange(null)}
+            />
+            {this.props.hasFilter() && (
+              <a
+                style={{ position: "absolute", right: 0 }}
+                onClick={this.props.filterAll}
+              >
+                {" "}
+                {t`RESET`}{" "}
+              </a>
+            )}
           </div>
         </div>
         <ChartTooltip series={series} hovered={hovered} />

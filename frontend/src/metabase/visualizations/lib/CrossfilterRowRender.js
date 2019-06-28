@@ -9,21 +9,21 @@ import { formatValue } from "metabase/lib/formatting";
 import {
   initCrossfilterChart,
   forceSortedGroup,
-  makeIndexMap
+  makeIndexMap,
 } from "./renderer_utils";
 import { getFriendlyName } from "./utils";
 import { checkXAxisLabelOverlap } from "./LineAreaBarPostRender";
 
 export default function crossfilterRowRenderer(
   element,
-  props
+  props,
 ): DeregisterFunction {
   const {
     settings,
     series,
     onHoverChange,
     onVisualizationClick,
-    height
+    height,
   } = props;
   const { cols } = series[0].data;
 
@@ -33,9 +33,10 @@ export default function crossfilterRowRenderer(
 
   const chart = dc.rowChart(element);
   // disable clicks
-  chart.onClick = (datum) => {
-    props.onClick(datum);
-    console.log("clicked row", datum);
+  const old = chart.onClick;
+  chart.onClick = datum => {
+    old(datum);
+    props.redrawCrossfilterGroup();
   };
 
   const formatDimension = row =>
@@ -80,10 +81,10 @@ export default function crossfilterRowRenderer(
                 {
                   key: getFriendlyName(cols[0]),
                   value: d.key,
-                  col: cols[0]
+                  col: cols[0],
                 },
-                { key: getFriendlyName(cols[1]), value: d.value, col: cols[1] }
-              ]
+                { key: getFriendlyName(cols[1]), value: d.value, col: cols[1] },
+              ],
             });
         })
         .on("mouseleave", () => {
@@ -99,15 +100,15 @@ export default function crossfilterRowRenderer(
           dimensions: [
             {
               value: d.key,
-              column: cols[0]
-            }
+              column: cols[0],
+            },
           ],
-          element: this
+          element: this,
         });
       });
     }
   });
-  chart.hasFilter = props.hasFilter
+  //chart.hasFilter = props.hasFilter
   chart
     .ordinalColors([settings.series(series[0]).color])
     .x(d3.scale.linear().domain(xDomain))
@@ -120,13 +121,13 @@ export default function crossfilterRowRenderer(
   let labelPadVertical = 1;
   let labelsOutside = false;
 
-  chart.on("renderlet.bar-labels", chart => {
-    chart
-      .selectAll("g.row text")
-      .attr("text-anchor", labelsOutside ? "end" : "start")
-      .attr("x", labelsOutside ? -labelPadHorizontal : labelPadHorizontal)
-      .classed(labelsOutside ? "outside" : "inside", true);
-  });
+  // chart.on("renderlet.bar-labels", chart => {
+  //   chart
+  //     .selectAll("g.row text")
+  //     .attr("text-anchor", labelsOutside ? "end" : "start")
+  //     .attr("x", labelsOutside ? -labelPadHorizontal : labelPadHorizontal)
+  //     .classed(labelsOutside ? "outside" : "inside", true);
+  // });
 
   if (settings["graph.y_axis.labels_enabled"]) {
     chart.on("renderlet.axis-labels", chart => {
@@ -141,9 +142,38 @@ export default function crossfilterRowRenderer(
     });
   }
 
+  const onResetClick = () => {
+    console.log("OnResetClick");
+    props.redrawCrossfilterGroup();
+  };
+  chart.on("renderlet.rest-text", (chart, filter) => {
+    if (chart.hasFilter()) {
+      chart
+        .svg()
+        .selectAll("g.reset")
+        .remove();
+      const x = chart.width() - chart.margins().right;
+      const y = chart.margins().top;
+      const textSvg = chart
+        .svg()
+        .append("g")
+        .attr("class", "reset")
+        .attr("transform", "translate(" + x + "," + y + ")")
+        .attr("x", chart.width() - chart.margins().right)
+        .attr("y", chart.margins().top)
+        .style("cursor", "pointer")
+        .on("click", () => {
+          chart.filterAll();
+          props.redrawCrossfilterGroup();
+        });
+      const text = textSvg
+        .append("text")
+        .attr("text-anchor", "middle")
+        .text("RESET");
+    }
+  });
 
- 
-  // inital render
+  // initial render
   chart.render();
 
   // bottom label height
@@ -164,7 +194,7 @@ export default function crossfilterRowRenderer(
   let maxTextHeight = Math.max(
     ...chart
       .selectAll("g.row text")[0]
-      .map(e => e.getBoundingClientRect().height)
+      .map(e => e.getBoundingClientRect().height),
   );
   let rowHeight = maxTextHeight + chart.gap() + labelPadVertical * 2;
   let cap = Math.max(1, Math.floor(containerHeight / rowHeight));
@@ -197,6 +227,6 @@ export default function crossfilterRowRenderer(
     deregister: () => {
       dc.chartRegistry.deregister(chart);
     },
-    redraw: () => chart.redraw()
+    redraw: () => chart.redraw(),
   };
 }
