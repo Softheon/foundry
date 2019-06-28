@@ -32,8 +32,8 @@ export default class CrossfilterCardRenderer extends Component {
 
   constructor(props) {
     super(props);
+    // Initialize chart's crossfilter.
     const { isCrossfilterSource } = this.props;
-
     const { rawSeries, settings } = this.props;
     const [{ data: { cols, rows } }] = rawSeries;
     const dimensions = settings["graph.dimensions"].filter(d => d != null);
@@ -68,14 +68,12 @@ export default class CrossfilterCardRenderer extends Component {
       this.props.setDimension(dimension);
       this.props.setGroup(group);
     }
-
-   // this.props.setKeyAccessor(d => d.dimensions[0].value);
   }
 
 
   shouldComponentUpdate(nextProps: Props) {
     // a chart only needs re-rendering when the result itself changes OR the chart type is different
-    if (this._redraw) {
+    if (this._redraw && this.props.activeCrossfilterGroup === this.props.crossfilterGroup) {
       this._redraw();
     }
     let sameSize =
@@ -94,7 +92,6 @@ export default class CrossfilterCardRenderer extends Component {
   }
 
   componentDidUpdate() {
-    console.log("CrossfilterCardRendered did update");
     this.renderChart();
   }
 

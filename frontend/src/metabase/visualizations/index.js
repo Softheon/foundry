@@ -19,6 +19,7 @@ import ObjectDetail from "./visualizations/ObjectDetail.jsx";
 import CrossfilterPieChart from "./visualizations/CrossfilterPieChart.jsx"
 import CrossfilterTable from "./visualizations/CrossfilterTable.jsx";
 import CrossfilterRowChart from "./visualizations/CrossfilterRowChart.jsx"
+import CrossfilterLineChart from "./visualizations/CrossfilterLineChart.jsx"
 import { t } from "c-3po";
 import _ from "underscore";
 
@@ -179,4 +180,5 @@ registerVisualization(ObjectDetail);
 registerCrossfilterVisualization(CrossfilterPieChart);
 registerCrossfilterVisualization(CrossfilterTable);
 registerCrossfilterVisualization(CrossfilterRowChart);
+registerCrossfilterVisualization(CrossfilterLineChart);
 export default visualizations;

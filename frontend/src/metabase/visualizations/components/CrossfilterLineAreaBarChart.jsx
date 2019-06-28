@@ -78,7 +78,7 @@ export default class CrossfilterLineAreaBarChart extends Component {
   static renderer: (element: Element, props: VisualizationProps) => any;
 
   static noHeader = true;
-  static supportsSeries = true;
+  static supportsSeries = false;
 
   static minSize = { width: 4, height: 3 };
 
