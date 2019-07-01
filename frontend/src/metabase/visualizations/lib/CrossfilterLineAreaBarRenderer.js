@@ -38,6 +38,7 @@ import {
   NULL_DIMENSION_WARNING,
   forceSortedGroupsOfGroups,
   initChart, // TODO - probably better named something like `initChartParent`
+  initCrossfilterChart,
   makeIndexMap,
   reduceGroup,
   isTimeseries,
@@ -87,15 +88,24 @@ const enableBrush = (series, onChangeCardAndRun) =>
 /************************************************************ SETUP ************************************************************/
 
 function checkSeriesIsValid({ series, maxSeries }) {
-  if (getFirstNonEmptySeries(series).data.cols.length < 2) {
-    throw new Error(t`This chart type requires at least 2 columns.`);
-  }
-
-  if (series.length > maxSeries) {
+  if (series.length > 1) {
     throw new Error(
-      t`This chart type doesn't support more than ${maxSeries} series of data.`,
+      t`This chart type does not support multiple series if dynamic filter is applied.`,
     );
   }
+  const seriesData = series[0].data;
+  if (seriesData.rows.length === 0 || _.isEqual(seriesData.rows, [[null]])) {
+    throw new Error(t`This main series is an empty series.`);
+  }
+  // if (getFirstNonEmptySeries(series).data.cols.length < 2) {
+  //   throw new Error(t`This chart type requires at least 2 columns.`);
+  // }
+
+  // if (series.length > maxSeries) {
+  //   throw new Error(
+  //     t`This chart type doesn't support more than ${maxSeries} series of data.`,
+  //   );
+  // }
 }
 
 function getDatas({ settings, series }, warn) {
@@ -115,15 +125,35 @@ function getDatas({ settings, series }, warn) {
   );
 }
 
+function getCrossfilterData({ settings, series, crossfilterData }, warn) {
+  const filteredGroups = crossfilterData();
+  const mainSeries = series[0];
+  const formatedRows = filteredGroups.map(group => {
+    const newRow = [
+      isDimensionTimeseries(series) && !isQuantitative(settings)
+        ? HACK_parseTimestamp(group.key, mainSeries.data.cols[0].unit, warn)
+        : isDimensionNumeric(series) ? group.key : String(group.key()),
+      group.value,
+    ];
+    return newRow;
+  });
+
+  return [formatedRows];
+}
+
 function getXInterval({ settings, series }, xValues) {
+  const mainSeries = series[0];
   if (isTimeseries(settings)) {
     // compute the interval
-    const unit = minTimeseriesUnit(series.map(s => s.data.cols[0].unit));
-    return computeTimeseriesDataInverval(xValues, unit);
+    const mainUnit = mainSeries.data.cols[0].unit;
+
+   // const unit = minTimeseriesUnit(series.map(s => s.data.cols[0].unit));
+   const unit = minTimeseriesUnit([mainUnit]); 
+   return computeTimeseriesDataInverval(xValues, unit);
   } else if (isQuantitative(settings) || isHistogram(settings)) {
     // Get the bin width from binning_info, if available
     // TODO: multiseries?
-    const binningInfo = getFirstNonEmptySeries(series).data.cols[0]
+    const binningInfo = mainSeries.data.cols[0]
       .binning_info;
     if (binningInfo) {
       return binningInfo.bin_width;
@@ -213,13 +243,13 @@ function getDimensionsAndGroupsAndUpdateSeriesDisplayNamesForStackedChart(
 
 function getDimensionsAndGroupsForOther({ series }, datas, warn) {
   const dataset = crossfilter();
-  datas.map(data => dataset.add(data));
+  datas.map(data => dataset.add(data)); // a crossfilter for all series data
 
   const dimension = dataset.dimension(d => d[0]);
   const groups = datas.map((data, seriesIndex) => {
     // If the value is empty, pass a dummy array to crossfilter
     data = data.length > 0 ? data : [[null, null]];
-
+    // a crossfilter dimension for a specific series.
     const dim = crossfilter(data).dimension(d => d[0]);
 
     return data[0]
@@ -233,6 +263,8 @@ function getDimensionsAndGroupsForOther({ series }, datas, warn) {
 
   return { dimension, groups };
 }
+
+
 
 /// Return an object containing the `dimension` and `groups` for the chart(s).
 /// For normalized stacked charts, this also updates the dispaly names to add a percent in front of the name (e.g. 'Sum' becomes '% Sum')
@@ -351,6 +383,7 @@ function makeBrushChangeFunctions({ series, onChangeCardAndRun }) {
           nextCard: updateDateTimeFilter(card, column, start, end),
           previousCard: card,
         });
+        // OnBrusEndfunction
       } else {
         onChangeCardAndRun({
           nextCard: updateNumericFilter(card, column, start, end),
@@ -767,7 +800,7 @@ export default function lineAreaBar(
     settings["graph.x_axis.scale"] = "ordinal";
   }
 
-  let datas = getDatas(props, warn);
+  let datas = getCrossfilterData(props, warn);
   let xAxisProps = getXAxisProps(props, datas);
 
   datas = fillMissingValuesInDatas(props, xAxisProps, datas);
@@ -790,7 +823,7 @@ export default function lineAreaBar(
   }
 
   const parent = dc.compositeChart(element);
-  initChart(parent, element);
+  initCrossfilterChart(parent, element);
 
   parent.settings = settings;
   parent.series = props.series;
@@ -817,7 +850,7 @@ export default function lineAreaBar(
   parent.compose(charts);
 
   if (groups.length > 1 && !props.isScalarSeries) {
-    doGroupedBarStuff(parent);
+   // doGroupedBarStuff(parent);
   } else if (isHistogramBar(props)) {
     doHistogramBarStuff(parent);
   }

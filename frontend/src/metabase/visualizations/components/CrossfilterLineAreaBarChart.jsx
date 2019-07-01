@@ -106,47 +106,48 @@ export default class CrossfilterLineAreaBarChart extends Component {
   }
 
   static seriesAreCompatible(initialSeries, newSeries) {
-    let initialSettings = getComputedSettingsForSeries([initialSeries]);
-    let newSettings = getComputedSettingsForSeries([newSeries]);
+    return false;
+    // let initialSettings = getComputedSettingsForSeries([initialSeries]);
+    // let newSettings = getComputedSettingsForSeries([newSeries]);
 
-    let initialDimensions = getColumnsFromNames(
-      initialSeries.data.cols,
-      initialSettings["graph.dimensions"],
-    );
-    let newDimensions = getColumnsFromNames(
-      newSeries.data.cols,
-      newSettings["graph.dimensions"],
-    );
-    let newMetrics = getColumnsFromNames(
-      newSeries.data.cols,
-      newSettings["graph.metrics"],
-    );
+    // let initialDimensions = getColumnsFromNames(
+    //   initialSeries.data.cols,
+    //   initialSettings["graph.dimensions"],
+    // );
+    // let newDimensions = getColumnsFromNames(
+    //   newSeries.data.cols,
+    //   newSettings["graph.dimensions"],
+    // );
+    // let newMetrics = getColumnsFromNames(
+    //   newSeries.data.cols,
+    //   newSettings["graph.metrics"],
+    // );
 
-    // must have at least one dimension and one metric
-    if (newDimensions.length === 0 || newMetrics.length === 0) {
-      return false;
-    }
+    // // must have at least one dimension and one metric
+    // if (newDimensions.length === 0 || newMetrics.length === 0) {
+    //   return false;
+    // }
 
-    // all metrics must be numeric
-    if (!_.all(newMetrics, isNumeric)) {
-      return false;
-    }
+    // // all metrics must be numeric
+    // if (!_.all(newMetrics, isNumeric)) {
+    //   return false;
+    // }
 
-    // both or neither primary dimension must be dates
-    if (isDate(initialDimensions[0]) !== isDate(newDimensions[0])) {
-      return false;
-    }
+    // // both or neither primary dimension must be dates
+    // if (isDate(initialDimensions[0]) !== isDate(newDimensions[0])) {
+    //   return false;
+    // }
 
-    // both or neither primary dimension must be numeric
-    // a timestamp field is both date and number so don't enforce the condition if both fields are dates; see #2811
-    if (
-      isNumeric(initialDimensions[0]) !== isNumeric(newDimensions[0]) &&
-      !(isDate(initialDimensions[0]) && isDate(newDimensions[0]))
-    ) {
-      return false;
-    }
+    // // both or neither primary dimension must be numeric
+    // // a timestamp field is both date and number so don't enforce the condition if both fields are dates; see #2811
+    // if (
+    //   isNumeric(initialDimensions[0]) !== isNumeric(newDimensions[0]) &&
+    //   !(isDate(initialDimensions[0]) && isDate(newDimensions[0]))
+    // ) {
+    //   return false;
+    // }
 
-    return true;
+    // return true;
   }
 
   static transformSeries(series) {
@@ -321,103 +322,43 @@ function transformSingleSeries(s, series, seriesIndex) {
   const extraColumnIndexes =
     bubbleColumnIndex && bubbleColumnIndex >= 0 ? [bubbleColumnIndex] : [];
 
-  if (dimensions.length > 1) {
-    const [dimensionColumnIndex, seriesColumnIndex] = dimensionColumnIndexes;
+  const dimensionColumnIndex = dimensionColumnIndexes[0];
+  return metricColumnIndexes.map(metricColumnIndex => {
+    const col = cols[metricColumnIndex];
     const rowColumnIndexes = [dimensionColumnIndex].concat(
-      metricColumnIndexes,
+      metricColumnIndex,
       extraColumnIndexes,
     );
+    const name = [
+      // show series title if it's multiseries
+      series.length > 1 && card.name,
+      // show column name if there are multiple metrics or sigle series
+      (metricColumnIndexes.length > 1 || series.length === 1) &&
+        getFriendlyName(col),
+    ]
+      .filter(n => n)
+      .join(": ");
 
-    const breakoutValues = [];
-    const breakoutRowsByValue = new Map();
-
-    for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-      const row = rows[rowIndex];
-      const seriesValue = row[seriesColumnIndex];
-
-      let seriesRows = breakoutRowsByValue.get(seriesValue);
-      if (!seriesRows) {
-        breakoutRowsByValue.set(seriesValue, (seriesRows = []));
-        breakoutValues.push(seriesValue);
-      }
-
-      let newRow = rowColumnIndexes.map(columnIndex => row[columnIndex]);
-      // $FlowFixMe: _origin not typed
-      newRow._origin = { seriesIndex, rowIndex, row, cols };
-      seriesRows.push(newRow);
-    }
-
-    return breakoutValues.map(breakoutValue => ({
+    return {
       card: {
         ...card,
-        // if multiseries include the card title as well as the breakout value
-        name: [
-          // show series title if it's multiseries
-          series.length > 1 && card.name,
-          // always show grouping value
-          formatValue(breakoutValue, { column: cols[seriesColumnIndex] }),
-        ]
-          .filter(n => n)
-          .join(": "),
+        name: name,
         _transformed: true,
-        _breakoutValue: breakoutValue,
-        _breakoutColumn: cols[seriesColumnIndex],
+        _seriesIndex: seriesIndex,
+        // use underlying column name as the seriesKey since it should be uniquer
+        // Except for dashboard multiseries, so check seriesIndex == 0
+        _seriesKey: seriesIndex === 0 && col ? col.name : name,
       },
       data: {
-        rows: breakoutRowsByValue.get(breakoutValue),
+        rows: rows.map((row, rowIndex) => {
+          const newRow = rowColumnIndexes.map(i => row[i]);
+          // $FlowFixMe: _origin not typed
+          newRow._origin = { seriesIndex, rowIndex, row, cols };
+          return newRow;
+        }),
         cols: rowColumnIndexes.map(i => cols[i]),
         _rawCols: cols,
       },
-      // for when the legend header for the breakout is clicked
-      clicked: {
-        dimensions: [
-          {
-            value: breakoutValue,
-            column: cols[seriesColumnIndex],
-          },
-        ],
-      },
-    }));
-  } else {
-    // dimensions.length <= 1
-    const dimensionColumnIndex = dimensionColumnIndexes[0];
-    return metricColumnIndexes.map(metricColumnIndex => {
-      const col = cols[metricColumnIndex];
-      const rowColumnIndexes = [dimensionColumnIndex].concat(
-        metricColumnIndex,
-        extraColumnIndexes,
-      );
-      const name = [
-        // show series title if it's multiseries
-        series.length > 1 && card.name,
-        // show column name if there are multiple metrics or sigle series
-        (metricColumnIndexes.length > 1 || series.length === 1) &&
-          getFriendlyName(col),
-      ]
-        .filter(n => n)
-        .join(": ");
-
-      return {
-        card: {
-          ...card,
-          name: name,
-          _transformed: true,
-          _seriesIndex: seriesIndex,
-          // use underlying column name as the seriesKey since it should be uniquer
-          // Except for dashboard multiseries, so check seriesIndex == 0
-          _seriesKey: seriesIndex === 0 && col ? col.name : name,
-        },
-        data: {
-          rows: rows.map((row, rowIndex) => {
-            const newRow = rowColumnIndexes.map(i => row[i]);
-            // $FlowFixMe: _origin not typed
-            newRow._origin = { seriesIndex, rowIndex, row, cols };
-            return newRow;
-          }),
-          cols: rowColumnIndexes.map(i => cols[i]),
-          _rawCols: cols,
-        },
-      };
-    });
-  }
+    };
+  });
 }

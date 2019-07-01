@@ -31,9 +31,9 @@ export function initCrossfilterChart(chart, element) {
   // disable animations
   //chart.transitionDuration(0);
   // disable brush
-  if (chart.brushOn) {
-    chart.brushOn(false);
-  }
+  // if (chart.brushOn) {
+  //   chart.brushOn(false);
+  // }
 }
 export function makeIndexMap(values: Array<Value>): Map<Value, number> {
   let indexMap = new Map();
