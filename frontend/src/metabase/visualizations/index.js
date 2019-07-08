@@ -23,6 +23,8 @@ import CrossfilterLineChart from "./visualizations/CrossfilterLineChart.jsx";
 import CrossfilterAreaChart from "./visualizations/CrossfilterAreaChart.jsx";
 import CrossfilterBarChart from "./visualizations/CrossfilterBarChart.jsx";
 import CrossfilterScatterPlot from "./visualizations/CrossfilterScatterPlot.jsx";
+import CrossfilterMap from "./visualizations/CrossfilterMap.jsx";
+
 import { t } from "c-3po";
 import _ from "underscore";
 
@@ -187,4 +189,5 @@ registerCrossfilterVisualization(CrossfilterLineChart);
 registerCrossfilterVisualization(CrossfilterAreaChart);
 registerCrossfilterVisualization(CrossfilterBarChart);
 registerCrossfilterVisualization(CrossfilterScatterPlot);
+registerCrossfilterVisualization(CrossfilterMap);
 export default visualizations;

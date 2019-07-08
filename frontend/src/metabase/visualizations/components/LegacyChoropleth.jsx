@@ -11,6 +11,7 @@ const LegacyChoropleth = ({
   getColor,
   onHoverFeature,
   onClickFeature,
+  getFillOpacity
 }) => {
   let geo = d3.geo.path().projection(projection);
 
@@ -41,6 +42,7 @@ const LegacyChoropleth = ({
                     event: e.nativeEvent,
                   })
                 }
+                fillOpacity={getFillOpacity(feature)}
                 onMouseLeave={() => onHoverFeature(null)}
                 className={cx({ "cursor-pointer": !!onClickFeature })}
                 onClick={

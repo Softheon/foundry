@@ -16,6 +16,7 @@ export default function connectWithCrossfilter(WrappedComponent) {
     static seriesAreCompatible = WrappedComponent.seriesAreCompatible;
     static transformSeries = WrappedComponent.transformSeries;
     static noHeader = WrappedComponent.noHeader;
+    static aliases = WrappedComponent.aliases;
     constructor(props) {
       super(props);
       this.initializeCharCrossfilter();
@@ -357,6 +358,7 @@ export default function connectWithCrossfilter(WrappedComponent) {
           filterAll={this.filterAll}
           isCrossfilterSource={this.props.isCrossfilterSource}
           getCrossfilterGroupId={this.props.getCrossfilterGroupId}
+          enableCrossfilter={true}
         />
       );
     }

@@ -749,8 +749,6 @@
             (let [first-element (get mbql 0 nil)
                   second-element (get mbql 1 nil)
                   third-element (get mbql 2 nil)]
-              (log/info (identity second-element))
-              (log/info (identity third-element))
               (cond
                 (= (name first-element) "field-id") (recur size
                                                            size (conj

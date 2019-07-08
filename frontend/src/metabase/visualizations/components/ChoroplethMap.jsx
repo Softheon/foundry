@@ -2,6 +2,7 @@
 
 import React, { Component } from "react";
 import { t } from "c-3po";
+import crossfilter from "crossfilter";
 import LoadingSpinner from "metabase/components/LoadingSpinner.jsx";
 
 import { isString } from "metabase/lib/schema_metadata";
@@ -90,11 +91,82 @@ export default class ChoroplethMap extends Component {
       geoJson: null,
       geoJsonPath: null,
     };
+    console.log("xia: choroplethmap props", props);
+    const { isCrossfilterSource, enableCrossfilter } = this.props;
+    let dataset = null;
+    if (isCrossfilterSource && enableCrossfilter) {
+      const { rawSeries } = this.props;
+      const [{ data: { cols, rows } }] = rawSeries;
+      dataset = crossfilter(rows);
+    } else if (enableCrossfilter) {
+      dataset = this.props.getSourceCrossfilter();
+    }
+    if (enableCrossfilter) {
+      const { dimension, dimensionIndex } = this.initializeDimension(dataset);
+      const { group, metricIndex } = this.initializeGroup(dimension);
+      if (enableCrossfilter) {
+        this.props.addSourceCrossfilter({
+          crossfilter: dataset,
+          dimension,
+          group,
+          dimensionIndex,
+          metricIndex,
+        });
+      } else {
+        this.props.setDimension(dimension);
+        this.props.setGroup(group);
+      }
+    }
   }
+
+  initializeDimension(crossfilter) {
+    const { settings, series } = this.props;
+    const [{ data: { cols } }] = series;
+    const dimensionIndex = _.findIndex(
+      cols,
+      col => col.name === settings["map.dimension"],
+    );
+    const dimension = crossfilter.dimension(d => d[dimensionIndex]);
+    return { dimension, dimensionIndex };
+  }
+
+  initializeGroup(dimension) {
+    const { settings, series } = this.props;
+    const [{ data: { cols } }] = series;
+    const metricIndex = _.findIndex(
+      cols,
+      col => col.name === settings["map.metric"],
+    );
+    const group = dimension.group().reduceSum(d => d[metricIndex]);
+    return { group, metricIndex };
+  }
+
+  getFilteredRows = () => {
+    const data = this.props.crossfilterData();
+    return data.map(d => [d.key, d.value]);
+  };
+
+  isSelectedNode = d => {
+    return this.props.hasFilter(d);
+  };
 
   componentWillMount() {
     this.componentWillReceiveProps(this.props);
   }
+
+  componentDidMount() {
+    const { isCrossfilterSource, enableCrossfilter} = this.props;
+    if (isCrossfilterSource && enableCrossfilter) {
+      this.props.redrawCrossfilterGroup();
+    }
+  }
+
+  
+  // shouldComponentUpdate(nextProps, nextState) {
+
+  //   return nextProps.enableCrossfilter &&nextProps.activeGroup === this.props.crossfilterGroup;
+  // }
+
 
   _getDetails(props) {
     return MetabaseSettings.get("custom_geojson", {})[
@@ -166,7 +238,11 @@ export default class ChoroplethMap extends Component {
       );
     }
 
-    const [{ data: { cols, rows } }] = series;
+    let [{ data: { cols, rows } }] = series;
+    if (this.props.enableCrossfilter) {
+      rows = this.getFilteredRows();
+    }
+
     const dimensionIndex = _.findIndex(
       cols,
       col => col.name === settings["map.dimension"],
@@ -202,19 +278,26 @@ export default class ChoroplethMap extends Component {
       ],
     });
 
-    const isClickable =
+    let isClickable =
       onVisualizationClick &&
       visualizationIsClickable(getFeatureClickObject(rows[0]));
+    if (this.props.enableCrossfilter) {
+      isClickable = true;
+    }
 
     const onClickFeature =
       isClickable &&
       (click => {
         const row = rowByFeatureKey.get(getFeatureKey(click.feature));
         if (row && onVisualizationClick) {
-          onVisualizationClick({
-            ...getFeatureClickObject(row),
-            event: click.event,
-          });
+          if (this.props.enableCrossfilter) {
+            this.props.onClick({ key: row[dimensionIndex] });
+          } else {
+            onVisualizationClick({
+              ...getFeatureClickObject(row),
+              event: click.event,
+            });
+          }
         }
       });
     const onHoverFeature =
@@ -262,6 +345,19 @@ export default class ChoroplethMap extends Component {
       return value == null ? HEAT_MAP_ZERO_COLOR : colorScale(value);
     };
 
+    const getFillOpacity = feature => {
+      if (!this.props.enableCrossfilter) {
+        return 1;
+      }
+      if (this.props.hasFilter()) {
+        const row = rowByFeatureKey.get(getFeatureKey(feature));
+        const key = row[dimensionIndex];
+        return this.props.hasFilter(key) ? 0.3 : 1;
+      } else {
+        return 1;
+      }
+    };
+
     let aspectRatio;
     if (projection) {
       let translate = projection.translate();
@@ -292,6 +388,7 @@ export default class ChoroplethMap extends Component {
             onHoverFeature={onHoverFeature}
             onClickFeature={onClickFeature}
             projection={projection}
+            getFillOpacity={getFillOpacity}
           />
         ) : (
           <LeafletChoropleth
@@ -301,6 +398,7 @@ export default class ChoroplethMap extends Component {
             onHoverFeature={onHoverFeature}
             onClickFeature={onClickFeature}
             minimalBounds={minimalBounds}
+            getFillOpacity={getFillOpacity}
           />
         )}
       </ChartWithLegend>

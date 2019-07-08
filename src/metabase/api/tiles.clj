@@ -1,6 +1,7 @@
 (ns metabase.api.tiles
   "`/api/tiles` endpoints."
   (:require [cheshire.core :as json]
+            [clojure.tools.logging :as log]
             [compojure.core :refer [GET]]
             [metabase
              [query-processor :as qp]
@@ -142,12 +143,12 @@
         updated-query
         (-> query
             (update :query query-with-inside-filter lat-field-id lon-field-id x y zoom)
-            (assoc :async? true))
+            (assoc :async? false))
         {:keys [status], {:keys [rows]} :data, :as result}
         (qp/process-query-and-save-execution! updated-query
                                               {:executed-by api/*current-user-id*
                                                :context :map-tiles})
-        ;; make sure query completed successfully, or API endpoint should return 400
+        ;; make sure query completed successfully, or API endpoint should return 400      
         _
         (when-not (= status :completed)
           (throw (ex-info (str (tru "Query failed"))

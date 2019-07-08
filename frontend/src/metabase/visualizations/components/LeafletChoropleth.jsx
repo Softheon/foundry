@@ -15,6 +15,7 @@ const LeafletChoropleth = ({
   geoJson,
   minimalBounds = computeMinimalBounds(geoJson.features),
   getColor = () => normal.blue,
+  getFillOpacity = () => 1,
   onHoverFeature = () => {},
   onClickFeature = () => {},
 }) => (
@@ -50,7 +51,7 @@ const LeafletChoropleth = ({
         weight: 1,
         opacity: 1,
         color: "white",
-        fillOpacity: 1,
+        fillOpacity: getFillOpacity(feature),
       });
 
       const onEachFeature = (feature, layer) => {
