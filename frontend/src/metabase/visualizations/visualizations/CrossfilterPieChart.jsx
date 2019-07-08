@@ -162,23 +162,13 @@ export default class CrossfilterPieChart extends Component {
       this.props.setDimension(dimension);
       this.props.setGroup(group);
     }
-
-    // this.props.setKeyAccessor(d => d.dimensions[0].value);
   }
 
   componentDidUpdate() {
-    // let groupElement = ReactDOM.findDOMNode(this.refs.group);
-    // let detailElement = ReactDOM.findDOMNode(this.refs.detail);
-    // if (groupElement.getBoundingClientRect().width < 100) {
-    //   detailElement.classList.add("hide");
-    // } else {
-    //   detailElement.classList.remove("hide");
-    // }
+
   }
 
   componentDidMount() {
-    // console.log("xia:  PieChartSVG ref", this.refs.PieChartSVG);
-
     const { isCrossfilterSource } = this.props;
 
     if (isCrossfilterSource) {
@@ -187,10 +177,9 @@ export default class CrossfilterPieChart extends Component {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    if (nextProps.activeGroup === this.props.crossfilterGroup) {
-      return true;
-    }
+   return nextProps.activeGroup === this.props.crossfilterGroup;
   }
+  
   initializeDimension(crossfilter) {
     const { settings } = this.props;
     const dimensionIndex = settings["pie._dimensionIndex"];

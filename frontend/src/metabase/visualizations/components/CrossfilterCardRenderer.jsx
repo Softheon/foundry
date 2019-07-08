@@ -53,8 +53,29 @@ export default class CrossfilterCardRenderer extends Component {
     } else {
       dataset = this.props.getSourceCrossfilter();
     }
-    const dimension = dataset.dimension(d => d[dimensionColumnIndex]);
-    const group = dimension.group().reduceSum(d => d[metricColumnIndex]);
+    let dimension;
+    let group;
+    const { bubbleColumnIndex } = this.props;
+    if (this.props.chartDisplayType === "scatter" && bubbleColumnIndex != -1) {
+      dimension = dataset.dimension(d => {
+        let data = [
+          d[dimensionColumnIndex],
+          d[metricColumnIndex],
+          d[bubbleColumnIndex]
+        ];
+        data._origin = {
+          seriesIndex: 1,
+          row: d,
+          cols: cols
+        };
+        return data;
+      });
+
+      group = dimension.group().reduceSum(d => d[bubbleColumnIndex] || 1);
+    } else {
+      dimension = dataset.dimension(d => d[dimensionColumnIndex]);
+      group = dimension.group().reduceSum(d => d[metricColumnIndex]);
+    }
 
     if (isCrossfilterSource) {
       this.props.addSourceCrossfilter({
@@ -70,10 +91,12 @@ export default class CrossfilterCardRenderer extends Component {
     }
   }
 
-
   shouldComponentUpdate(nextProps: Props) {
     // a chart only needs re-rendering when the result itself changes OR the chart type is different
-    if (this._redraw && this.props.activeCrossfilterGroup === this.props.crossfilterGroup) {
+    if (
+      this._redraw &&
+      this.props.activeCrossfilterGroup === this.props.crossfilterGroup
+    ) {
       this._redraw();
     }
     let sameSize =

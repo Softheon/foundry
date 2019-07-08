@@ -361,7 +361,7 @@ export const nativeQueryGroupsBySQL = createSelector(
   [getSQLDashcards],
   (nativeDashcards) => {
     const map = new Map();
-    console.log("xia: selectors, nativeDashcards", nativeDashcards);
+    //console.log("xia: selectors, nativeDashcards", nativeDashcards);
     nativeDashcards.map(nativeDashcard => {
       const { card } = nativeDashcard;
       const query = card.dataset_query.native.query;

@@ -12,7 +12,7 @@ import {
   computeSplit,
   getFriendlyName,
   getXValues,
-  colorShades,
+  colorShades
 } from "./utils";
 
 import { minTimeseriesUnit, computeTimeseriesDataInverval } from "./timeseries";
@@ -23,7 +23,7 @@ import {
   applyChartTimeseriesXAxis,
   applyChartQuantitativeXAxis,
   applyChartOrdinalXAxis,
-  applyChartYAxis,
+  applyChartYAxis
 } from "./apply_axis";
 
 import { setupTooltips } from "./apply_tooltips";
@@ -52,7 +52,7 @@ import {
   isDimensionTimeseries,
   isDimensionNumeric,
   isRemappedToString,
-  isMultiCardSeries,
+  isMultiCardSeries
 } from "./renderer_utils";
 
 import lineAndBarOnRender from "./LineAreaBarPostRender";
@@ -61,11 +61,11 @@ import { isStructured } from "metabase/meta/Card";
 
 import {
   updateDateTimeFilter,
-  updateNumericFilter,
+  updateNumericFilter
 } from "metabase/qb/lib/actions";
 
 import { lineAddons } from "./graph/addons";
-import { initBrush } from "./graph/brush";
+import { initCrossfilterBrush } from "./graph/CrossfilterBrush";
 
 import type { VisualizationProps } from "metabase/meta/types/Visualization";
 
@@ -74,23 +74,18 @@ const DEFAULT_INTERPOLATION = "linear";
 
 const UNAGGREGATED_DATA_WARNING = col =>
   t`"${getFriendlyName(
-    col,
+    col
   )}" is an unaggregated field: if it has more than one value at a point on the x-axis, the values will be summed.`;
 
 const enableBrush = (series, onChangeCardAndRun) =>
-  !!(
-    onChangeCardAndRun &&
-    !isMultiCardSeries(series) &&
-    isStructured(series[0].card) &&
-    !isRemappedToString(series)
-  );
+  !!(!isMultiCardSeries(series) && !isRemappedToString(series));
 
 /************************************************************ SETUP ************************************************************/
 
 function checkSeriesIsValid({ series, maxSeries }) {
   if (series.length > 1) {
     throw new Error(
-      t`This chart type does not support multiple series if dynamic filter is applied.`,
+      t`This chart type does not support multiple series if dynamic filter is applied.`
     );
   }
   const seriesData = series[0].data;
@@ -116,29 +111,36 @@ function getDatas({ settings, series }, warn) {
         isDimensionTimeseries(series) && !isQuantitative(settings)
           ? HACK_parseTimestamp(row[0], s.data.cols[0].unit, warn)
           : isDimensionNumeric(series) ? row[0] : String(row[0]),
-        ...row.slice(1),
+        ...row.slice(1)
       ];
       // $FlowFixMe: _origin not typed
       newRow._origin = row._origin;
       return newRow;
-    }),
+    })
   );
 }
 
-function getCrossfilterData({ settings, series, crossfilterData }, warn) {
-  const filteredGroups = crossfilterData();
+function getFormatedCrossfilterData(
+  { settings, series, crossfilterData },
+  isScatter = false,
+  warn
+) {
   const mainSeries = series[0];
-  const formatedRows = filteredGroups.map(group => {
+  let data = crossfilterData();
+  data = isScatter
+    ? data.map(d => [d.key[0], d.key[1], d.key[2]])
+    : data.map(d => [d.key, d.value]);
+  const rows = data.map(row => {
     const newRow = [
       isDimensionTimeseries(series) && !isQuantitative(settings)
-        ? HACK_parseTimestamp(group.key, mainSeries.data.cols[0].unit, warn)
-        : isDimensionNumeric(series) ? group.key : String(group.key()),
-      group.value,
+        ? HACK_parseTimestamp(row[0], mainSeries.data.cols[0].unit, warn)
+        : isDimensionNumeric(series) ? row[0] : String(row[0]),
+      ...row.slice(1)
     ];
     return newRow;
   });
 
-  return [formatedRows];
+  return [rows];
 }
 
 function getXInterval({ settings, series }, xValues) {
@@ -147,14 +149,13 @@ function getXInterval({ settings, series }, xValues) {
     // compute the interval
     const mainUnit = mainSeries.data.cols[0].unit;
 
-   // const unit = minTimeseriesUnit(series.map(s => s.data.cols[0].unit));
-   const unit = minTimeseriesUnit([mainUnit]); 
-   return computeTimeseriesDataInverval(xValues, unit);
+    // const unit = minTimeseriesUnit(series.map(s => s.data.cols[0].unit));
+    const unit = minTimeseriesUnit([mainUnit]);
+    return computeTimeseriesDataInverval(xValues, unit);
   } else if (isQuantitative(settings) || isHistogram(settings)) {
     // Get the bin width from binning_info, if available
     // TODO: multiseries?
-    const binningInfo = mainSeries.data.cols[0]
-      .binning_info;
+    const binningInfo = mainSeries.data.cols[0].binning_info;
     if (binningInfo) {
       return binningInfo.bin_width;
     }
@@ -171,22 +172,28 @@ function getXAxisProps(props, datas) {
     xValues,
     xDomain: d3.extent(xValues),
     xInterval: getXInterval(props, xValues),
-    isHistogramBar: isHistogramBar(props),
+    isHistogramBar: isHistogramBar(props)
   };
 }
 
 ///------------------------------------------------------------ DIMENSIONS & GROUPS ------------------------------------------------------------///
 
-function getDimensionsAndGroupsForScatterChart(datas) {
-  const dataset = crossfilter();
-  datas.map(data => dataset.add(data));
+function getDimensionsAndGroupsForScatterChart(
+  datas,
+  { getGroup, getDimension }
+) {
+  // // const dataset = crossfilter();
+  // datas.map(data => dataset.add(data));
 
-  const dimension = dataset.dimension(row => row);
-  const groups = datas.map(data => {
-    const dim = crossfilter(data).dimension(row => row);
-    return [dim.group().reduceSum(d => d[2] || 1)];
-  });
+  // //const dimension = dataset.dimension(row => row);
+  // const groups = datas.map(data => {
+  //   const dim = crossfilter(data).dimension(row => row);
+  //   return [dim.group().reduceSum(d => d[2] || 1)];
+  // });
 
+  const dimension = getDimension();
+  const group = getGroup();
+  const groups = [[group]];
   return { dimension, groups };
 }
 
@@ -195,15 +202,15 @@ function addPercentSignsToDisplayNames(series) {
   return series.map(s =>
     updateIn(s, ["data", "cols", 1], col => ({
       ...col,
-      display_name: "% " + getFriendlyName(col),
-    })),
+      display_name: "% " + getFriendlyName(col)
+    }))
   );
 }
 
 function getDimensionsAndGroupsAndUpdateSeriesDisplayNamesForStackedChart(
   props,
   datas,
-  warn,
+  warn
 ) {
   const dataset = crossfilter();
 
@@ -224,47 +231,33 @@ function getDimensionsAndGroupsAndUpdateSeriesDisplayNamesForStackedChart(
     dataset.add(
       data.map(d => ({
         [0]: d[0],
-        [i + 1]: normalized ? d[1] / scaleFactors[d[0]] : d[1],
-      })),
-    ),
+        [i + 1]: normalized ? d[1] / scaleFactors[d[0]] : d[1]
+      }))
+    )
   );
 
   const dimension = dataset.dimension(d => d[0]);
   const groups = [
     datas.map((data, seriesIndex) =>
       reduceGroup(dimension.group(), seriesIndex + 1, () =>
-        warn(UNAGGREGATED_DATA_WARNING(props.series[seriesIndex].data.cols[0])),
-      ),
-    ),
+        warn(UNAGGREGATED_DATA_WARNING(props.series[seriesIndex].data.cols[0]))
+      )
+    )
   ];
 
   return { dimension, groups };
 }
 
-function getDimensionsAndGroupsForOther({ series }, datas, warn) {
-  const dataset = crossfilter();
-  datas.map(data => dataset.add(data)); // a crossfilter for all series data
-
-  const dimension = dataset.dimension(d => d[0]);
-  const groups = datas.map((data, seriesIndex) => {
-    // If the value is empty, pass a dummy array to crossfilter
-    data = data.length > 0 ? data : [[null, null]];
-    // a crossfilter dimension for a specific series.
-    const dim = crossfilter(data).dimension(d => d[0]);
-
-    return data[0]
-      .slice(1)
-      .map((_, metricIndex) =>
-        reduceGroup(dim.group(), metricIndex + 1, () =>
-          warn(UNAGGREGATED_DATA_WARNING(series[seriesIndex].data.cols[0])),
-        ),
-      );
-  });
-
+function getDimensionsAndGroupsForOther(
+  { series, getGroup, getDimension },
+  datas,
+  warn
+) {
+  const dimension = getDimension();
+  const group = getGroup();
+  const groups = [[group]];
   return { dimension, groups };
 }
-
-
 
 /// Return an object containing the `dimension` and `groups` for the chart(s).
 /// For normalized stacked charts, this also updates the dispaly names to add a percent in front of the name (e.g. 'Sum' becomes '% Sum')
@@ -272,12 +265,12 @@ function getDimensionsAndGroupsAndUpdateSeriesDisplayNames(props, datas, warn) {
   const { settings, chartType } = props;
 
   return chartType === "scatter"
-    ? getDimensionsAndGroupsForScatterChart(datas)
+    ? getDimensionsAndGroupsForScatterChart(datas, props)
     : isStacked(settings, datas)
       ? getDimensionsAndGroupsAndUpdateSeriesDisplayNamesForStackedChart(
           props,
           datas,
-          warn,
+          warn
         )
       : getDimensionsAndGroupsForOther(props, datas, warn);
 }
@@ -287,7 +280,7 @@ function getDimensionsAndGroupsAndUpdateSeriesDisplayNames(props, datas, warn) {
 function getYAxisSplit(
   { settings, chartType, isScalarSeries, series },
   datas,
-  yExtents,
+  yExtents
 ) {
   const seriesAxis = series.map(single => settings.series(single)["axis"]);
   const left = [];
@@ -322,7 +315,7 @@ function getYAxisSplit(
     const [autoLeft, autoRight] = computeSplit(yExtents);
     return [
       _.uniq([...left, ...autoLeft.filter(index => !seriesAxis[index])]),
-      _.uniq([...right, ...autoRight.filter(index => !seriesAxis[index])]),
+      _.uniq([...right, ...autoRight.filter(index => !seriesAxis[index])])
     ];
   } else {
     // assign all auto to the left
@@ -333,7 +326,7 @@ function getYAxisSplit(
 function getYAxisSplitLeftAndRight(series, yAxisSplit, yExtents) {
   return yAxisSplit.map(indexes => ({
     series: indexes.map(index => series[index]),
-    extent: d3.extent([].concat(...indexes.map(index => yExtents[index]))),
+    extent: d3.extent([].concat(...indexes.map(index => yExtents[index])))
   }));
 }
 
@@ -348,7 +341,7 @@ function getYAxisProps(props, groups, datas) {
   const [yLeftSplit, yRightSplit] = getYAxisSplitLeftAndRight(
     props.series,
     yAxisSplit,
-    yExtents,
+    yExtents
   );
 
   return {
@@ -357,13 +350,17 @@ function getYAxisProps(props, groups, datas) {
     yExtent: d3.extent([].concat(...yExtents)),
     yLeftSplit,
     yRightSplit,
-    isSplit: getIsSplitYAxis(yLeftSplit, yRightSplit),
+    isSplit: getIsSplitYAxis(yLeftSplit, yRightSplit)
   };
 }
 
 /// make the `onBrushChange()` and `onBrushEnd()` functions we'll use later, as well as an `isBrushing()` function to check
 /// current status.
-function makeBrushChangeFunctions({ series, onChangeCardAndRun }) {
+function makeBrushChangeFunctions({
+  series,
+  onChangeCardAndRun,
+  redrawCrossfilterGroup
+}) {
   let _isBrushing = false;
 
   const isBrushing = () => _isBrushing;
@@ -372,24 +369,13 @@ function makeBrushChangeFunctions({ series, onChangeCardAndRun }) {
     _isBrushing = true;
   }
 
-  function onBrushEnd(range) {
+  function onBrushEnd(range, chart) {
     _isBrushing = false;
     if (range) {
-      const column = series[0].data.cols[0];
-      const card = series[0].card;
-      const [start, end] = range;
-      if (isDimensionTimeseries(series)) {
-        onChangeCardAndRun({
-          nextCard: updateDateTimeFilter(card, column, start, end),
-          previousCard: card,
-        });
-        // OnBrusEndfunction
-      } else {
-        onChangeCardAndRun({
-          nextCard: updateNumericFilter(card, column, start, end),
-          previousCard: card,
-        });
-      }
+      // const column = series[0].data.cols[0];
+      // const card = series[0].card;
+      // const [start, end] = range;
+      // //redrawCrossfilterGroup();
     }
   }
 
@@ -418,7 +404,7 @@ function applyChartLineBarSettings(
   settings,
   chartType,
   seriesSettings,
-  forceCenterBar,
+  forceCenterBar
 ) {
   // LINE/AREA:
   // for chart types that have an 'interpolate' option (line/area charts), enable based on settings
@@ -426,7 +412,7 @@ function applyChartLineBarSettings(
     chart.interpolate(
       seriesSettings["line.interpolate"] ||
         settings["line.interpolate"] ||
-        DEFAULT_INTERPOLATION,
+        DEFAULT_INTERPOLATION
     );
   }
 
@@ -440,15 +426,28 @@ function applyChartLineBarSettings(
     chart
       .barPadding(BAR_PADDING_RATIO)
       .centerBar(
-        forceCenterBar || settings["graph.x_axis.scale"] !== "ordinal",
+        forceCenterBar || settings["graph.x_axis.scale"] !== "ordinal"
       );
   }
 }
 
 // TODO - give this a good name when I figure out what it does
-function doScatterChartStuff(chart, datas, index, { yExtent, yExtents }) {
-  chart.keyAccessor(d => d.key[0]).valueAccessor(d => d.key[1]);
-
+function doScatterChartStuff(
+  chart,
+  datas,
+  index,
+  { yExtent, yExtents },
+  { isTimeDimension, isNumericDimension, keyColumn }
+) {
+  chart.keyAccessor(d => {
+    const key = d.key[0];
+   return isTimeDimension
+        ? HACK_parseTimestamp(key, keyColumn.unit, null)
+        : isNumericDimension ? key : String(key);
+    
+  });
+  
+  chart.valueAccessor(d => d.key[1]);
   if (chart.radiusValueAccessor) {
     const isBubble = datas[index][0].length > 2;
     if (isBubble) {
@@ -457,13 +456,52 @@ function doScatterChartStuff(chart, datas, index, { yExtent, yExtents }) {
         d3.scale
           .sqrt()
           .domain([0, yExtent[1] * BUBBLE_SCALE_FACTOR_MAX])
-          .range([0, 1]),
+          .range([0, 1])
       );
     } else {
       chart.radiusValueAccessor(d => 1);
       chart.MIN_RADIUS = 3;
     }
     chart.minRadiusWithLabel(Infinity);
+  }
+
+  // update scatter filterhandler
+  chart.filterHandler((dimension, filters) => {
+    if (filters.length === 0) {
+      dimension.filter(null);
+    } else {
+      dimension.filterFunction(function(d) {
+    
+        const dimensionKey = d[0];
+        for (let i = 0; i < filters.length; i++) {
+          let filter = filters[i];
+          let value = isTimeDimension 
+            ?  HACK_parseTimestamp(dimensionKey, keyColumn.unit, x=>x)
+            : isNumericDimension ? dimensionKey : String(dimensionKey);
+          if (filter.isFiltered && filter.isFiltered(value)) { 
+            return true;
+          } else if (filter <= value && filter >= value) {
+            return true;
+          }
+        }   
+        return false;
+      });
+    }
+    return filters;
+  });
+
+  chart.isSelectedNode = d => {
+    const filter = chart.filter();
+    const dimensionKey = d.key[0];
+    const value = isTimeDimension 
+            ?  HACK_parseTimestamp(dimensionKey, keyColumn.unit, x=>x)
+            : isNumericDimension ? dimensionKey : String(dimensionKey);
+     if (filter.isFiltered && filter.isFiltered(value)) {
+       return true;
+     } else if (filter <= value && filter >= value) {
+       return true;
+     }
+     return false;
   }
 }
 
@@ -486,7 +524,7 @@ function setChartColor({ series, settings, chartType }, chart, groups, index) {
     }
   } else {
     chart.ordinalColors(
-      series.map(single => colorsByKey[keyForSingleSeries(single)]),
+      series.map(single => colorsByKey[keyForSingleSeries(single)])
     );
   }
 }
@@ -508,9 +546,15 @@ function getCharts(
   datas,
   groups,
   dimension,
-  { onBrushChange, onBrushEnd },
+  { onBrushChange, onBrushEnd }
 ) {
-  const { settings, chartType, series, onChangeCardAndRun } = props;
+  const {
+    settings,
+    chartType,
+    series,
+    onChangeCardAndRun,
+    redrawCrossfilterGroup
+  } = props;
   const { yAxisSplit } = yAxisProps;
 
   const isHeterogenous =
@@ -535,7 +579,10 @@ function getCharts(
         });
     });
   }
-
+  const column = series[0].data.cols[0];
+  const isTimeDimension = isDimensionTimeseries(series);
+  const isNumericDimension = isDimensionNumeric(series);
+   const mainSeries = series[0];
   return groups.map((group, index) => {
     const single = series[index];
     const seriesSettings = settings.series(single);
@@ -544,28 +591,52 @@ function getCharts(
     const chart = getDcjsChart(seriesChartType, parent);
 
     if (enableBrush(series, onChangeCardAndRun)) {
-      initBrush(parent, chart, onBrushChange, onBrushEnd);
+      initCrossfilterBrush(parent, chart, onBrushChange, onBrushEnd);
     }
 
     // disable clicks
     chart.onClick = () => {};
 
-    chart
-      .dimension(dimension)
-      .group(group[0])
-      .transitionDuration(0)
-      .useRightYAxis(yAxisSplit.length > 1 && yAxisSplit[1].includes(index));
+    chart.keyAccessor(d => {
+      return isTimeDimension
+        ? HACK_parseTimestamp(d.key, column.unit, null)
+        : isNumericDimension ? d.key : String(d.key);
+    });
 
-    if (chartType === "scatter") {
-      doScatterChartStuff(chart, datas, index, yAxisProps);
+
+    if (isTimeDimension) {
+      chart.filterHandler((dimension, filters) => {
+        if (filters.length === 0) {
+          dimension.filter(null);
+        } else if (filters.length === 1 && !filters[0].isFiltered) {
+          // single value and not a function-based filter
+          dimension.filterExact(filters[0]);
+        } else {
+          dimension.filterFunction(function(d) {
+            for (let i = 0; i < filters.length; i++) {
+              let filter = filters[i];
+              let value = HACK_parseTimestamp(d, column.unit, null);
+              if (filter.isFiltered && filter.isFiltered(value)) {
+                return true;
+              } else if (filter <= value && filter >= value) {
+                return true;
+              }
+            }
+            return false;
+          });
+        }
+        return filters;
+      });
     }
 
-    if (chart.defined) {
-      chart.defined(
-        seriesSettings["line.missing"] === "none"
-          ? d => d.y != null
-          : d => true,
-      );
+    chart.dimension(dimension).group(group[0]);
+
+    if (chartType === "scatter") {
+      doScatterChartStuff(chart, datas, index, yAxisProps, {
+        isTimeDimension,
+        isNumericDimension,
+        keyColumn: column
+      });
     }
 
     setChartColor(props, chart, groups, index);
@@ -579,7 +650,7 @@ function getCharts(
       settings,
       seriesChartType,
       seriesSettings,
-      isHeterogenousOrdinal,
+      isHeterogenousOrdinal
     );
 
     return chart;
@@ -593,7 +664,7 @@ function addGoalChartAndGetOnGoalHover(
   { settings, onHoverChange },
   xDomain,
   parent,
-  charts,
+  charts
 ) {
   if (!settings["graph.show_goal"]) {
     return () => {};
@@ -627,8 +698,8 @@ function addGoalChartAndGetOnGoalHover(
     onHoverChange(
       element && {
         element,
-        data: [{ key: settings["graph.goal_label"], value: goalValue }],
-      },
+        data: [{ key: settings["graph.goal_label"], value: goalValue }]
+      }
     );
   };
 }
@@ -636,7 +707,7 @@ function addGoalChartAndGetOnGoalHover(
 function findSeriesIndexForColumnName(series, colName) {
   return (
     _.findIndex(series, ({ data: { cols } }) =>
-      _.findWhere(cols, { name: colName }),
+      _.findWhere(cols, { name: colName })
     ) || 0
   );
 }
@@ -648,7 +719,7 @@ function addTrendlineChart(
   { xDomain },
   { yAxisSplit },
   parent,
-  charts,
+  charts
 ) {
   if (!settings["graph.show_trendline"]) {
     return;
@@ -723,7 +794,7 @@ function doGroupedBarStuff(parent) {
       .map(node => node.parentNode.parentNode.parentNode);
     if (barCharts.length > 0) {
       const oldBarWidth = parseFloat(
-        barCharts[0].querySelector("rect").getAttribute("width"),
+        barCharts[0].querySelector("rect").getAttribute("width")
       );
       const newBarWidthTotal = oldBarWidth / barCharts.length;
       const seriesPadding =
@@ -734,7 +805,7 @@ function doGroupedBarStuff(parent) {
       barCharts.forEach((barChart, index) => {
         barChart.setAttribute(
           "transform",
-          "translate(" + (newBarWidth + seriesPadding) * index + ", 0)",
+          "translate(" + (newBarWidth + seriesPadding) * index + ", 0)"
         );
       });
     }
@@ -774,16 +845,16 @@ function doHistogramBarStuff(parent) {
 type LineAreaBarProps = VisualizationProps & {
   chartType: "line" | "area" | "bar" | "scatter",
   isScalarSeries: boolean,
-  maxSeries: number,
+  maxSeries: number
 };
 
 type DeregisterFunction = () => void;
 
 export default function lineAreaBar(
   element: Element,
-  props: LineAreaBarProps,
+  props: LineAreaBarProps
 ): DeregisterFunction {
-  const { onRender, isScalarSeries, settings, series } = props;
+  const { onRender, isScalarSeries, settings, series, chartType } = props;
 
   const warnings = {};
   const warn = id => {
@@ -799,12 +870,13 @@ export default function lineAreaBar(
     settings["line.missing"] = "zero";
     settings["graph.x_axis.scale"] = "ordinal";
   }
-
-  let datas = getCrossfilterData(props, warn);
+  const isScatterChart = chartType === "scatter" ? true : false;
+  //let datas = getDatas(props, warn);
+  let datas = getFormatedCrossfilterData(props, isScatterChart, warn);
   let xAxisProps = getXAxisProps(props, datas);
 
-  datas = fillMissingValuesInDatas(props, xAxisProps, datas);
-  xAxisProps = getXAxisProps(props, datas);
+  //datas = fillMissingValuesInDatas(props, xAxisProps, datas);
+  // xAxisProps = getXAxisProps(props, datas);
 
   if (isScalarSeries) {
     xAxisProps.xValues = datas.map(data => data[0][0]);
@@ -812,7 +884,7 @@ export default function lineAreaBar(
 
   const {
     dimension,
-    groups,
+    groups
   } = getDimensionsAndGroupsAndUpdateSeriesDisplayNames(props, datas, warn);
 
   const yAxisProps = getYAxisProps(props, groups, datas);
@@ -827,30 +899,81 @@ export default function lineAreaBar(
 
   parent.settings = settings;
   parent.series = props.series;
+  parent.dimension(props.getDimension());
+  parent.group(props.getGroup());
+
+  const column = series[0].data.cols[0];
+  const mainSeries = series[0];
+  const isTimeDimension =
+    isDimensionTimeseries(series) && !isQuantitative(settings);
+  const isNumericDimension = isDimensionNumeric(series);
 
   const brushChangeFunctions = makeBrushChangeFunctions(props);
 
-  const charts = getCharts(
+  let charts = getCharts(
     props,
     yAxisProps,
     parent,
     datas,
     groups,
     dimension,
-    brushChangeFunctions,
+    brushChangeFunctions
   );
+
+  charts.map(chart => {
+    chart.on("filtered.redrawGroup", () => {
+      props.redrawCrossfilterGroup();
+    });
+  });
+
+  parent.on("postRedraw.reset-button", chart => {
+    const children = parent.children();
+    const hasFilter = false;
+    for (let i = 0; i < children.length; ++i) {
+      const child = children[i];
+      if (child.hasFilter()) {
+        parent
+          .svg()
+          .selectAll("g.reset")
+          .remove();
+        const x = parent.width() - parent.margins().right * 1.5;
+        const y = parent.margins().top * 0.5;
+        const textSvg = parent
+          .svg()
+          .append("g")
+          .attr("class", "reset")
+          .attr("transform", "translate(" + x + "," + y + ")")
+          .attr("x", parent.width() - parent.margins().right)
+          .attr("y", parent.margins().top)
+          .style("cursor", "pointer")
+          .on("click", () => {
+            children.map(child => {
+              child.replaceFilter(null);
+            });
+            parent.brush().extent([0, 0]);
+            parent.redrawGroup();
+          });
+        textSvg
+          .append("text")
+          .attr("text-anchor", "middle")
+          .text("RESET");
+        break;
+      }
+    }
+  });
+
   const onGoalHover = addGoalChartAndGetOnGoalHover(
     props,
     xAxisProps.xDomain,
     parent,
-    charts,
+    charts
   );
   addTrendlineChart(props, xAxisProps, yAxisProps, parent, charts);
 
   parent.compose(charts);
 
   if (groups.length > 1 && !props.isScalarSeries) {
-   // doGroupedBarStuff(parent);
+    doGroupedBarStuff(parent);
   } else if (isHistogramBar(props)) {
     doHistogramBarStuff(parent);
   }
@@ -858,7 +981,7 @@ export default function lineAreaBar(
   // HACK: compositeChart + ordinal X axis shenanigans. See https://github.com/dc-js/dc.js/issues/678 and https://github.com/dc-js/dc.js/issues/662
   const hasBar = _.any(
     series,
-    single => getSeriesDisplay(settings, single) === "bar",
+    single => getSeriesDisplay(settings, single) === "bar"
   );
   parent._rangeBandPadding(hasBar ? BAR_PADDING_RATIO : 1);
 
@@ -875,7 +998,7 @@ export default function lineAreaBar(
     parent,
     onGoalHover,
     yAxisProps.isSplit,
-    isStacked(parent.settings, datas),
+    isStacked(parent.settings, datas)
   );
 
   // only ordinal axis can display "null" values
@@ -886,23 +1009,26 @@ export default function lineAreaBar(
   if (onRender) {
     onRender({
       yAxisSplit: yAxisProps.yAxisSplit,
-      warnings: Object.keys(warnings),
+      warnings: Object.keys(warnings)
     });
   }
 
+  const deregister = () => dc.chartRegistry.deregister(parent);
+  const redraw = () => parent.redrawGroup();
   // return an unregister function
-  return () => {
-    dc.chartRegistry.deregister(parent);
+  return {
+    deregister,
+    redraw
   };
 }
 
 export const CrossfilterLineRenderer = (element, props) =>
   lineAreaBar(element, { ...props, chartType: "line" });
-export const areaRenderer = (element, props) =>
+export const CrossfilterAreaRenderer = (element, props) =>
   lineAreaBar(element, { ...props, chartType: "area" });
-export const barRenderer = (element, props) =>
+export const CrossfilterBarRenderer = (element, props) =>
   lineAreaBar(element, { ...props, chartType: "bar" });
 export const comboRenderer = (element, props) =>
   lineAreaBar(element, { ...props, chartType: "combo" });
-export const scatterRenderer = (element, props) =>
+export const CrossfilterScatterRenderer = (element, props) =>
   lineAreaBar(element, { ...props, chartType: "scatter" });

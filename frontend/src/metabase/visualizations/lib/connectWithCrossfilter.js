@@ -29,7 +29,6 @@ export default function connectWithCrossfilter(WrappedComponent) {
       const card = this.props.card;
       this._cardId = card.id;
       this._nativeQuery = this.getNativeQuery();
-      console.log("xia: native query", this._nativeQuery);
       this._crossfilter = this.getSourceCrossfilter();
       this._filters = [];
       this._group = null;
@@ -39,7 +38,7 @@ export default function connectWithCrossfilter(WrappedComponent) {
       this._transitionDelay = 0;
       this._keyAccessor = d => d.key;
       this._valueAccessor = d => d.value;
-      console.log("xia: connectWithCrossfilter, initializaeCharCrossfitler");
+  
     }
 
     getNativeQuery() {
@@ -198,7 +197,6 @@ export default function connectWithCrossfilter(WrappedComponent) {
           filters = this.addFilterHandler(filters, filter);
         }
       }
-      console.log("xia: applied filters", filters);
       this._filters = this.applyFilters(filters);
     };
 
@@ -207,7 +205,6 @@ export default function connectWithCrossfilter(WrappedComponent) {
     };
 
     setKeyAccessor = keyAccessor => {
-      console.log("set key accessor", keyAccessor);
       this._keyAccessor = keyAccessor;
     };
 
@@ -236,10 +233,7 @@ export default function connectWithCrossfilter(WrappedComponent) {
     };
 
     onCrossfilterClick = (datum, event) => {
-      console.log("xia onCrossfilter click, datum", datum);
       const datumKey = this.getKeyAccessor()(datum);
-      console.log("xia: datumkey", this.getKeyAccessor());
-      console.log("xia onCrossfilterClick, filterdKey", datumKey);
       this.filter(datumKey);
       this.redrawCrossfilterGroup();
     };

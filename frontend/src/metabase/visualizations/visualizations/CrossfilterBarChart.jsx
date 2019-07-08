@@ -1,9 +1,10 @@
 /* @flow */
 
 import { t } from "c-3po";
-import LineAreaBarChart from "../components/LineAreaBarChart.jsx";
-import { barRenderer } from "../lib/LineAreaBarRenderer";
 import CrossfilterLineAreaBarChart from "../components/CrossfilterLineAreaBarChart.jsx";
+import { CrossfilterAreaRenderer } from "../lib/CrossfilterLineAreaBarRenderer";
+import connectWithCrossfilter from "../lib/connectWithCrossfilter.js";
+
 import {
   GRAPH_DATA_SETTINGS,
   STACKABLE_SETTINGS,
@@ -12,7 +13,8 @@ import {
   GRAPH_AXIS_SETTINGS
 } from "../lib/settings/graph";
 
-export default class BarChart extends CrossfilterLineAreaBarChart {
+@connectWithCrossfilter
+export default class CrossfilterBarChart extends CrossfilterLineAreaBarChart {
   static uiName = t`Bar`;
   static identifier = "bar";
   static iconName = "bar";
@@ -26,5 +28,5 @@ export default class BarChart extends CrossfilterLineAreaBarChart {
     ...GRAPH_AXIS_SETTINGS
   };
 
-  static renderer = barRenderer;
+  static renderer = CrossfilterAreaRenderer;
 }

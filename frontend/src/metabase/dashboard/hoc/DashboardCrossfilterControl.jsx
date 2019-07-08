@@ -167,7 +167,6 @@ export default (ComposedComponent: ReactClass<any>) =>
             crossfilterGroup.group = group;
           }
         }
-        console.log("xia: current crossfilter group", this._crossfilterMap);
       };
 
       addSourceCrossfilterDimensionAndGroup = (

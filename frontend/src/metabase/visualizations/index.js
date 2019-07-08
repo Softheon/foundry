@@ -16,10 +16,13 @@ import ScatterPlot from "./visualizations/ScatterPlot.jsx";
 import Funnel from "./visualizations/Funnel.jsx";
 import Gauge from "./visualizations/Gauge.jsx";
 import ObjectDetail from "./visualizations/ObjectDetail.jsx";
-import CrossfilterPieChart from "./visualizations/CrossfilterPieChart.jsx"
+import CrossfilterPieChart from "./visualizations/CrossfilterPieChart.jsx";
 import CrossfilterTable from "./visualizations/CrossfilterTable.jsx";
-import CrossfilterRowChart from "./visualizations/CrossfilterRowChart.jsx"
-import CrossfilterLineChart from "./visualizations/CrossfilterLineChart.jsx"
+import CrossfilterRowChart from "./visualizations/CrossfilterRowChart.jsx";
+import CrossfilterLineChart from "./visualizations/CrossfilterLineChart.jsx";
+import CrossfilterAreaChart from "./visualizations/CrossfilterAreaChart.jsx";
+import CrossfilterBarChart from "./visualizations/CrossfilterBarChart.jsx";
+import CrossfilterScatterPlot from "./visualizations/CrossfilterScatterPlot.jsx";
 import { t } from "c-3po";
 import _ from "underscore";
 
@@ -181,4 +184,7 @@ registerCrossfilterVisualization(CrossfilterPieChart);
 registerCrossfilterVisualization(CrossfilterTable);
 registerCrossfilterVisualization(CrossfilterRowChart);
 registerCrossfilterVisualization(CrossfilterLineChart);
+registerCrossfilterVisualization(CrossfilterAreaChart);
+registerCrossfilterVisualization(CrossfilterBarChart);
+registerCrossfilterVisualization(CrossfilterScatterPlot);
 export default visualizations;

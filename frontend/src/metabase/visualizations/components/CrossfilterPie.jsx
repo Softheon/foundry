@@ -144,7 +144,6 @@ function drawChart(sliceGroup, data, chartProps) {
   const arc = buildArc();
   const pie = buildPieLayout();
   const pieData = pie(data);
-  console.log("xia: pieData", pieData);
   const slices = sliceGroup.selectAll("g").data(pieData);
   removeElements(slices);
   createElements(slices, arc, pieData, chartProps);
