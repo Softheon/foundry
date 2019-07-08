@@ -84,6 +84,7 @@ export default (ComposedComponent: ReactClass<any>) =>
               dimensionIndex: null,
               metricIndex: null,
               cardId: parameter.card_id,
+              groupId: parameter.id
               //cardIdSetOfTheSameSQL: this.getCardIdSetBySQL(nativeQuery),
             });
           }
@@ -251,19 +252,19 @@ export default (ComposedComponent: ReactClass<any>) =>
         return null;
       }
 
+      getCrossfilterGroupId = (cardId, native) => {
+        console.log("getCrossfitlerGroupId active");
+        const crossfilterGroup = this.getCrossfilter(cardId, native);
+        if (crossfilterGroup) {
+          return crossfilterGroup.groupId;
+        }
+        return "default";
+      }
+
       render() {
         return (
           <ComposedComponent
             {...this.props}
-            //addCrossfilter={this.addCrossfilter}
-           // removeCrossfilter={this.removeCrossfilter}
-            //getCrossfilter={this.getCrossfilter}
-           
-           // belongToACrossfilterGroup={this.belongToACrossfilterGroup}
-
-            // addSourceCrossfilterDimensionAndGroup={
-            //   this.addSourceCrossfilterDimensionAndGroup
-            // }
             redrawGroup={this.redrawGroup}
             activeGroup={this.state.activeGroup}
             isCrossfilterSource={this.isCrossfilterSource}
@@ -272,6 +273,7 @@ export default (ComposedComponent: ReactClass<any>) =>
             getSharedCrossfilter={this.getSharedCrossfilter}
             shouldEnableCrossfilter={this.shouldEnableCrossfilter}
             getSharedCrossfilterDimension={this.getSharedCrossfilterDimension}
+            getCrossfilterGroupId={this.getCrossfilterGroupId}
           />
         );
       }

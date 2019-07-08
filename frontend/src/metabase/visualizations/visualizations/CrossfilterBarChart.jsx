@@ -2,7 +2,7 @@
 
 import { t } from "c-3po";
 import CrossfilterLineAreaBarChart from "../components/CrossfilterLineAreaBarChart.jsx";
-import { CrossfilterAreaRenderer } from "../lib/CrossfilterLineAreaBarRenderer";
+import { CrossfilterBarRenderer } from "../lib/CrossfilterLineAreaBarRenderer";
 import connectWithCrossfilter from "../lib/connectWithCrossfilter.js";
 
 import {
@@ -28,5 +28,5 @@ export default class CrossfilterBarChart extends CrossfilterLineAreaBarChart {
     ...GRAPH_AXIS_SETTINGS
   };
 
-  static renderer = CrossfilterAreaRenderer;
+  static renderer = CrossfilterBarRenderer;
 }

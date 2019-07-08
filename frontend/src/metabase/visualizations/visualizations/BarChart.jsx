@@ -3,7 +3,6 @@
 import { t } from "c-3po";
 import LineAreaBarChart from "../components/LineAreaBarChart.jsx";
 import { barRenderer } from "../lib/LineAreaBarRenderer";
-import CrossfilterLineAreaBarChart from "../components/CrossfilterLineAreaBarChart.jsx";
 import {
   GRAPH_DATA_SETTINGS,
   STACKABLE_SETTINGS,
@@ -12,7 +11,7 @@ import {
   GRAPH_AXIS_SETTINGS
 } from "../lib/settings/graph";
 
-export default class BarChart extends CrossfilterLineAreaBarChart {
+export default class BarChart extends LineAreaBarChart {
   static uiName = t`Bar`;
   static identifier = "bar";
   static iconName = "bar";

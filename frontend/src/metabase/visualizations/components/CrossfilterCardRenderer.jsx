@@ -56,12 +56,12 @@ export default class CrossfilterCardRenderer extends Component {
     let dimension;
     let group;
     const { bubbleColumnIndex } = this.props;
-    if (this.props.chartDisplayType === "scatter" && bubbleColumnIndex != -1) {
+    if (this.props.chartDisplayType === "scatter") {
       dimension = dataset.dimension(d => {
         let data = [
           d[dimensionColumnIndex],
           d[metricColumnIndex],
-          d[bubbleColumnIndex]
+          1 && d[bubbleColumnIndex]
         ];
         data._origin = {
           seriesIndex: 1,

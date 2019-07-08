@@ -209,6 +209,7 @@ export default class DashCard extends Component {
           isSourceCrossfilterLoaded = {this.props.isSourceCrossfilterLoaded}
           getSharedCrossfilter={this.props.getSharedCrossfilter}
           getSharedCrossfilterDimension={this.props.getSharedCrossfilterDimension}
+          getCrossfilterGroupId={this.props.getCrossfilterGroupId}
         />
       </div>
     );

@@ -242,6 +242,10 @@ export default class DashboardGrid extends Component {
     });
   };
 
+  getCrossfilterGroupId = (cardId, native) => () => {
+    return this.props.getCrossfilterGroupId(cardId, native);
+  }
+  
   renderDashCard(dc, isMobile) {
     return (
       <DashCard
@@ -288,6 +292,10 @@ export default class DashboardGrid extends Component {
           this.getNativeQuery(dc),
         )}
         addCrossfilterGroup={this.addCrossfilterGroup (
+          dc.card.id,
+          this.getNativeQuery(dc)
+        )}
+        getCrossfilterGroupId={this.getCrossfilterGroupId(
           dc.card.id,
           this.getNativeQuery(dc)
         )}

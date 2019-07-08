@@ -55,7 +55,7 @@ import {
   isMultiCardSeries
 } from "./renderer_utils";
 
-import lineAndBarOnRender from "./LineAreaBarPostRender";
+import lineAndBarOnRender, {crossfilterLineandBarOnRender} from "./LineAreaBarPostRender";
 
 import { isStructured } from "metabase/meta/Card";
 
@@ -92,15 +92,6 @@ function checkSeriesIsValid({ series, maxSeries }) {
   if (seriesData.rows.length === 0 || _.isEqual(seriesData.rows, [[null]])) {
     throw new Error(t`This main series is an empty series.`);
   }
-  // if (getFirstNonEmptySeries(series).data.cols.length < 2) {
-  //   throw new Error(t`This chart type requires at least 2 columns.`);
-  // }
-
-  // if (series.length > maxSeries) {
-  //   throw new Error(
-  //     t`This chart type doesn't support more than ${maxSeries} series of data.`,
-  //   );
-  // }
 }
 
 function getDatas({ settings, series }, warn) {
@@ -182,14 +173,6 @@ function getDimensionsAndGroupsForScatterChart(
   datas,
   { getGroup, getDimension }
 ) {
-  // // const dataset = crossfilter();
-  // datas.map(data => dataset.add(data));
-
-  // //const dimension = dataset.dimension(row => row);
-  // const groups = datas.map(data => {
-  //   const dim = crossfilter(data).dimension(row => row);
-  //   return [dim.group().reduceSum(d => d[2] || 1)];
-  // });
 
   const dimension = getDimension();
   const group = getGroup();
@@ -375,7 +358,7 @@ function makeBrushChangeFunctions({
       // const column = series[0].data.cols[0];
       // const card = series[0].card;
       // const [start, end] = range;
-      // //redrawCrossfilterGroup();
+      redrawCrossfilterGroup();
     }
   }
 
@@ -384,18 +367,18 @@ function makeBrushChangeFunctions({
 
 /************************************************************ INDIVIDUAL CHART SETUP ************************************************************/
 
-function getDcjsChart(cardType, parent) {
+function getDcjsChart(cardType, parent, groupId) {
   switch (cardType) {
     case "line":
-      return lineAddons(dc.lineChart(parent));
+      return lineAddons(dc.lineChart(parent, groupId));
     case "area":
-      return lineAddons(dc.lineChart(parent));
+      return lineAddons(dc.lineChart(parent, groupId));
     case "bar":
-      return dc.barChart(parent);
+      return dc.barChart(parent, groupId);
     case "scatter":
-      return dc.bubbleChart(parent);
+      return dc.bubbleChart(parent, groupId);
     default:
-      return dc.barChart(parent);
+      return dc.barChart(parent, groupId);
   }
 }
 
@@ -446,8 +429,8 @@ function doScatterChartStuff(
         : isNumericDimension ? key : String(key);
     
   });
-  
   chart.valueAccessor(d => d.key[1]);
+
   if (chart.radiusValueAccessor) {
     const isBubble = datas[index][0].length > 2;
     if (isBubble) {
@@ -471,7 +454,6 @@ function doScatterChartStuff(
       dimension.filter(null);
     } else {
       dimension.filterFunction(function(d) {
-    
         const dimensionKey = d[0];
         for (let i = 0; i < filters.length; i++) {
           let filter = filters[i];
@@ -588,7 +570,7 @@ function getCharts(
     const seriesSettings = settings.series(single);
     const seriesChartType = getSeriesDisplay(settings, single) || chartType;
 
-    const chart = getDcjsChart(seriesChartType, parent);
+    const chart = getDcjsChart(seriesChartType, parent, props.getCrossfilterGroupId());
 
     if (enableBrush(series, onChangeCardAndRun)) {
       initCrossfilterBrush(parent, chart, onBrushChange, onBrushEnd);
@@ -602,7 +584,6 @@ function getCharts(
         ? HACK_parseTimestamp(d.key, column.unit, null)
         : isNumericDimension ? d.key : String(d.key);
     });
-
 
     if (isTimeDimension) {
       chart.filterHandler((dimension, filters) => {
@@ -855,7 +836,6 @@ export default function lineAreaBar(
   props: LineAreaBarProps
 ): DeregisterFunction {
   const { onRender, isScalarSeries, settings, series, chartType } = props;
-
   const warnings = {};
   const warn = id => {
     warnings[id] = (warnings[id] || 0) + 1;
@@ -920,11 +900,11 @@ export default function lineAreaBar(
     brushChangeFunctions
   );
 
-  charts.map(chart => {
-    chart.on("filtered.redrawGroup", () => {
-      props.redrawCrossfilterGroup();
-    });
-  });
+  // charts.map(chart => {
+  //   chart.on("filtered.redrawGroup", () => {
+  //     //props.redrawCrossfilterGroup();
+  //   });
+  // });
 
   parent.on("postRedraw.reset-button", chart => {
     const children = parent.children();
@@ -952,6 +932,7 @@ export default function lineAreaBar(
             });
             parent.brush().extent([0, 0]);
             parent.redrawGroup();
+            props.redrawCrossfilterGroup();
           });
         textSvg
           .append("text")
@@ -968,7 +949,7 @@ export default function lineAreaBar(
     parent,
     charts
   );
-  addTrendlineChart(props, xAxisProps, yAxisProps, parent, charts);
+ addTrendlineChart(props, xAxisProps, yAxisProps, parent, charts);
 
   parent.compose(charts);
 
@@ -994,7 +975,7 @@ export default function lineAreaBar(
   parent.render();
 
   // apply any on-rendering functions (this code lives in `LineAreaBarPostRenderer`)
-  lineAndBarOnRender(
+  crossfilterLineandBarOnRender(
     parent,
     onGoalHover,
     yAxisProps.isSplit,
@@ -1014,7 +995,7 @@ export default function lineAreaBar(
   }
 
   const deregister = () => dc.chartRegistry.deregister(parent);
-  const redraw = () => parent.redrawGroup();
+  const redraw = () => {};
   // return an unregister function
   return {
     deregister,

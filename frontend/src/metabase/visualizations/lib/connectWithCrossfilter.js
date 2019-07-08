@@ -323,7 +323,7 @@ export default function connectWithCrossfilter(WrappedComponent) {
       }
     };
 
-    render() {
+    render() { 
       return (
         <WrappedComponent
           {...this.props}
@@ -343,7 +343,6 @@ export default function connectWithCrossfilter(WrappedComponent) {
           getTransitionDuration={this.getTransitionDuration}
           setTransitionDelay={this.setTransitionDelay}
           getTransitionDelay={this.getTransitionDelay}
-          isCrossfilterSource={this.props.isCrossfilterSource}
           addSourceCrossfilter={this.addSourceCrossfilter}
           getSourceCrossfilter={this.getSourceCrossfilter}
           redrawCrossfilterGroup={this.redrawCrossfilterGroup}
@@ -356,6 +355,8 @@ export default function connectWithCrossfilter(WrappedComponent) {
           fadeDeselected={this.fadeDeselected}
           resetHighlight={this.resetHighlight}
           filterAll={this.filterAll}
+          isCrossfilterSource={this.props.isCrossfilterSource}
+          getCrossfilterGroupId={this.props.getCrossfilterGroupId}
         />
       );
     }

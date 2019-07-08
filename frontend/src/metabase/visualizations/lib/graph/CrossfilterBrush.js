@@ -1,6 +1,5 @@
 import { KEYCODE_ESCAPE } from "metabase/lib/keyboard";
 import { moveToBack, moveToFront } from "metabase/lib/dom";
-import dc from "dc";
 export function initCrossfilterBrush(parent, child, onBrushChange, onBrushEnd) {
   if (!parent.brushOn) {
     return;
@@ -29,9 +28,9 @@ export function initCrossfilterBrush(parent, child, onBrushChange, onBrushEnd) {
     // add "dragging" class to chart
     parent.svg().classed("dragging", true);
     // move the brush element to the front
-    moveToFront(parent.select(".brush").node());
+   // moveToFront(parent.select(".brush").node());
     // add an escape keydown listener
-    window.addEventListener("keydown", onKeyDown, true);
+   // window.addEventListener("keydown", onKeyDown, true);
   });
 
 
@@ -61,16 +60,17 @@ export function initCrossfilterBrush(parent, child, onBrushChange, onBrushEnd) {
     // reset brush opacity (if the brush was cancelled)
     parent.select(".brush").style("opacity", 1);
     // move the brush to the back
-    moveToBack(parent.select(".brush").node());
+    //moveToBack(parent.select(".brush").node());
     // remove the escape keydown listener
-    window.removeEventListener("keydown", onKeyDown, true);
+  //  window.removeEventListener("keydown", onKeyDown, true);
     // reset the fitler and redraw
     //child.filterAll();
-    parent.redraw();
-
+   // parent.redraw();
+    parent.redrawGroup();
     // if not cancelled, emit the onBrushEnd event with the last filter range
     onBrushEnd(cancelled ? null : range);
     range = null;
+   
   });
 
 
@@ -86,7 +86,7 @@ export function initCrossfilterBrush(parent, child, onBrushChange, onBrushEnd) {
 
   parent.on("pretransition.custom", function(chart) {
     // move brush to the back so tootips/clicks still work
-    moveToBack(chart.select(".brush").node());
+   // moveToBack(chart.select(".brush").node());
     // remove the handles since we can't adjust them anyway
     chart.selectAll(".brush .resize").remove();
   });
