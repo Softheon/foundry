@@ -96,8 +96,10 @@ export default class CrossfilterCardRenderer extends Component {
     if (
       this._redraw &&
       this.props.activeCrossfilterGroup === this.props.crossfilterGroup
+    
     ) {
       this._redraw();
+    
     }
     let sameSize =
       this.props.width === nextProps.width &&

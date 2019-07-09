@@ -17,6 +17,7 @@ export default function connectWithCrossfilter(WrappedComponent) {
     static transformSeries = WrappedComponent.transformSeries;
     static noHeader = WrappedComponent.noHeader;
     static aliases = WrappedComponent.aliases;
+
     constructor(props) {
       super(props);
       this.initializeCharCrossfilter();
@@ -27,9 +28,8 @@ export default function connectWithCrossfilter(WrappedComponent) {
     }
 
     initializeCharCrossfilter() {
-      const card = this.props.card;
-      this._cardId = card.id;
-      this._nativeQuery = this.getNativeQuery();
+      this._chartGroup = this.props.chartGroup;
+      this._crossfilter = null;
       this._crossfilter = this.getSourceCrossfilter();
       this._filters = [];
       this._group = null;
@@ -40,19 +40,6 @@ export default function connectWithCrossfilter(WrappedComponent) {
       this._keyAccessor = d => d.key;
       this._valueAccessor = d => d.value;
   
-    }
-
-    getNativeQuery() {
-      const { card } = this.props;
-      if (
-        card &&
-        card.dataset_query &&
-        card.dataset_query.native &&
-        card.dataset_query.native.query
-      ) {
-        return card.dataset_query.native.query;
-      }
-      return null;
     }
 
     filterHandler(dimension, filters) {
@@ -256,7 +243,7 @@ export default function connectWithCrossfilter(WrappedComponent) {
     };
 
     isCrossfilterLoaded = () => {
-      return this._crossfilter && !!this._crossfilter.crossfilter;
+      return this.props.isChartGroupLoaded();
     };
 
     disposeDimensionAndGroup = () => {
@@ -268,15 +255,8 @@ export default function connectWithCrossfilter(WrappedComponent) {
       }
     };
 
-    onAddCrossfilter = (cardId, data) => {
-      this.props.addCrossfilter(cardId, data, this._nativeQuery);
-    };
-
     shouldTurnOnCrossfilter = () => {
-      return this.props.belongToACrossfilterGroup(
-        this._cardId,
-        this._nativeQuery,
-      );
+      return this.props.enableCrossfilter;
     };
 
     unregisterCrossfilter() {
@@ -290,11 +270,7 @@ export default function connectWithCrossfilter(WrappedComponent) {
     }
 
     redrawCrossfilterGroup = () => {
-      this.props.redrawGroup(this._nativeQuery);
-    };
-
-    resetActiveCrossfilterGroup = () => {
-      this.props.redrawGroup(null);
+      this.props.redrawChartGroup();
     };
 
     addSourceCrossfilter = ({
@@ -307,28 +283,26 @@ export default function connectWithCrossfilter(WrappedComponent) {
       this.setCrossfilter(crossfilter);
       this.setDimension(dimension);
       this.setGroup(group);
-      this.props.addCrossfilterGroup({
+      this.props.loadChartGroup({
         crossfilter,
         dimension,
         group,
         dimensionIndex,
         metricIndex,
-      });
+      })
     };
 
     getSourceCrossfilter = () => {
-      if (this._crossfilter) {
+      if (this._crossfilter){
         return this._crossfilter;
-      } else {
-        return this.props.getSharedCrossfilter(this._cardId, this._nativeQuery);
       }
+      return this.props.getChartGroupCrossfilter();
     };
 
     render() { 
       return (
         <WrappedComponent
           {...this.props}
-          onClick={this.onCrossfilterClick}
           turnOnResetControl={this.turnOnResetControl}
           turnOffResetControl={this.turnOffResetControl}
           setDimension={this.setDimension}
@@ -344,21 +318,19 @@ export default function connectWithCrossfilter(WrappedComponent) {
           getTransitionDuration={this.getTransitionDuration}
           setTransitionDelay={this.setTransitionDelay}
           getTransitionDelay={this.getTransitionDelay}
-          addSourceCrossfilter={this.addSourceCrossfilter}
-          getSourceCrossfilter={this.getSourceCrossfilter}
-          redrawCrossfilterGroup={this.redrawCrossfilterGroup}
-          getSourceCrossfilterDimension={this.getSourceCrossfilterDimension}
           hasFilter={this.hasFilter}
-          activeCrossfilterGroup={this.props.activeGroup}
-          crossfilterGroup={this._nativeQuery}
-          resetActiveCrossfilterGroup={this.resetActiveCrossfilterGroup}
           highlightSelected={this.highlightSelected}
           fadeDeselected={this.fadeDeselected}
           resetHighlight={this.resetHighlight}
           filterAll={this.filterAll}
-          isCrossfilterSource={this.props.isCrossfilterSource}
-          getCrossfilterGroupId={this.props.getCrossfilterGroupId}
-          enableCrossfilter={true}
+          
+          crossfilterGroup={this.props.chartGroup}
+          activeCrossfilterGroup={this.props.activeGroup}
+          isCrossfilterSource={this.props.isSourceChartGroup}
+          addSourceCrossfilter={this.addSourceCrossfilter}
+          getSourceCrossfilter={this.getSourceCrossfilter}
+          redrawCrossfilterGroup={this.redrawCrossfilterGroup}
+          onClick={this.onCrossfilterClick}
         />
       );
     }

@@ -2,9 +2,9 @@
 
 import React, { Component } from "react";
 import { t } from "c-3po";
-import ChoroplethMap, {
+import CrossfilterChoroplethMap, {
   getColorplethColorScale,
-} from "../components/ChoroplethMap.jsx";
+} from "../components/CrossfilterChoroplethMap.jsx";
 import PinMap from "../components/PinMap.jsx";
 
 import { ChartSettingsError } from "metabase/visualizations/lib/errors";
@@ -244,6 +244,10 @@ export default class CrossfilterMap extends Component {
   }
 
   shouldComponentUpdate(nextProps: any, nextState: any) {
+    if (nextProps.crossfilterGroup === nextProps.activeGroup) {
+      return true;
+    }
+    
     let sameSize =
       this.props.width === nextProps.width &&
       this.props.height === nextProps.height;
@@ -254,12 +258,10 @@ export default class CrossfilterMap extends Component {
   render() {
     const { settings } = this.props;
     const type = settings["map.type"];
-    // if (PIN_MAP_TYPES.has(type)) {
-    //   return <PinMap {...this.props} />;
-    // } else 
-    if (type === "region") {
-      console.log(this.props);
-      return <ChoroplethMap {...this.props} />;
+    if (PIN_MAP_TYPES.has(type)) {
+      return <PinMap {...this.props} />;
+    } else if (type === "region") {
+      return <CrossfilterChoroplethMap {...this.props} />;
     } else {
         return null;
     }

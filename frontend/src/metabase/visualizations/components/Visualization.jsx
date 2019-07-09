@@ -364,9 +364,9 @@ export default class Visualization extends Component {
     if(this.props.enableCrossfilter) {
       CardVisualization = CrossfilterCardVisualization;
       if (!loading ) {
-        if (this.props.isCrossfilterSource) {
+        if (this.props.isSourceChartGroup) {
           loading = false;
-        } else if (!this.props.isSourceCrossfilterLoaded()){
+        } else if (!this.props.isChartGroupLoaded()){
           loading = true;
         }
       }

@@ -66,7 +66,7 @@ export function initCrossfilterBrush(parent, child, onBrushChange, onBrushEnd) {
     // reset the fitler and redraw
     //child.filterAll();
    // parent.redraw();
-    parent.redrawGroup();
+    //parent.redrawGroup();
     // if not cancelled, emit the onBrushEnd event with the last filter range
     onBrushEnd(cancelled ? null : range);
     range = null;

@@ -36,6 +36,7 @@ export default function crossfilterRowRenderer(
   const old = chart.onClick;
   chart.onClick = datum => {
     old(datum);
+    console.log("row click", datum);
     props.redrawCrossfilterGroup();
   };
 
@@ -52,7 +53,6 @@ export default function crossfilterRowRenderer(
   //   ]),
   // );
 
-  console.log("xia: crossfilterRowRendered, props", props);
   // const dataset = crossfilter(rows);
 
   const dimension = props.getDimension();
@@ -92,23 +92,23 @@ export default function crossfilterRowRenderer(
         });
     }
 
-    if (onVisualizationClick) {
-      chart.selectAll(".row rect").on("click", function(d) {
-        onVisualizationClick({
-          value: d.value,
-          column: cols[1],
-          dimensions: [
-            {
-              value: d.key,
-              column: cols[0],
-            },
-          ],
-          element: this,
-        });
-      });
-    }
+    // if (onVisualizationClick) {
+    //   chart.selectAll(".row rect").on("click", function(d) {
+    //     onVisualizationClick({
+    //       value: d.value,
+    //       column: cols[1],
+    //       dimensions: [
+    //         {
+    //           value: d.key,
+    //           column: cols[0],
+    //         },
+    //       ],
+    //       element: this,
+    //     });
+    //   });
+    // }
   });
-  //chart.hasFilter = props.hasFilter
+
   chart
     .ordinalColors([settings.series(series[0]).color])
     .x(d3.scale.linear().domain(xDomain))
@@ -166,7 +166,7 @@ export default function crossfilterRowRenderer(
           chart.filterAll();
           props.redrawCrossfilterGroup();
         });
-      const text = textSvg
+      textSvg
         .append("text")
         .attr("text-anchor", "middle")
         .text("RESET");

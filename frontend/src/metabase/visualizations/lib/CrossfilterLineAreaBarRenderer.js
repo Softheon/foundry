@@ -337,8 +337,6 @@ function getYAxisProps(props, groups, datas) {
   };
 }
 
-/// make the `onBrushChange()` and `onBrushEnd()` functions we'll use later, as well as an `isBrushing()` function to check
-/// current status.
 function makeBrushChangeFunctions({
   series,
   onChangeCardAndRun,
@@ -355,9 +353,6 @@ function makeBrushChangeFunctions({
   function onBrushEnd(range, chart) {
     _isBrushing = false;
     if (range) {
-      // const column = series[0].data.cols[0];
-      // const card = series[0].card;
-      // const [start, end] = range;
       redrawCrossfilterGroup();
     }
   }
@@ -570,7 +565,7 @@ function getCharts(
     const seriesSettings = settings.series(single);
     const seriesChartType = getSeriesDisplay(settings, single) || chartType;
 
-    const chart = getDcjsChart(seriesChartType, parent, props.getCrossfilterGroupId());
+    const chart = getDcjsChart(seriesChartType, parent, props.chartGroup);
 
     if (enableBrush(series, onChangeCardAndRun)) {
       initCrossfilterBrush(parent, chart, onBrushChange, onBrushEnd);
@@ -931,7 +926,7 @@ export default function lineAreaBar(
               child.replaceFilter(null);
             });
             parent.brush().extent([0, 0]);
-            parent.redrawGroup();
+            //parent.redrawGroup();
             props.redrawCrossfilterGroup();
           });
         textSvg
@@ -995,7 +990,7 @@ export default function lineAreaBar(
   }
 
   const deregister = () => dc.chartRegistry.deregister(parent);
-  const redraw = () => {};
+  const redraw = () => parent.redraw();
   // return an unregister function
   return {
     deregister,

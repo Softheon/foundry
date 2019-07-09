@@ -23,7 +23,6 @@ import _ from "underscore";
 import { getIn } from "icepick";
 import { getParametersBySlug } from "metabase/meta/Parameter";
 import Utils from "metabase/lib/utils";
-import connectCrossfilter from "../hoc/connectCrossfilter.js";
 
 const DATASET_USUALLY_FAST_THRESHOLD = 15 * 1000;
 
@@ -33,7 +32,7 @@ const HEADER_ACTION_STYLE = {
   padding: 4,
 };
 
-//@connectCrossfilter
+
 export default class DashCard extends Component {
   static propTypes = {
     dashcard: PropTypes.object.isRequired,
@@ -165,6 +164,7 @@ export default class DashCard extends Component {
                 onReplaceAllVisualizationSettings={
                   this.props.onReplaceAllVisualizationSettings
                 }
+                showAddSeries={!this.props.enableCrossfilter}
               />
             ) : isEmbed ? (
               <QueryDownloadWidget
@@ -201,15 +201,16 @@ export default class DashCard extends Component {
                 }
               : null
           }
+
+          chartGroup={this.props.chartGroup}
+          redrawChartGroup={this.props.redrawChartGroup}
           activeGroup={this.props.activeGroup}
-          redrawGroup={this.props.redrawGroup}
-          addCrossfilterGroup={this.props.addCrossfilterGroup}
-          enableCrossfilter={this.props.enableCrossfilter}
-          isCrossfilterSource={this.props.enableCrossfilter && this.props.isCrossfilterSource}
-          isSourceCrossfilterLoaded = {this.props.isSourceCrossfilterLoaded}
-          getSharedCrossfilter={this.props.getSharedCrossfilter}
-          getSharedCrossfilterDimension={this.props.getSharedCrossfilterDimension}
-          getCrossfilterGroupId={this.props.getCrossfilterGroupId}
+          enableCrossfilter={this.props.enableCrossfilter} 
+          isSourceChartGroup={this.props.isSourceChartGroup}
+          isChartGroupLoaded={this.props.isChartGroupLoaded}
+          loadChartGroup={this.props.loadChartGroup}
+          getChartGroupDetail={this.props.getChartGroupDetail}
+          getChartGroupCrossfilter={this.props.getChartGroupCrossfilter}
         />
       </div>
     );
@@ -221,12 +222,13 @@ const DashCardActionButtons = ({
   onRemove,
   onAddSeries,
   onReplaceAllVisualizationSettings,
+  showAddSeries = true,
 }) => (
   <span
     className="DashCard-actions flex align-center"
     style={{ lineHeight: 1 }}
   >
-    {getVisualizationRaw(series).CardVisualization.supportsSeries && (
+    {showAddSeries && getVisualizationRaw(series).CardVisualization.supportsSeries && (
       <AddSeriesButton series={series} onAddSeries={onAddSeries} />
     )}
     {onReplaceAllVisualizationSettings &&

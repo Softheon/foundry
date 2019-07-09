@@ -133,63 +133,64 @@ export const getSQLDashcards = createSelector(
 export const getCrossFilterValues = createSelector(
   [getDashcards, getSQLDashcards, getCardData, getCrossfilterParameter],
   (dashcards, sqlDashcards, dashcardData, crossfilterParameter) => {
-    const dimensionNames = [];
-    const cfDashcardId = crossfilterParameter.dashcard_id;
-    const cfDatabaseId = crossfilterParameter.database_id;
-    const dashcardsWithTheSQLQueryString = [];
-    const sourceQueryString = dashcards[cfDashcardId].card.dataset_query.native.query;
-    if (!sourceQueryString){
-      return dimensionNames;
-    }
+    // const dimensionNames = [];
+    // const cfDashcardId = crossfilterParameter.dashcard_id;
+    // const cfDatabaseId = crossfilterParameter.database_id;
+    // const dashcardsWithTheSQLQueryString = [];
+    // const sourceQueryString = dashcards[cfDashcardId].card.dataset_query.native.query;
+    // if (!sourceQueryString){
+    //   return dimensionNames;
+    // }
 
-    sqlDashcards.map(sqlDashcard => {
-      const query = sqlDashcard.card.dataset_query.native.query;
-      if (sqlDashcard.card.database_id === cfDatabaseId && query === sourceQueryString ) {
-        dashcardsWithTheSQLQueryString.push(sqlDashcard);
-      }
-    })
-    dashcardsWithTheSQLQueryString.map(sqlDashcard => {
-      const card = sqlDashcard.card;
-      const dashcard = dashcards[sqlDashcard.dashcard_id];
-      const mainCard = {
-          ...card,
-          visualization_settings:{
-            ...card.visualization_settings,
-            ...dashcard.visualization_settings,
-          }
-      }
-      const cards = [mainCard].concat(dashcard.series || []);
-      let  series = cards.map(card => ({
-        ...getIn(dashcardData, [dashcard.id, card.id]),
-        card: card
-      }));
+    // sqlDashcards.map(sqlDashcard => {
+    //   const query = sqlDashcard.card.dataset_query.native.query;
+    //   if (sqlDashcard.card.database_id === cfDatabaseId && query === sourceQueryString ) {
+    //     dashcardsWithTheSQLQueryString.push(sqlDashcard);
+    //   }
+    // })
+    // dashcardsWithTheSQLQueryString.map(sqlDashcard => {
+    //   const card = sqlDashcard.card;
+    //   const dashcard = dashcards[sqlDashcard.dashcard_id];
+    //   const mainCard = {
+    //       ...card,
+    //       visualization_settings:{
+    //         ...card.visualization_settings,
+    //         ...dashcard.visualization_settings,
+    //       }
+    //   }
+    //   const cards = [mainCard].concat(dashcard.series || []);
+    //   let  series = cards.map(card => ({
+    //     ...getIn(dashcardData, [dashcard.id, card.id]),
+    //     card: card
+    //   }));
 
-      const loading = !(series.length > 0 && _.every(series, s => s.data));
-      if (loading) {
-          return;
-      }
-      const visualizationTransformed = getVisualizationTransformed(extractRemappings(series));
-      series = visualizationTransformed.series;
-      const settings = getComputedSettingsForSeries(series);
+    //   const loading = !(series.length > 0 && _.every(series, s => s.data));
+    //   if (loading) {
+    //       return;
+    //   }
+    //   const visualizationTransformed = getVisualizationTransformed(extractRemappings(series));
+    //   series = visualizationTransformed.series;
+    //   const settings = getComputedSettingsForSeries(series);
       
-      const [{ data: {cols} }] = series;
-      const displayType = card.display;
-      if (displayType === "pie") {
-        const dimensionIndex = settings["pie._dimensionIndex"];
-        const name = getFriendlyName(cols[dimensionIndex]);
-        dimensionNames.push(name);
-      } else if (settings["graph.dimensions"]){
-        const dimensions = (settings["graph.dimensions"] || []).filter(
-          name => name
-        );
-        if (dimensions.length > 0) {
-          dimensionNames.push(dimensions[0])
-        }
-      }
+    //   const [{ data: {cols} }] = series;
+    //   const displayType = card.display;
+    //   if (displayType === "pie") {
+    //     const dimensionIndex = settings["pie._dimensionIndex"];
+    //     const name = getFriendlyName(cols[dimensionIndex]);
+    //     dimensionNames.push(name);
+    //   } else if (settings["graph.dimensions"]){
+    //     const dimensions = (settings["graph.dimensions"] || []).filter(
+    //       name => name
+    //     );
+    //     if (dimensions.length > 0) {
+    //       dimensionNames.push(dimensions[0])
+    //     }
+    //   }
 
 
-    })
-    return _.unique(dimensionNames);
+    // })
+    // return _.unique(dimensionNames);
+    return [];
   }
 );
 

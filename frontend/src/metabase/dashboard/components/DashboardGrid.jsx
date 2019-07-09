@@ -246,7 +246,34 @@ export default class DashboardGrid extends Component {
     return this.props.getCrossfilterGroupId(cardId, native);
   }
   
+  isSourceChartGroup = (cardId) => () => {
+    return this.props.isSourceChartGroup(cardId);
+  }
+  
+  getChartGroupDetail = groupId => () => {
+    return this.props.getChartGroupDetail(groupId);
+  }
+
+  isChartGroupLoaded = groupId => () => {
+    return this.props.isChartGroupLoaded(groupId);
+  }
+
+  loadChartGroup = groupId => info => {
+    return this.props.loadChartGroup(groupId, info);
+  }
+  
+  redrawChartGroup = groupId => () => {
+    return this.props.redrawChartGroup(groupId);
+  }
+
+  getChartGroupCrossfilter = groupId => () => {
+    return this.props.getChartGroupCrossfilter(groupId);
+  }
+
   renderDashCard(dc, isMobile) {
+    const native = this.getNativeQuery(dc);
+    const chartGroup = this.props.getChartGroup(native);
+    const enableCrossfilter = chartGroup ? true : false;
     return (
       <DashCard
         dashcard={dc}
@@ -275,30 +302,15 @@ export default class DashboardGrid extends Component {
         metadata={this.props.metadata}
         dashboard={this.props.dashboard}
 
-        redrawGroup={this.props.redrawGroup}
+        chartGroup={chartGroup}
+        redrawChartGroup={this.redrawChartGroup(chartGroup)}
         activeGroup={this.props.activeGroup}
-        isCrossfilterSource={this.props.isCrossfilterSource(dc.card.id)}
-        enableCrossfilter={this.props.shouldEnableCrossfilter(
-          dc.card.id,
-          this.getNativeQuery(dc),
-        )}
-        getSharedCrossfilter={this.props.getSharedCrossfilter}
-        isSourceCrossfilterLoaded={this.isSourceCrossfilterLoaded(
-          dc.card.id,
-          this.getNativeQuery(dc),
-        )}
-        getSharedCrossfilterDimension={this.getSharedCrossfilterDimension(
-          dc.card.id,
-          this.getNativeQuery(dc),
-        )}
-        addCrossfilterGroup={this.addCrossfilterGroup (
-          dc.card.id,
-          this.getNativeQuery(dc)
-        )}
-        getCrossfilterGroupId={this.getCrossfilterGroupId(
-          dc.card.id,
-          this.getNativeQuery(dc)
-        )}
+        isSourceChartGroup={this.props.isSourceChartGroup(dc.card.id)}
+        isChartGroupLoaded={this.isChartGroupLoaded(chartGroup)}
+        loadChartGroup={this.loadChartGroup(chartGroup)}
+        getChartGroupDetail={this.getChartGroupDetail(chartGroup)}
+        getChartGroupCrossfilter={this.getChartGroupCrossfilter(chartGroup)}
+        enableCrossfilter={enableCrossfilter}
       />
     );
   }
