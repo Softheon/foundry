@@ -187,8 +187,8 @@ export default class DashboardHeader extends Component {
     ];
   }
 
-  getUniqueCrossfilterSources() {
-    const { parameters } = this.props.dashboard;
+  getUniqueCrossfilterSources = () => {
+    const { parameters } = this.props.dashboard ;
     const { dashcards, nativeDashcards } = this.props;
     
     // maps the values of crossfilter parameters  to its corresonding cards.
@@ -247,6 +247,7 @@ export default class DashboardHeader extends Component {
     }
     return parameterSections;
   } 
+
 
   getHeaderButtons() {
     const {
@@ -329,6 +330,7 @@ export default class DashboardHeader extends Component {
                   onAddParameter={this.props.addParameter}
                   onClose={() => this.setState({ modal: null })}
                   parameterSections={this.updateCrossFilterParameterSection(PARAMETER_SECTIONS)}
+                  getCrossfilterParameterValues={this.getUniqueCrossfilterSources}
                 />
               </Popover>
             )}

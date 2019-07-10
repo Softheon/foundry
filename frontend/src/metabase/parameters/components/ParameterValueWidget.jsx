@@ -110,7 +110,8 @@ export default class ParameterValueWidget extends Component {
     if (DATE_WIDGETS[parameter.type]) {
       return DATE_WIDGETS[parameter.type];
     } else if (CROSS_FILTER_WIDGETS[parameter.type]) {
-      return CROSS_FILTER_WIDGETS[parameter.type];
+     // return CROSS_FILTER_WIDGETS[parameter.type];
+     return TextWidget;
     } else if (this.getField()) {
       return ParameterFieldWidget;
     } else if (values && values.length > 0) {
@@ -164,6 +165,7 @@ export default class ParameterValueWidget extends Component {
     let hasValue = value != null;
 
     let Widget = this.getWidget();
+    let isCrossfilterParameter = parameter.type === 'crossfilter';
 
     const focusChanged = isFocused => {
       if (parentFocusChanged) {
@@ -250,6 +252,7 @@ export default class ParameterValueWidget extends Component {
             isEditing={isEditing}
             commitImmediately={commitImmediately}
             focusChanged={focusChanged}
+            disabled={isCrossfilterParameter}
           />
           {getWidgetStatusIcon()}
         </div>

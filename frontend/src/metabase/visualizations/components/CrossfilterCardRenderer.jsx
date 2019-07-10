@@ -61,8 +61,10 @@ export default class CrossfilterCardRenderer extends Component {
         let data = [
           d[dimensionColumnIndex],
           d[metricColumnIndex],
-          1 && d[bubbleColumnIndex]
         ];
+        if (bubbleColumnIndex){
+          data.push(d[bubbleColumnIndex])
+        }
         data._origin = {
           seriesIndex: 1,
           row: d,
@@ -92,7 +94,6 @@ export default class CrossfilterCardRenderer extends Component {
   }
 
   shouldComponentUpdate(nextProps: Props) {
-    // a chart only needs re-rendering when the result itself changes OR the chart type is different
     if (
       this._redraw &&
       this.props.activeCrossfilterGroup === this.props.crossfilterGroup

@@ -49,7 +49,11 @@ export default class ParametersPopover extends Component {
       let isCrossFilterSection = parameterSection.id === "crossfilter";
       return (
         <ParameterOptionsPane
-          options={parameterSection && parameterSection.options}
+          options={
+            isCrossFilterSection 
+            ? this.props.getCrossfilterParameterValues()
+            : parameterSection && parameterSection.options
+          }
           onSelectOption={option => {
             onAddParameter(option);
             onClose();

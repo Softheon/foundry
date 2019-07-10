@@ -166,7 +166,6 @@ export default function connectCrossfilter(WrappedComponent) {
           filters = this.addFilterHandler(filters, filter);
         }
       }
-      console.log("xia: applied filters", filters);
       this._filters = this.applyFilters(filters);
     };
 

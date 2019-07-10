@@ -762,7 +762,6 @@ export const addParameter = createThunkAction(
     updateParameters(dispatch, getState, parameters => {
       if (parameterOption.type === "crossfilter") {
         parameter = createCrossfilterParameter(parameterOption, parameters);
-        console.log("add cross filter parameter", parameter);
       } else {
         parameter = createParameter(parameterOption, parameters);
       }

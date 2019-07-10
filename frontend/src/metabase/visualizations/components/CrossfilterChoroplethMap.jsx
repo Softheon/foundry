@@ -137,7 +137,6 @@ export default class CrossfilterChoroplethMap extends Component {
       col => col.name === settings["map.metric"],
     );
     const group = dimension.group().reduceSum(d => {
-      console.log("reducing group", d[metricIndex]);
       return d[metricIndex];
     });
     return { group, metricIndex };

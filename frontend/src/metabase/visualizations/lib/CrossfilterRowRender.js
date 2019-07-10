@@ -36,7 +36,6 @@ export default function crossfilterRowRenderer(
   const old = chart.onClick;
   chart.onClick = datum => {
     old(datum);
-    console.log("row click", datum);
     props.redrawCrossfilterGroup();
   };
 

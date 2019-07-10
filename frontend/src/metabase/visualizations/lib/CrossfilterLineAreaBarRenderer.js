@@ -12,7 +12,7 @@ import {
   computeSplit,
   getFriendlyName,
   getXValues,
-  colorShades
+  colorShades,
 } from "./utils";
 
 import { minTimeseriesUnit, computeTimeseriesDataInverval } from "./timeseries";
@@ -23,7 +23,7 @@ import {
   applyChartTimeseriesXAxis,
   applyChartQuantitativeXAxis,
   applyChartOrdinalXAxis,
-  applyChartYAxis
+  applyChartYAxis,
 } from "./apply_axis";
 
 import { setupTooltips } from "./apply_tooltips";
@@ -52,16 +52,18 @@ import {
   isDimensionTimeseries,
   isDimensionNumeric,
   isRemappedToString,
-  isMultiCardSeries
+  isMultiCardSeries,
 } from "./renderer_utils";
 
-import lineAndBarOnRender, {crossfilterLineandBarOnRender} from "./LineAreaBarPostRender";
+import lineAndBarOnRender, {
+  crossfilterLineandBarOnRender,
+} from "./LineAreaBarPostRender";
 
 import { isStructured } from "metabase/meta/Card";
 
 import {
   updateDateTimeFilter,
-  updateNumericFilter
+  updateNumericFilter,
 } from "metabase/qb/lib/actions";
 
 import { lineAddons } from "./graph/addons";
@@ -74,7 +76,7 @@ const DEFAULT_INTERPOLATION = "linear";
 
 const UNAGGREGATED_DATA_WARNING = col =>
   t`"${getFriendlyName(
-    col
+    col,
   )}" is an unaggregated field: if it has more than one value at a point on the x-axis, the values will be summed.`;
 
 const enableBrush = (series, onChangeCardAndRun) =>
@@ -85,7 +87,7 @@ const enableBrush = (series, onChangeCardAndRun) =>
 function checkSeriesIsValid({ series, maxSeries }) {
   if (series.length > 1) {
     throw new Error(
-      t`This chart type does not support multiple series if dynamic filter is applied.`
+      t`This chart type does not support multiple series if dynamic filter is applied.`,
     );
   }
   const seriesData = series[0].data;
@@ -102,31 +104,38 @@ function getDatas({ settings, series }, warn) {
         isDimensionTimeseries(series) && !isQuantitative(settings)
           ? HACK_parseTimestamp(row[0], s.data.cols[0].unit, warn)
           : isDimensionNumeric(series) ? row[0] : String(row[0]),
-        ...row.slice(1)
+        ...row.slice(1),
       ];
       // $FlowFixMe: _origin not typed
       newRow._origin = row._origin;
       return newRow;
-    })
+    }),
   );
 }
 
 function getFormatedCrossfilterData(
   { settings, series, crossfilterData },
   isScatter = false,
-  warn
+  warn,
 ) {
   const mainSeries = series[0];
   let data = crossfilterData();
+  let isBubble = data[0].key.length > 2;
   data = isScatter
-    ? data.map(d => [d.key[0], d.key[1], d.key[2]])
+    ? data.map(d => {
+        const row = [d.key[0], d.key[1]];
+        if (isBubble) {
+          row.push(d.key[2]);
+        }
+        return row;
+      })
     : data.map(d => [d.key, d.value]);
   const rows = data.map(row => {
     const newRow = [
       isDimensionTimeseries(series) && !isQuantitative(settings)
         ? HACK_parseTimestamp(row[0], mainSeries.data.cols[0].unit, warn)
         : isDimensionNumeric(series) ? row[0] : String(row[0]),
-      ...row.slice(1)
+      ...row.slice(1),
     ];
     return newRow;
   });
@@ -163,7 +172,7 @@ function getXAxisProps(props, datas) {
     xValues,
     xDomain: d3.extent(xValues),
     xInterval: getXInterval(props, xValues),
-    isHistogramBar: isHistogramBar(props)
+    isHistogramBar: isHistogramBar(props),
   };
 }
 
@@ -171,9 +180,8 @@ function getXAxisProps(props, datas) {
 
 function getDimensionsAndGroupsForScatterChart(
   datas,
-  { getGroup, getDimension }
+  { getGroup, getDimension },
 ) {
-
   const dimension = getDimension();
   const group = getGroup();
   const groups = [[group]];
@@ -185,15 +193,15 @@ function addPercentSignsToDisplayNames(series) {
   return series.map(s =>
     updateIn(s, ["data", "cols", 1], col => ({
       ...col,
-      display_name: "% " + getFriendlyName(col)
-    }))
+      display_name: "% " + getFriendlyName(col),
+    })),
   );
 }
 
 function getDimensionsAndGroupsAndUpdateSeriesDisplayNamesForStackedChart(
   props,
   datas,
-  warn
+  warn,
 ) {
   const dataset = crossfilter();
 
@@ -214,18 +222,18 @@ function getDimensionsAndGroupsAndUpdateSeriesDisplayNamesForStackedChart(
     dataset.add(
       data.map(d => ({
         [0]: d[0],
-        [i + 1]: normalized ? d[1] / scaleFactors[d[0]] : d[1]
-      }))
-    )
+        [i + 1]: normalized ? d[1] / scaleFactors[d[0]] : d[1],
+      })),
+    ),
   );
 
   const dimension = dataset.dimension(d => d[0]);
   const groups = [
     datas.map((data, seriesIndex) =>
       reduceGroup(dimension.group(), seriesIndex + 1, () =>
-        warn(UNAGGREGATED_DATA_WARNING(props.series[seriesIndex].data.cols[0]))
-      )
-    )
+        warn(UNAGGREGATED_DATA_WARNING(props.series[seriesIndex].data.cols[0])),
+      ),
+    ),
   ];
 
   return { dimension, groups };
@@ -234,7 +242,7 @@ function getDimensionsAndGroupsAndUpdateSeriesDisplayNamesForStackedChart(
 function getDimensionsAndGroupsForOther(
   { series, getGroup, getDimension },
   datas,
-  warn
+  warn,
 ) {
   const dimension = getDimension();
   const group = getGroup();
@@ -253,7 +261,7 @@ function getDimensionsAndGroupsAndUpdateSeriesDisplayNames(props, datas, warn) {
       ? getDimensionsAndGroupsAndUpdateSeriesDisplayNamesForStackedChart(
           props,
           datas,
-          warn
+          warn,
         )
       : getDimensionsAndGroupsForOther(props, datas, warn);
 }
@@ -263,7 +271,7 @@ function getDimensionsAndGroupsAndUpdateSeriesDisplayNames(props, datas, warn) {
 function getYAxisSplit(
   { settings, chartType, isScalarSeries, series },
   datas,
-  yExtents
+  yExtents,
 ) {
   const seriesAxis = series.map(single => settings.series(single)["axis"]);
   const left = [];
@@ -298,7 +306,7 @@ function getYAxisSplit(
     const [autoLeft, autoRight] = computeSplit(yExtents);
     return [
       _.uniq([...left, ...autoLeft.filter(index => !seriesAxis[index])]),
-      _.uniq([...right, ...autoRight.filter(index => !seriesAxis[index])])
+      _.uniq([...right, ...autoRight.filter(index => !seriesAxis[index])]),
     ];
   } else {
     // assign all auto to the left
@@ -309,7 +317,7 @@ function getYAxisSplit(
 function getYAxisSplitLeftAndRight(series, yAxisSplit, yExtents) {
   return yAxisSplit.map(indexes => ({
     series: indexes.map(index => series[index]),
-    extent: d3.extent([].concat(...indexes.map(index => yExtents[index])))
+    extent: d3.extent([].concat(...indexes.map(index => yExtents[index]))),
   }));
 }
 
@@ -324,7 +332,7 @@ function getYAxisProps(props, groups, datas) {
   const [yLeftSplit, yRightSplit] = getYAxisSplitLeftAndRight(
     props.series,
     yAxisSplit,
-    yExtents
+    yExtents,
   );
 
   return {
@@ -333,14 +341,14 @@ function getYAxisProps(props, groups, datas) {
     yExtent: d3.extent([].concat(...yExtents)),
     yLeftSplit,
     yRightSplit,
-    isSplit: getIsSplitYAxis(yLeftSplit, yRightSplit)
+    isSplit: getIsSplitYAxis(yLeftSplit, yRightSplit),
   };
 }
 
 function makeBrushChangeFunctions({
   series,
   onChangeCardAndRun,
-  redrawCrossfilterGroup
+  redrawCrossfilterGroup,
 }) {
   let _isBrushing = false;
 
@@ -352,9 +360,7 @@ function makeBrushChangeFunctions({
 
   function onBrushEnd(range, chart) {
     _isBrushing = false;
-    if (range) {
-      redrawCrossfilterGroup();
-    }
+    redrawCrossfilterGroup();
   }
 
   return { isBrushing, onBrushChange, onBrushEnd };
@@ -382,7 +388,7 @@ function applyChartLineBarSettings(
   settings,
   chartType,
   seriesSettings,
-  forceCenterBar
+  forceCenterBar,
 ) {
   // LINE/AREA:
   // for chart types that have an 'interpolate' option (line/area charts), enable based on settings
@@ -390,7 +396,7 @@ function applyChartLineBarSettings(
     chart.interpolate(
       seriesSettings["line.interpolate"] ||
         settings["line.interpolate"] ||
-        DEFAULT_INTERPOLATION
+        DEFAULT_INTERPOLATION,
     );
   }
 
@@ -404,7 +410,7 @@ function applyChartLineBarSettings(
     chart
       .barPadding(BAR_PADDING_RATIO)
       .centerBar(
-        forceCenterBar || settings["graph.x_axis.scale"] !== "ordinal"
+        forceCenterBar || settings["graph.x_axis.scale"] !== "ordinal",
       );
   }
 }
@@ -415,14 +421,13 @@ function doScatterChartStuff(
   datas,
   index,
   { yExtent, yExtents },
-  { isTimeDimension, isNumericDimension, keyColumn }
+  { isTimeDimension, isNumericDimension, keyColumn },
 ) {
   chart.keyAccessor(d => {
     const key = d.key[0];
-   return isTimeDimension
-        ? HACK_parseTimestamp(key, keyColumn.unit, null)
-        : isNumericDimension ? key : String(key);
-    
+    return isTimeDimension
+      ? HACK_parseTimestamp(key, keyColumn.unit, null)
+      : isNumericDimension ? key : String(key);
   });
   chart.valueAccessor(d => d.key[1]);
 
@@ -434,7 +439,7 @@ function doScatterChartStuff(
         d3.scale
           .sqrt()
           .domain([0, yExtent[1] * BUBBLE_SCALE_FACTOR_MAX])
-          .range([0, 1])
+          .range([0, 1]),
       );
     } else {
       chart.radiusValueAccessor(d => 1);
@@ -443,7 +448,7 @@ function doScatterChartStuff(
     chart.minRadiusWithLabel(Infinity);
   }
 
-  // update scatter filterhandler
+  // update scatter filter handler
   chart.filterHandler((dimension, filters) => {
     if (filters.length === 0) {
       dimension.filter(null);
@@ -452,15 +457,15 @@ function doScatterChartStuff(
         const dimensionKey = d[0];
         for (let i = 0; i < filters.length; i++) {
           let filter = filters[i];
-          let value = isTimeDimension 
-            ?  HACK_parseTimestamp(dimensionKey, keyColumn.unit, x=>x)
+          let value = isTimeDimension
+            ? HACK_parseTimestamp(dimensionKey, keyColumn.unit, x => x)
             : isNumericDimension ? dimensionKey : String(dimensionKey);
-          if (filter.isFiltered && filter.isFiltered(value)) { 
+          if (filter.isFiltered && filter.isFiltered(value)) {
             return true;
           } else if (filter <= value && filter >= value) {
             return true;
           }
-        }   
+        }
         return false;
       });
     }
@@ -470,16 +475,16 @@ function doScatterChartStuff(
   chart.isSelectedNode = d => {
     const filter = chart.filter();
     const dimensionKey = d.key[0];
-    const value = isTimeDimension 
-            ?  HACK_parseTimestamp(dimensionKey, keyColumn.unit, x=>x)
-            : isNumericDimension ? dimensionKey : String(dimensionKey);
-     if (filter.isFiltered && filter.isFiltered(value)) {
-       return true;
-     } else if (filter <= value && filter >= value) {
-       return true;
-     }
-     return false;
-  }
+    const value = isTimeDimension
+      ? HACK_parseTimestamp(dimensionKey, keyColumn.unit, x => x)
+      : isNumericDimension ? dimensionKey : String(dimensionKey);
+    if (filter.isFiltered && filter.isFiltered(value)) {
+      return true;
+    } else if (filter <= value && filter >= value) {
+      return true;
+    }
+    return false;
+  };
 }
 
 /// set the colors for a CHART based on the number of series and type of chart
@@ -501,7 +506,7 @@ function setChartColor({ series, settings, chartType }, chart, groups, index) {
     }
   } else {
     chart.ordinalColors(
-      series.map(single => colorsByKey[keyForSingleSeries(single)])
+      series.map(single => colorsByKey[keyForSingleSeries(single)]),
     );
   }
 }
@@ -523,14 +528,14 @@ function getCharts(
   datas,
   groups,
   dimension,
-  { onBrushChange, onBrushEnd }
+  { onBrushChange, onBrushEnd },
 ) {
   const {
     settings,
     chartType,
     series,
     onChangeCardAndRun,
-    redrawCrossfilterGroup
+    redrawCrossfilterGroup,
   } = props;
   const { yAxisSplit } = yAxisProps;
 
@@ -559,7 +564,7 @@ function getCharts(
   const column = series[0].data.cols[0];
   const isTimeDimension = isDimensionTimeseries(series);
   const isNumericDimension = isDimensionNumeric(series);
-   const mainSeries = series[0];
+  const mainSeries = series[0];
   return groups.map((group, index) => {
     const single = series[index];
     const seriesSettings = settings.series(single);
@@ -611,7 +616,7 @@ function getCharts(
       doScatterChartStuff(chart, datas, index, yAxisProps, {
         isTimeDimension,
         isNumericDimension,
-        keyColumn: column
+        keyColumn: column,
       });
     }
 
@@ -626,7 +631,7 @@ function getCharts(
       settings,
       seriesChartType,
       seriesSettings,
-      isHeterogenousOrdinal
+      isHeterogenousOrdinal,
     );
 
     return chart;
@@ -640,7 +645,7 @@ function addGoalChartAndGetOnGoalHover(
   { settings, onHoverChange },
   xDomain,
   parent,
-  charts
+  charts,
 ) {
   if (!settings["graph.show_goal"]) {
     return () => {};
@@ -674,8 +679,8 @@ function addGoalChartAndGetOnGoalHover(
     onHoverChange(
       element && {
         element,
-        data: [{ key: settings["graph.goal_label"], value: goalValue }]
-      }
+        data: [{ key: settings["graph.goal_label"], value: goalValue }],
+      },
     );
   };
 }
@@ -683,7 +688,7 @@ function addGoalChartAndGetOnGoalHover(
 function findSeriesIndexForColumnName(series, colName) {
   return (
     _.findIndex(series, ({ data: { cols } }) =>
-      _.findWhere(cols, { name: colName })
+      _.findWhere(cols, { name: colName }),
     ) || 0
   );
 }
@@ -695,7 +700,7 @@ function addTrendlineChart(
   { xDomain },
   { yAxisSplit },
   parent,
-  charts
+  charts,
 ) {
   if (!settings["graph.show_trendline"]) {
     return;
@@ -770,7 +775,7 @@ function doGroupedBarStuff(parent) {
       .map(node => node.parentNode.parentNode.parentNode);
     if (barCharts.length > 0) {
       const oldBarWidth = parseFloat(
-        barCharts[0].querySelector("rect").getAttribute("width")
+        barCharts[0].querySelector("rect").getAttribute("width"),
       );
       const newBarWidthTotal = oldBarWidth / barCharts.length;
       const seriesPadding =
@@ -781,7 +786,7 @@ function doGroupedBarStuff(parent) {
       barCharts.forEach((barChart, index) => {
         barChart.setAttribute(
           "transform",
-          "translate(" + (newBarWidth + seriesPadding) * index + ", 0)"
+          "translate(" + (newBarWidth + seriesPadding) * index + ", 0)",
         );
       });
     }
@@ -821,14 +826,14 @@ function doHistogramBarStuff(parent) {
 type LineAreaBarProps = VisualizationProps & {
   chartType: "line" | "area" | "bar" | "scatter",
   isScalarSeries: boolean,
-  maxSeries: number
+  maxSeries: number,
 };
 
 type DeregisterFunction = () => void;
 
 export default function lineAreaBar(
   element: Element,
-  props: LineAreaBarProps
+  props: LineAreaBarProps,
 ): DeregisterFunction {
   const { onRender, isScalarSeries, settings, series, chartType } = props;
   const warnings = {};
@@ -859,7 +864,7 @@ export default function lineAreaBar(
 
   const {
     dimension,
-    groups
+    groups,
   } = getDimensionsAndGroupsAndUpdateSeriesDisplayNames(props, datas, warn);
 
   const yAxisProps = getYAxisProps(props, groups, datas);
@@ -892,18 +897,12 @@ export default function lineAreaBar(
     datas,
     groups,
     dimension,
-    brushChangeFunctions
+    brushChangeFunctions,
   );
-
-  // charts.map(chart => {
-  //   chart.on("filtered.redrawGroup", () => {
-  //     //props.redrawCrossfilterGroup();
-  //   });
-  // });
 
   parent.on("postRedraw.reset-button", chart => {
     const children = parent.children();
-    const hasFilter = false;
+  
     for (let i = 0; i < children.length; ++i) {
       const child = children[i];
       if (child.hasFilter()) {
@@ -925,7 +924,7 @@ export default function lineAreaBar(
             children.map(child => {
               child.replaceFilter(null);
             });
-            parent.brush().extent([0, 0]);
+           // parent.brush().extent([0, 0]);
             //parent.redrawGroup();
             props.redrawCrossfilterGroup();
           });
@@ -942,9 +941,9 @@ export default function lineAreaBar(
     props,
     xAxisProps.xDomain,
     parent,
-    charts
+    charts,
   );
- addTrendlineChart(props, xAxisProps, yAxisProps, parent, charts);
+  addTrendlineChart(props, xAxisProps, yAxisProps, parent, charts);
 
   parent.compose(charts);
 
@@ -957,7 +956,7 @@ export default function lineAreaBar(
   // HACK: compositeChart + ordinal X axis shenanigans. See https://github.com/dc-js/dc.js/issues/678 and https://github.com/dc-js/dc.js/issues/662
   const hasBar = _.any(
     series,
-    single => getSeriesDisplay(settings, single) === "bar"
+    single => getSeriesDisplay(settings, single) === "bar",
   );
   parent._rangeBandPadding(hasBar ? BAR_PADDING_RATIO : 1);
 
@@ -974,7 +973,7 @@ export default function lineAreaBar(
     parent,
     onGoalHover,
     yAxisProps.isSplit,
-    isStacked(parent.settings, datas)
+    isStacked(parent.settings, datas),
   );
 
   // only ordinal axis can display "null" values
@@ -985,7 +984,7 @@ export default function lineAreaBar(
   if (onRender) {
     onRender({
       yAxisSplit: yAxisProps.yAxisSplit,
-      warnings: Object.keys(warnings)
+      warnings: Object.keys(warnings),
     });
   }
 
@@ -994,7 +993,7 @@ export default function lineAreaBar(
   // return an unregister function
   return {
     deregister,
-    redraw
+    redraw,
   };
 }
 

@@ -22,6 +22,9 @@ export default (ComposedComponent: ReactClass<any>) =>
 
       state = {
         activeGroup: null,
+        chartGroup: new Map(),
+        nativeToGroupMap: new Map(),
+        groupSourceSet: new Set()
       };
 
       componentWillMount() {
@@ -30,10 +33,11 @@ export default (ComposedComponent: ReactClass<any>) =>
 
       componentDidUpdate() {
         this.resetActiveChartGroup();
+        this.updateChartGroup();
       }
 
       componentWillUpdate() {
-        this.updateChartGroup();
+       // this.updateChartGroup();
       }
 
       getCrossfilterParameters() {
@@ -64,23 +68,23 @@ export default (ComposedComponent: ReactClass<any>) =>
       }
 
       initialization = () => {
-        this._chartGroup = new Map();
-        this._nativeToGroupMap = new Map();
-        this._groupSourceSet = new Set();
         this.updateChartGroup();
       };
 
       updateChartGroup = () => {
         const params = this.getCrossfilterParameters();
         const currentParams = new Set();
+        const { chartGroup, nativeToGroupMap, groupSourceSet} = this.state
+        let hasChange = false;
         params.map(param => {
           currentParams.add(param.id);
           const nativeQuery = this.getNativeQuery(param.card_id);
           const paramId = param.id;
-          if (!this._nativeToGroupMap.has(nativeQuery)) {
-            this._groupSourceSet.add(param.card_id);
-            this._nativeToGroupMap.set(nativeQuery, paramId);
-            this._chartGroup.set(paramId, {
+          if (!nativeToGroupMap.has(nativeQuery)) {
+            hasChange = true;
+            groupSourceSet.add(param.card_id);
+            nativeToGroupMap.set(nativeQuery, paramId);
+            chartGroup.set(paramId, {
               crossfilter: null,
               dimension: null,
               group: null,
@@ -89,45 +93,61 @@ export default (ComposedComponent: ReactClass<any>) =>
               ...param,
               cardId: param.card_id,
               groupId: param.id,
+              query: nativeQuery,
               loaded: false,
             });
           }
         });
 
         // remove invalid chart group
-        const entries = this._chartGroup.entries();
+        const entries = chartGroup.entries();
         for (let entry of entries) {
           const chartGroupId = entry[0];
+          const chartGroupDetail = entry[1];
           if (!currentParams.has(chartGroupId)) {
-            this._chartGroup.delete(chartGroupId);
+            hasChange = true;
+            chartGroup.delete(chartGroupId);
+            nativeToGroupMap.delete(chartGroupDetail.query);
+            groupSourceSet.delete(chartGroupDetail.cardId);
           }
+        }
+        if (hasChange) {
+          this.setState({
+            chartGroup: chartGroup,
+            nativeToGroupMap: nativeToGroupMap,
+            groupSourceSet: groupSourceSet
+          })
         }
       };
 
       isSourceChartGroup = cardId => {
-        return this._groupSourceSet.has(cardId);
+        const {groupSourceSet} = this.state
+        return groupSourceSet.has(cardId);
       };
 
       getChartGroup = native => {
+        const {nativeToGroupMap} = this.state
         if (!native) {
           return null;
         }
-        return this._nativeToGroupMap.has(native)
-          ? this._nativeToGroupMap.get(native)
+        return nativeToGroupMap.has(native)
+          ? nativeToGroupMap.get(native)
           : null;
       };
 
       getChartGroupDetail = groupId => {
-        return this._chartGroup.has(groupId)
-          ? this._chartGroup.get(groupId)
+        const {chartGroup} = this.state
+        return chartGroup.has(groupId)
+          ? chartGroup.get(groupId)
           : null;
       };
 
       isChartGroupLoaded = groupId => {
-        if (!this._chartGroup.has(groupId)) {
+        const {chartGroup} = this.state
+        if (!chartGroup.has(groupId)) {
           return false;
         }
-        const { loaded } = this._chartGroup.get(groupId);
+        const { loaded } = chartGroup.get(groupId);
         return loaded;
       };
 
@@ -135,15 +155,19 @@ export default (ComposedComponent: ReactClass<any>) =>
         groupId,
         { crossfilter, dimension, group, dimensionIndex, metricIndex },
       ) => {
-        if (this._chartGroup.has(groupId)) {
-          const chartGroup = this._chartGroup.get(groupId);
-          chartGroup.crossfilter = crossfilter;
-          chartGroup.dimension = dimension;
-          chartGroup.group = group;
-          chartGroup.dimensionIndex = dimensionIndex;
-          chartGroup.metricIndex = metricIndex;
-          chartGroup.loaded = true;
+        const {chartGroup} = this.state
+        if (chartGroup.has(groupId)) {
+          const chartGroupDetail = chartGroup.get(groupId);
+          chartGroupDetail.crossfilter = crossfilter;
+          chartGroupDetail.dimension = dimension;
+          chartGroupDetail.group = group;
+          chartGroupDetail.dimensionIndex = dimensionIndex;
+          chartGroupDetail.metricIndex = metricIndex;
+          chartGroupDetail.loaded = true;
         }
+        this.setState({
+          chartGroup: chartGroup
+        })
       };
 
       redrawChartGroup = groupId => {
@@ -161,8 +185,9 @@ export default (ComposedComponent: ReactClass<any>) =>
       };
 
       getChartGroupCrossfilter = groupId => {
-        if (groupId && this._chartGroup.has(groupId)) {
-          const { crossfilter } = this._chartGroup.get(groupId);
+        const {chartGroup} = this.state
+        if (groupId && chartGroup.has(groupId)) {
+          const { crossfilter } = chartGroup.get(groupId);
           return crossfilter;
         }
         return null;

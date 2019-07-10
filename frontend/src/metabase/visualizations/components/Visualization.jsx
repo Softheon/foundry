@@ -370,7 +370,7 @@ export default class Visualization extends Component {
           loading = true;
         }
       }
-    }
+    } 
 
     // don't try to load settings unless data is loaded
     let settings = this.props.settings || {};

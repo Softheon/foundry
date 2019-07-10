@@ -415,7 +415,6 @@ function applyChartLineBarSettings(
 // TODO - give this a good name when I figure out what it does
 function doScatterChartStuff(chart, datas, index, { yExtent, yExtents }) {
   chart.keyAccessor(d => d.key[0]).valueAccessor(d => d.key[1]);
-  console.log("original data", chart.data)
   if (chart.radiusValueAccessor) {
     const isBubble = datas[index][0].length > 2;
     if (isBubble) {
