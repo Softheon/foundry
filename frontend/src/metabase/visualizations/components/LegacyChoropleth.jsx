@@ -26,7 +26,8 @@ const LegacyChoropleth = ({
           <svg className="flex-full m1" viewBox={`0 0 ${width} ${height}`}>
             {geoJson.features.map((feature, index) => (
               <path
-                d={geo(feature, index)}
+              key={index}  
+              d={geo(feature, index)}
                 stroke="white"
                 strokeWidth={1}
                 fill={getColor(feature)}

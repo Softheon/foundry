@@ -234,7 +234,7 @@ export default class CrossfilterChoroplethMap extends Component {
 
     const [{ data: { cols } }] = series;
     const rows = this.getFilteredRows();
-    console.log("xia: data", rows);
+ 
     const dimensionIndex = _.findIndex(
       cols,
       col => col.name === settings["map.dimension"],
