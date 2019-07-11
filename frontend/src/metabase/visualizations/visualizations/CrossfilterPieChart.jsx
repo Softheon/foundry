@@ -164,22 +164,27 @@ export default class CrossfilterPieChart extends Component {
     }
   }
 
-  componentDidUpdate() {
-
-  }
+  componentDidUpdate() {}
 
   componentDidMount() {
     const { isCrossfilterSource } = this.props;
-
     if (isCrossfilterSource) {
       this.props.redrawCrossfilterGroup();
     }
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-   return nextProps.activeGroup === this.props.crossfilterGroup;
+    if (nextProps.resetedCrossfilterId === this.props.crossfilterGroup) {
+      this.props.filter(null);
+    } else if (
+      nextProps.resetedCrossfilterId !== this.props.resetedCrossfilterId &&
+      this.props.resetedCrossfilterId === this.props.crossfilterGroup
+    ) {
+      return true;
+    }
+    return nextProps.activeGroup === this.props.crossfilterGroup;
   }
-  
+
   initializeDimension(crossfilter) {
     const { settings } = this.props;
     const dimensionIndex = settings["pie._dimensionIndex"];
@@ -230,6 +235,7 @@ export default class CrossfilterPieChart extends Component {
     const metricIndex = settings["pie._metricIndex"];
     let dataRowDimensionIndex = 0;
     let dataRowMetricIndex = 1;
+
     rows = this.getFilteredRows();
 
     const formatDimension = (dimension, jsx = true) =>

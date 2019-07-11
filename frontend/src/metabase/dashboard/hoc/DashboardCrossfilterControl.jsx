@@ -177,7 +177,7 @@ export default (ComposedComponent: ReactClass<any>) =>
       };
 
       resetActiveChartGroup = () => {
-        if (this.state.activeGroup !== "-1") {
+      if (this.state.activeGroup !== "-1") {
           this.setState({
             activeGroup: "-1",
           });

@@ -221,11 +221,15 @@ export default function crossfilterRowRenderer(
   if (checkXAxisLabelOverlap(chart, ".axis text")) {
     chart.selectAll(".axis").remove();
   }
-
+  const resetFilter = () => {
+    chart.filterAll();
+  }
   return {
     deregister: () => {
       dc.chartRegistry.deregister(chart);
     },
-    redraw: () => chart.redraw(),
+    redraw: () => {
+      chart.redraw()},
+    resetFilter,
   };
 }

@@ -20,7 +20,8 @@ const LegacyChoropleth = ({
   let height = translate[1] * 2;
 
   return <div className="absolute top bottom left right flex layout-centered">
-      <ShouldUpdate series={series} shouldUpdate={(props, nextProps) => !isSameSeries(props.series, nextProps.series) || nextProps.crossfilterGroup === nextProps.activeGroup}>
+      <ShouldUpdate series={series} shouldUpdate={(props, nextProps) => !isSameSeries(props.series, nextProps.series) 
+        || nextProps.crossfilterGroup === nextProps.activeGroup || props.crossfilterGroup === props.resetedCrossfilterId}>
         {() => // eslint-disable-line react/display-name
           <svg className="flex-full m1" viewBox={`0 0 ${width} ${height}`}>
             {geoJson.features.map((feature, index) => (
@@ -56,7 +57,6 @@ const LegacyChoropleth = ({
 class ShouldUpdate extends Component {
   shouldComponentUpdate(nextProps) {
     if (nextProps.shouldUpdate) {
-      console.log("shouldUpdatt", nextProps.shouldUpdate(this.props, nextProps))
       return nextProps.shouldUpdate(this.props, nextProps);
     }
     return true;

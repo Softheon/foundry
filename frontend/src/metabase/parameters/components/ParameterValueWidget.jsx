@@ -110,8 +110,8 @@ export default class ParameterValueWidget extends Component {
     if (DATE_WIDGETS[parameter.type]) {
       return DATE_WIDGETS[parameter.type];
     } else if (CROSS_FILTER_WIDGETS[parameter.type]) {
-     // return CROSS_FILTER_WIDGETS[parameter.type];
-     return TextWidget;
+      return CROSS_FILTER_WIDGETS[parameter.type];
+    // return TextWidget;
     } else if (this.getField()) {
       return ParameterFieldWidget;
     } else if (values && values.length > 0) {
@@ -153,6 +153,7 @@ export default class ParameterValueWidget extends Component {
       value,
       values,
       setValue,
+      resetCrossfilter,
       isEditing,
       placeholder,
       isFullscreen,
@@ -285,6 +286,7 @@ export default class ParameterValueWidget extends Component {
             value={value}
             values={values}
             setValue={setValue}
+            resetCrossfilter={resetCrossfilter}
             onClose={() => this.refs.valuePopover.close()}
           />
         </PopoverWithTrigger>

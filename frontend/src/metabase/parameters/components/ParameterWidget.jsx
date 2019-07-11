@@ -28,7 +28,7 @@ export default class ParameterWidget extends Component {
     commitImmediately: false,
   };
 
-  renderPopover(value, setValue, placeholder, isFullscreen) {
+  renderPopover(value, setValue, resetCrossfilter, placeholder, isFullscreen) {
     const { parameter, editingParameter, commitImmediately } = this.props;
     const isEditingParameter = !!(
       editingParameter && editingParameter.id === parameter.id
@@ -44,6 +44,7 @@ export default class ParameterWidget extends Component {
         focusChanged={this.focusChanged}
         isFullscreen={isFullscreen}
         commitImmediately={commitImmediately}
+        resetCrossfilter={resetCrossfilter}
       />
     );
   }
@@ -84,6 +85,7 @@ export default class ParameterWidget extends Component {
       setEditingParameter,
       setName,
       setValue,
+      resetCrossfilter,
       setDefaultValue,
       remove,
       children,
@@ -109,6 +111,7 @@ export default class ParameterWidget extends Component {
           {this.renderPopover(
             parameter.value,
             value => setValue(value),
+            resetCrossfilter,
             parameter.name,
             isFullscreen,
           )}
@@ -206,6 +209,7 @@ export default class ParameterWidget extends Component {
         </FieldSet>
       );
     };
+
     const renderSetCrossfilterValueUI = () => {
       const editNameButton = (
         <span className={S.editNameIconContainer}>

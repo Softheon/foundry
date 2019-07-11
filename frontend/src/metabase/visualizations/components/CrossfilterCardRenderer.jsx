@@ -14,7 +14,7 @@ import type { VisualizationProps } from "metabase/meta/types/Visualization";
 type DeregisterFunction = () => void;
 
 type Props = VisualizationProps & {
-  renderer: (element: Element, props: VisualizationProps) => DeregisterFunction
+  renderer: (element: Element, props: VisualizationProps) => DeregisterFunction,
 };
 
 @ExplicitSize()
@@ -25,7 +25,7 @@ export default class CrossfilterCardRenderer extends Component {
     className: PropTypes.string,
     series: PropTypes.array.isRequired,
     renderer: PropTypes.func.isRequired,
-    onRenderError: PropTypes.func.isRequired
+    onRenderError: PropTypes.func.isRequired,
   };
 
   _deregister: ?DeregisterFunction;
@@ -39,10 +39,10 @@ export default class CrossfilterCardRenderer extends Component {
     const dimensions = settings["graph.dimensions"].filter(d => d != null);
     const metrics = settings["graph.metrics"].filter(d => d != null);
     const dimensionColumnIndexes = dimensions.map(dimensionName =>
-      _.findIndex(cols, col => col.name === dimensionName)
+      _.findIndex(cols, col => col.name === dimensionName),
     );
     const metricColumnIndexes = metrics.map(metricName =>
-      _.findIndex(cols, col => col.name === metricName)
+      _.findIndex(cols, col => col.name === metricName),
     );
     const dimensionColumnIndex = dimensionColumnIndexes[0];
     const metricColumnIndex = metricColumnIndexes[0];
@@ -58,17 +58,14 @@ export default class CrossfilterCardRenderer extends Component {
     const { bubbleColumnIndex } = this.props;
     if (this.props.chartDisplayType === "scatter") {
       dimension = dataset.dimension(d => {
-        let data = [
-          d[dimensionColumnIndex],
-          d[metricColumnIndex],
-        ];
-        if (bubbleColumnIndex){
-          data.push(d[bubbleColumnIndex])
+        let data = [d[dimensionColumnIndex], d[metricColumnIndex]];
+        if (bubbleColumnIndex) {
+          data.push(d[bubbleColumnIndex]);
         }
         data._origin = {
           seriesIndex: 1,
           row: d,
-          cols: cols
+          cols: cols,
         };
         return data;
       });
@@ -85,7 +82,7 @@ export default class CrossfilterCardRenderer extends Component {
         dimension,
         group,
         dimensionIndex: dimensionColumnIndex,
-        metricIndex: metricColumnIndex
+        metricIndex: metricColumnIndex,
       });
     } else {
       this.props.setDimension(dimension);
@@ -94,14 +91,20 @@ export default class CrossfilterCardRenderer extends Component {
   }
 
   shouldComponentUpdate(nextProps: Props) {
-    if (
+    if (nextProps.resetedCrossfilterId === this.props.crossfilterGroup) {
+      this._resetChart();
+    } 
+    if (nextProps.resetedCrossfilterId !== this.props.resetedCrossfilterId &&
+      this.props.resetedCrossfilterId === this.props.crossfilterGroup ) {
+      this._redraw();
+    } 
+    else if (
       this._redraw &&
-      this.props.activeCrossfilterGroup === this.props.crossfilterGroup
-    
+      nextProps.activeCrossfilterGroup === this.props.crossfilterGroup
     ) {
       this._redraw();
-    
     }
+
     let sameSize =
       this.props.width === nextProps.width &&
       this.props.height === nextProps.height;
@@ -157,6 +160,7 @@ export default class CrossfilterCardRenderer extends Component {
       const result = this.props.renderer(element, this.props);
       this._deregister = result.deregister;
       this._redraw = result.redraw;
+      this._resetChart = result.resetFilter;
     } catch (err) {
       console.error(err);
       this.props.onRenderError(err.message || err);

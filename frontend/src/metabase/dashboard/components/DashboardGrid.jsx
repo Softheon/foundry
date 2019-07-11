@@ -311,6 +311,8 @@ export default class DashboardGrid extends Component {
         getChartGroupDetail={this.getChartGroupDetail(chartGroup)}
         getChartGroupCrossfilter={this.getChartGroupCrossfilter(chartGroup)}
         enableCrossfilter={enableCrossfilter}
+        resetedCrossfilterId = {this.props.resetedCrossfilterId}
+        resetCrossfilter={this.props.resetCrossfilter}
       />
     );
   }

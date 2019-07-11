@@ -210,6 +210,7 @@ export default class DashCard extends Component {
           loadChartGroup={this.props.loadChartGroup}
           getChartGroupDetail={this.props.getChartGroupDetail}
           getChartGroupCrossfilter={this.props.getChartGroupCrossfilter}
+          resetedCrossfilterId={this.props.resetedCrossfilterId}
         />
       </div>
     );

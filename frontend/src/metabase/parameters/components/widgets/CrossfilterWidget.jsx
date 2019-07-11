@@ -41,7 +41,9 @@ export default class CrossfilterWidget extends Component {
   };
 
   resetValues = () => {
-    this.setState({ selectedValues: [] });
+    //this.setState({ selectedValues: [] });
+   this.props.onClose();
+   this.props.resetCrossfilter();
   };
 
 
@@ -53,33 +55,25 @@ export default class CrossfilterWidget extends Component {
   render() {
     const options = this.getOptions();
     const selectedValues = this.state.selectedValues;
-    return null;
-    // return (
-    //   <div style={{ minWidth: 182 }}>
-    //     <CrossfilterDimensionPicker
-    //       options={options}
-    //       values={(selectedValues: Array<string>)}
-    //       onValuesChange={this.onSelectedValuesChange}
-    //       multi={true}
-    //     />
-    //     <div className="p1">
-    //       <button
-    //         data-ui-tag="reset-crossfilter"
-    //         className="Button Button--purple full"
-    //         onClick={() => this.resetValues()}
-    //       >
-    //         {t`Reset`}
-    //       </button>
-
-    //       <button
-    //         data-ui-tag="complete-crossfilter"
-    //         className="Button Button--purple full mt1"
-    //         onClick={() => this.commitValues(this.state.selectedValues)}
-    //       >
-    //         {t`Done`}
-    //       </button>
-    //     </div>
-    //   </div>
-    // );
+    //return null;
+    return (
+      <div style={{ minWidth: 182 }}>
+        {/* <CrossfilterDimensionPicker
+          options={options}
+          values={(selectedValues: Array<string>)}
+          onValuesChange={this.onSelectedValuesChange}
+          multi={true}
+        /> */}
+        <div className="p1">
+          <button
+            data-ui-tag="reset-crossfilter"
+            className="Button Button--purple full"
+            onClick={() => this.resetValues()}
+          >
+            {t`Reset`}
+          </button>
+        </div>
+      </div>
+    );
   }
 }

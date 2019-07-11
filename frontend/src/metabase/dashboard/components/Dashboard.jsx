@@ -124,6 +124,7 @@ export default class Dashboard extends Component {
   props: Props;
   state: State = {
     error: null,
+    resetedCrossfilterId: "",
   };
 
   static propTypes = {
@@ -173,6 +174,16 @@ export default class Dashboard extends Component {
   componentWillUnmount() {
     this.props.cancelFetchDashboardCardData();
   }
+
+  componentDidUpdate () {
+    const { resetedCrossfilterId } = this.state;
+   if (resetedCrossfilterId !== "") {
+      this.setState({
+        resetedCrossfilterId: "",
+
+      })
+    }
+  }
   
   async loadDashboard(dashboardId: DashboardId) {
     this.props.initialize();
@@ -217,6 +228,12 @@ export default class Dashboard extends Component {
     });
   };
 
+  resetCrossfilter = id => {
+    this.setState({
+      resetedCrossfilterId: id,
+    })
+  }
+
   render() {
     let {
       dashboard,
@@ -251,6 +268,7 @@ export default class Dashboard extends Component {
           setParameterDefaultValue={this.props.setParameterDefaultValue}
           removeParameter={this.props.removeParameter}
           setParameterValue={this.props.setParameterValue}
+          resetCrossfilter={this.resetCrossfilter}
         />
       );
     }
@@ -296,6 +314,8 @@ export default class Dashboard extends Component {
                 <DashboardGrid
                   {...this.props}
                   onEditingChange={this.setEditing}
+                  resetedCrossfilterId={this.state.resetedCrossfilterId}
+                  resetCrossfilter={this.resetCrossfilter}
                 />
               )}
             </div>

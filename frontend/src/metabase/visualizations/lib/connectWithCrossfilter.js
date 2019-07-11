@@ -323,7 +323,7 @@ export default function connectWithCrossfilter(WrappedComponent) {
           fadeDeselected={this.fadeDeselected}
           resetHighlight={this.resetHighlight}
           filterAll={this.filterAll}
-          
+          filter={this.filter}
           crossfilterGroup={this.props.chartGroup}
           activeCrossfilterGroup={this.props.activeGroup}
           isCrossfilterSource={this.props.isSourceChartGroup}

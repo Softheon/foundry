@@ -247,7 +247,15 @@ export default class CrossfilterMap extends Component {
     if (nextProps.crossfilterGroup === nextProps.activeGroup) {
       return true;
     }
-    
+
+    if (nextProps.resetedCrossfilterId === this.props.crossfilterGroup) {
+      this.props.filter(null);
+    } 
+    else if (nextProps.resetedCrossfilterId !== this.props.resetedCrossfilterId 
+      && this.props.resetedCrossfilterId === this.props.crossfilterGroup){
+      return true;
+    }
+  
     let sameSize =
       this.props.width === nextProps.width &&
       this.props.height === nextProps.height;

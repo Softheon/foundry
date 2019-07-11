@@ -127,7 +127,10 @@ function getFormatedCrossfilterData(
         if (isBubble) {
           row.push(d.key[2]);
         }
-        return row;
+        else{
+          row.push(1);
+        }
+          return row;
       })
     : data.map(d => [d.key, d.value]);
   const rows = data.map(row => {
@@ -922,7 +925,7 @@ export default function lineAreaBar(
           .style("cursor", "pointer")
           .on("click", () => {
             children.map(child => {
-              child.replaceFilter(null);
+              child.filterAll();
             });
            // parent.brush().extent([0, 0]);
             //parent.redrawGroup();
@@ -989,11 +992,20 @@ export default function lineAreaBar(
   }
 
   const deregister = () => dc.chartRegistry.deregister(parent);
-  const redraw = () => parent.redraw();
+  const redraw = () => {
+    parent.redraw();
+  };
+  const resetFilter = () => {
+    charts.map(chart => 
+      {
+        chart.filterAll();
+      })
+  };
   // return an unregister function
   return {
     deregister,
     redraw,
+    resetFilter,
   };
 }
 

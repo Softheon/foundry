@@ -127,6 +127,7 @@ export default class Parameters extends Component {
       setParameterValue,
       setParameterDefaultValue,
       setParameterIndex,
+      resetCrossfilter,
       removeParameter,
       vertical,
       commitImmediately,
@@ -181,8 +182,10 @@ export default class Parameters extends Component {
               setParameterDefaultValue &&
               (value => setParameterDefaultValue(parameter.id, value))
             }
+            resetCrossfilter={this.props.resetCrossfilter && (()=> this.props.resetCrossfilter(parameter.id))}
             remove={removeParameter && (() => removeParameter(parameter.id))}
             commitImmediately={commitImmediately}
+
           >
             {/* show drag handle if editing and setParameterIndex provided */}
             {isEditing && setParameterIndex ? (

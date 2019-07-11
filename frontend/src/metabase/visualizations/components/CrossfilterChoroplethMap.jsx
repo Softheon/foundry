@@ -234,6 +234,7 @@ export default class CrossfilterChoroplethMap extends Component {
 
     const [{ data: { cols } }] = series;
     const rows = this.getFilteredRows();
+    console.log("xia: data", rows);
     const dimensionIndex = _.findIndex(
       cols,
       col => col.name === settings["map.dimension"],
@@ -377,7 +378,7 @@ export default class CrossfilterChoroplethMap extends Component {
         )}
         {this.props.hasFilter() && (
           <div
-            style={{ position: "absolute", right: "45", cursor: "pointer" }}
+            style={{ position: "absolute", right: 45, cursor: "pointer" }}
             onClick={this.props.filterAll}
           >
             {"RESET"}
