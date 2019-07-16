@@ -8,7 +8,7 @@ import querystring from "querystring";
 
 import PopoverWithTrigger from "metabase/components/PopoverWithTrigger.jsx";
 import Icon from "metabase/components/Icon.jsx";
-import DownloadButton from "metabase/components/DownloadButton.jsx";
+import DownloadButton, { DownloadModalButton } from "metabase/components/DownloadButton.jsx";
 import Tooltip from "metabase/components/Tooltip.jsx";
 
 import * as Urls from "metabase/lib/urls";
@@ -97,23 +97,25 @@ const QueryDownloadWidget = ({
 );
 
 const UnsavedQueryButton = ({ type, result: { json_query }, card }) => (
-  <DownloadButton
+  <DownloadModalButton
     url={`api/dataset/${type}`}
     params={{ query: JSON.stringify(_.omit(json_query, "constraints")) }}
     extensions={[type]}
+    card={card}
   >
     {type}
-  </DownloadButton>
+  </DownloadModalButton>
 );
 
 const SavedQueryButton = ({ type, result: { json_query }, card }) => (
-  <DownloadButton
+  <DownloadModalButton
     url={`api/card/${card.id}/query/${type}`}
     params={{ parameters: JSON.stringify(json_query.parameters) }}
     extensions={[type]}
+    card={card}
   >
     {type}
-  </DownloadButton>
+  </DownloadModalButton>
 );
 
 const PublicQueryButton = ({ type, uuid, result: { json_query } }) => (

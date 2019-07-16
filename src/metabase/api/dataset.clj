@@ -173,14 +173,14 @@
 (defn- as-format-response-stream
   "Return a response containing the `results` of a query in the specified format."
   {:style/indent 1, :arglists '([export-format results])}
-  [export-format {{:keys [columns rows cols]} :data, :keys [status], :as response}]
+  [name export-format {{:keys [columns rows cols]} :data, :keys [status], :as response}]
   (api/let-404 [export-conf (ex/export-formats export-format)]
     (if (not (nil? response))
       ;; successful query, send file
       {:status  200
        :body    response
        :headers {"Content-Type"        (str (:content-type export-conf) "; charset=utf-8")
-                 "Content-Disposition" (str "attachment; filename=\"query_result_" (du/date->iso-8601) "." (:ext export-conf) "\"")}}
+                 "Content-Disposition" (str "attachment; filename=\"" name "." (:ext export-conf) "\"")}}
       ;; failed query, send error message
       {:status 500
        :body   (:error "Somthing went wrong!")})))
@@ -189,13 +189,13 @@
   "Write the results of an async query to API `respond` or `raise` functions in `export-format`. `in-chan` should be a
   core.async channel that can be used to fetch the results of the query."
   {:style/indent 3}
-  [export-format :- ExportFormat, respond :- (s/pred fn?), raise :- (s/pred fn?), in-chan :- ManyToManyChannel]
+  [name export-format :- ExportFormat, respond :- (s/pred fn?), raise :- (s/pred fn?), in-chan :- ManyToManyChannel]
   (a/go
     (try
       (let [results (a/<! in-chan)]
         (if (instance? Throwable results)
           (raise results)
-          (respond (as-format-response-stream export-format results))))
+          (respond (as-format-response-stream name export-format results))))
       (catch Throwable e
         (raise e))
       (finally
@@ -205,13 +205,14 @@
 
 (api/defendpoint-async POST ["/:export-format", :export-format export-format-regex]
     "Execute a query and download the result data as a file in the specified format."
-    [{{:keys [export-format query]} :params} respond raise]
+    [{{:keys [export-format query name]} :params} respond raise]
     {query         su/JSONString
-     export-format ExportFormat}
+     export-format ExportFormat
+     name su/NonBlankString}
     (let [{:keys [database] :as query} (json/parse-string query keyword)]
       (when-not (= database database/virtual-id)
         (api/read-check Database database))
-      (as-format-async-file export-format respond raise
+      (as-format-async-file name export-format respond raise
         (qp.async/process-query-and-stream-file!
          (-> query
              (dissoc :constraints)
