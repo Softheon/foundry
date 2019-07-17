@@ -38,7 +38,7 @@ const ColorRangePicker = ({
         colors={value}
         className={cx(className, "bordered rounded overflow-hidden")}
         style={{ height: 30, ...style }}
-        sections={sections}
+        sections={value.length}
         quantile={quantile}
       />
     }
@@ -58,7 +58,7 @@ const ColorRangePicker = ({
               }}
               className={cx("bordered rounded overflow-hidden cursor-pointer")}
               style={{ height: 30 }}
-              sections={sections}
+              sections={value.length}
               quantile={quantile}
             />
           </div>

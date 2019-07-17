@@ -173,6 +173,25 @@ export default class Map extends Component {
       widget: "select",
       getHidden: (series, vizSettings) => vizSettings["map.type"] !== "region",
     }),
+    "map.color_bins": {
+      title: t`Color Bin Number`,
+      widget: "select",
+      props: {
+        options: [
+          { name: t`5`, value: "5"},
+          { name: t`6`, value: "6"},
+          { name: t`7`, value: "7"},
+        ]
+      },
+      getDefault: ([{ card, data: { cols }}], settings) => {
+        const defaultNumberOfBins =settings["map.color_bins"];
+        if (defaultNumberOfBins) {
+          return defaultNumberOfBins;
+        }
+        return "5"
+      },
+      getHidden: (series, vizSettings) => vizSettings["map.type"] !== "region"
+    },
     "map.colors": {
       title: t`Color`,
       widget: ColorRangePicker,
@@ -183,8 +202,23 @@ export default class Map extends Component {
         quantile: true,
         columns: 1,
       },
-      default: getColorplethColorScale(Object.values(desaturated)[0]),
+      getProps:(series, vizSettings, onChange, extra) => {
+        return {
+          ranges: Object.values(desaturated).map(color => 
+          getColorplethColorScale(color, {
+            bins: parseInt(vizSettings["map.color_bins"])
+          }))
+        }
+      },
+      getDefault: (series, vizSettings, extra) => {
+        return getColorplethColorScale(Object.values(desaturated)[0], {
+          bins: parseInt(vizSettings["map.color_bins"])
+        });
+      }, 
       getHidden: (series, vizSettings) => vizSettings["map.type"] !== "region",
+      readDependencies: [
+        "map.color_bins"
+      ],
     },
     "map.zoom": {},
     "map.center_latitude": {},
