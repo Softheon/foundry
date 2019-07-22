@@ -13,7 +13,9 @@ import { formatValue } from "metabase/lib/formatting";
 import ChartWithLegend from "./ChartWithLegend.jsx";
 import LegacyChoropleth from "./LegacyChoropleth.jsx";
 import LeafletChoropleth from "./LeafletChoropleth.jsx";
-
+import {
+  getDynamicFilterData
+} from "metabase/visualizations/lib/utils";
 import {
   computeMinimalBounds,
   getCanonicalRowKey,
@@ -166,7 +168,7 @@ export default class ChoroplethMap extends Component {
       );
     }
 
-    const [{ data: { cols, rows } }] = series;
+    let [{ data: { cols, rows } }] = series;
     const dimensionIndex = _.findIndex(
       cols,
       col => col.name === settings["map.dimension"],
@@ -175,6 +177,13 @@ export default class ChoroplethMap extends Component {
       cols,
       col => col.name === settings["map.metric"],
     );
+    const dynamicFilterEnabled = settings["map.aggregation_enabled"];
+    if (dynamicFilterEnabled) {
+      const aggregationType = settings["map.dynamic_filter_aggregation"];
+      const dynamicFilterData = getDynamicFilterData(series[0], {dimensionIndex, metricIndex, aggregationType})
+      cols = dynamicFilterData.cols;
+      rows = dynamicFilterData.rows;
+    } 
 
     const getRowKey = row =>
       getCanonicalRowKey(row[dimensionIndex], settings["map.region"]);
@@ -236,27 +245,29 @@ export default class ChoroplethMap extends Component {
     for (const row of rows) {
       valuesMap[getRowKey(row)] =
         (valuesMap[getRowKey(row)] || 0) + getRowValue(row);
-      domain.push(getRowValue(row));
     }
-
+    Object.values(valuesMap).map(val => domain.push(val));
     const heatMapColors = settings["map.colors"] || HEAT_MAP_COLORS;
 
     const groups = ss.ckmeans(domain, heatMapColors.length);
-
     let colorScale = d3.scale
       .quantile()
       .domain(groups.map(cluster => cluster[0]))
-      .range(heatMapColors);
+      .range(heatMapColors.slice(0, groups.length));
 
-    let legendColors = heatMapColors;
-    let legendTitles = heatMapColors.map((color, index) => {
-      const min = groups[index][0];
-      const max = groups[index].slice(-1)[0];
-      return index === heatMapColors.length - 1
-        ? formatMetric(min) + " +"
-        : formatMetric(min) + " - " + formatMetric(max);
-    });
+    let legendColors = heatMapColors.slice(0, groups.length);
+    let legendTitles = groups.map((group, index) => {
+      if (group.length === 1){
+        return formatMetric(group[0]) + " +";
+      }
+      const min = group[0];
+      const max = group.slice(-1)[0];
+      return index === legendColors.length - 1
+      ? formatMetric(min) + " +"
+      : formatMetric(min) + " - " + formatMetric(max);
+    })
 
+    
     const getColor = feature => {
       let value = getFeatureValue(feature);
       return value == null ? HEAT_MAP_ZERO_COLOR : colorScale(value);

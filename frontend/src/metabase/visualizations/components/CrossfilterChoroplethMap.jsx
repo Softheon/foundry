@@ -20,6 +20,10 @@ import {
   getCanonicalRowKey,
 } from "metabase/visualizations/lib/mapping";
 
+import {
+  getReduceCrossfilterReduceFns
+} from "metabase/visualizations/lib/utils.js"
+
 import d3 from "d3";
 import ss from "simple-statistics";
 import _ from "underscore";
@@ -101,8 +105,32 @@ export default class CrossfilterChoroplethMap extends Component {
       dataset = this.props.getSourceCrossfilter();
     }
     if (enableCrossfilter) {
-      const { dimension, dimensionIndex } = this.initializeDimension(dataset);
-      const { group, metricIndex } = this.initializeGroup(dimension);
+      const { settings, series } = this.props;
+      const [{ data: { cols } }] = series;
+      const dimensionIndex = _.findIndex(
+        cols,
+        col => col.name === settings["map.dimension"],
+      );
+      const metricIndex = _.findIndex(
+        cols,
+        col => col.name === settings["map.metric"],
+      );
+      const aggregationType = settings["map.dynamic_filter_aggregation"]; 
+      const dimension =dataset.dimension(d => d[dimensionIndex]);
+      const reduceFns = getReduceCrossfilterReduceFns(aggregationType, dimensionIndex, metricIndex);
+      const group = dimension.group().reduce(
+        reduceFns.reduceAdd,
+        reduceFns.reduceRemove,
+        reduceFns.reduceInitial
+      )
+      const dynamicFilterEnabled = settings["map.aggregation_enabled"];
+      if (dynamicFilterEnabled) {
+        const metricCol = cols[metricIndex];
+        const display_name = metricCol.name + " "  +
+                            aggregationType.charAt(0).toUpperCase() + 
+                            aggregationType.slice(1);
+        metricCol.display_name = display_name;
+      }
       if (enableCrossfilter) {
         this.props.addSourceCrossfilter({
           crossfilter: dataset,
@@ -118,33 +146,17 @@ export default class CrossfilterChoroplethMap extends Component {
     }
   }
 
-  initializeDimension(crossfilter) {
-    const { settings, series } = this.props;
-    const [{ data: { cols } }] = series;
-    const dimensionIndex = _.findIndex(
-      cols,
-      col => col.name === settings["map.dimension"],
-    );
-    const dimension = crossfilter.dimension(d => d[dimensionIndex]);
-    return { dimension, dimensionIndex };
-  }
+ 
 
-  initializeGroup(dimension) {
+  getFilteredRows = () => {
+    const data = this.props.crossfilterData();
     const { settings, series } = this.props;
     const [{ data: { cols } }] = series;
     const metricIndex = _.findIndex(
       cols,
       col => col.name === settings["map.metric"],
     );
-    const group = dimension.group().reduceSum(d => {
-      return d[metricIndex];
-    });
-    return { group, metricIndex };
-  }
-
-  getFilteredRows = () => {
-    const data = this.props.crossfilterData();
-    return data.map(d => [d.key, d.value]);
+    return data.map(d => [d.key, d.value[metricIndex]]);
   };
 
   isSelectedNode = d => {
@@ -297,26 +309,29 @@ export default class CrossfilterChoroplethMap extends Component {
     for (const row of rows) {
       valuesMap[getRowKey(row)] =
         (valuesMap[getRowKey(row)] || 0) + getRowValue(row);
-      domain.push(getRowValue(row));
     }
-
+    
+    Object.values(valuesMap).map(val => domain.push(val));
     const heatMapColors = settings["map.colors"] || HEAT_MAP_COLORS;
 
     const groups = ss.ckmeans(domain, heatMapColors.length);
-
     let colorScale = d3.scale
       .quantile()
       .domain(groups.map(cluster => cluster[0]))
-      .range(heatMapColors);
+      .range(heatMapColors.slice(0, groups.length));
 
-    let legendColors = heatMapColors;
-    let legendTitles = heatMapColors.map((color, index) => {
-      const min = groups[index][0];
-      const max = groups[index].slice(-1)[0];
-      return index === heatMapColors.length - 1
-        ? formatMetric(min) + " +"
-        : formatMetric(min) + " - " + formatMetric(max);
-    });
+    let legendColors = heatMapColors.slice(0, groups.length);
+    let legendTitles = groups.map((group, index) => {
+      if (group.length === 1){
+        return formatMetric(group[0]) + " +";
+      }
+      const min = group[0];
+      const max = group.slice(-1)[0];
+      return index === legendColors.length - 1
+      ? formatMetric(min) + " +"
+      : formatMetric(min) + " - " + formatMetric(max);
+    })
+
 
     const getColor = feature => {
       let value = getFeatureValue(feature);

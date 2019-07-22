@@ -13,7 +13,11 @@ import ChartTooltip from "../components/ChartTooltip.jsx";
 import ChartWithLegend from "../components/ChartWithLegend.jsx";
 
 import { ChartSettingsError } from "metabase/visualizations/lib/errors";
-import { getFriendlyName } from "metabase/visualizations/lib/utils";
+import { 
+  getFriendlyName, 
+  getReduceCrossfilterReduceFns 
+} from "metabase/visualizations/lib/utils";
+
 import {
   metricSetting,
   dimensionSetting,
@@ -50,11 +54,19 @@ export default class CrossfilterPieChart extends Component {
     return cols.length === 2;
   }
 
-  static checkRenderable([{ data: { cols, rows } }], settings) {
+  static checkRenderable(series, settings) {
     if (!settings["pie.dimension"] || !settings["pie.metric"]) {
       throw new ChartSettingsError(t`Which columns do you want to use?`, {
         section: `Data`,
       });
+    }
+    const dynamicFilterEnabled = settings["pie.aggregation_enabled"];
+    if (dynamicFilterEnabled && series.length > 1) {
+      throw new ChartSettingsError(
+        t`Aggregation does not support multiple series`,
+        { section: t`Data` },
+        t`Update fields`,
+      )
     }
   }
 
@@ -148,8 +160,18 @@ export default class CrossfilterPieChart extends Component {
     } else {
       dataset = this.props.getSourceCrossfilter();
     }
-    const { dimension, dimensionIndex } = this.initializeDimension(dataset);
-    const { group, metricIndex } = this.initializeGroup(dimension);
+    const { settings } = this.props;
+    const dimensionIndex = settings["pie._dimensionIndex"];
+    const metricIndex = settings["pie._metricIndex"];
+    const aggregationType = settings["pie.dynamic_filter_aggregation"];
+    const reduceFns = getReduceCrossfilterReduceFns(aggregationType, dimensionIndex, metricIndex);
+    const dimension = dataset.dimension(d => d[dimensionIndex]);
+    const group = dimension.group().reduce(
+      reduceFns.reduceAdd,
+      reduceFns.reduceRemove,
+      reduceFns.reduceInitial
+    )
+
     if (isCrossfilterSource) {
       this.props.addSourceCrossfilter({
         crossfilter: dataset,
@@ -185,24 +207,11 @@ export default class CrossfilterPieChart extends Component {
     return nextProps.activeGroup === this.props.crossfilterGroup;
   }
 
-  initializeDimension(crossfilter) {
-    const { settings } = this.props;
-    const dimensionIndex = settings["pie._dimensionIndex"];
-    const dimension = crossfilter.dimension(d => d[dimensionIndex]);
-    return { dimension, dimensionIndex };
-  }
-
-  initializeGroup(dimension) {
-    const { settings } = this.props;
-    const metricIndex = settings["pie._metricIndex"];
-    let group = dimension.group().reduceSum(d => d[metricIndex]);
-
-    return { group, metricIndex };
-  }
-
   getFilteredRows = () => {
     const filteredRecords = this.props.crossfilterData();
-    let rows = filteredRecords.map(d => [d.key, d.value]);
+    const { settings } = this.props;
+    const metricIndex = settings["pie._metricIndex"];
+    let rows = filteredRecords.map(d => [d.key, d.value[metricIndex]]);
     return rows;
   };
 
@@ -267,11 +276,26 @@ export default class CrossfilterPieChart extends Component {
 
     const ndx = this.props.getSourceCrossfilter();
     const all = ndx.groupAll();
-    const groupAll = all.reduceSum(d => d[metricIndex]);
-    let total = groupAll.value();
+    const aggregationType = settings["pie.dynamic_filter_aggregation"];
+    const reduceFns = getReduceCrossfilterReduceFns(aggregationType, dimensionIndex, metricIndex);
+    const groupAll = all.reduce(
+      reduceFns.reduceAdd,
+      reduceFns.reduceRemove,
+      reduceFns.reduceInitial,
+    )
+    
+    let total = groupAll.value()[metricIndex];
     all.dispose();
     groupAll.dispose();
 
+    const dynamicFilterEnabled = settings["pie.aggregation_enabled"];
+    if (dynamicFilterEnabled) {
+      const metricCol = cols[metricIndex];
+      const display_name = metricCol.name + " "  +
+                          aggregationType.charAt(0).toUpperCase() + 
+                          aggregationType.slice(1);
+      metricCol.display_name = display_name;
+    }
     let sliceThreshold =
       typeof settings["pie.slice_threshold"] === "number"
         ? settings["pie.slice_threshold"] / 100

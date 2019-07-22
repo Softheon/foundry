@@ -163,7 +163,7 @@ export default class DashCard extends Component {
                 onReplaceAllVisualizationSettings={
                   this.props.onReplaceAllVisualizationSettings
                 }
-                showAddSeries={!this.props.enableCrossfilter}
+                crossfilterEnabled={this.props.enableCrossfilter}
               />
             ) : isEmbed ? (
               <QueryDownloadWidget
@@ -222,25 +222,41 @@ const DashCardActionButtons = ({
   onRemove,
   onAddSeries,
   onReplaceAllVisualizationSettings,
-  showAddSeries = true,
-}) => (
-  <span
-    className="DashCard-actions flex align-center"
-    style={{ lineHeight: 1 }}
-  >
-    {showAddSeries && getVisualizationRaw(series).CardVisualization.supportsSeries && (
-      <AddSeriesButton series={series} onAddSeries={onAddSeries} />
-    )}
-    {onReplaceAllVisualizationSettings &&
-      !getVisualizationRaw(series).CardVisualization.disableSettingsConfig && (
-        <ChartSettingsButton
-          series={series}
-          onReplaceAllVisualizationSettings={onReplaceAllVisualizationSettings}
-        />
+  crossfilterEnabled = false,
+}) => {
+  if (crossfilterEnabled) {
+    return (
+      <span
+        className="DashCard-actions flex align-center"
+        style={{ lineHeight: 1 }}
+      >
+        <RemoveButton onRemove={onRemove} />
+      </span>
+    );
+  }
+  return (
+    <span
+      className="DashCard-actions flex align-center"
+      style={{ lineHeight: 1 }}
+    >
+
+      {getVisualizationRaw(series).CardVisualization.supportsSeries && (
+        <AddSeriesButton series={series} onAddSeries={onAddSeries} />
       )}
-    <RemoveButton onRemove={onRemove} />
-  </span>
-);
+      {onReplaceAllVisualizationSettings &&
+        !getVisualizationRaw(series).CardVisualization
+          .disableSettingsConfig && (
+          <ChartSettingsButton
+            series={series}
+            onReplaceAllVisualizationSettings={
+              onReplaceAllVisualizationSettings
+            }
+          />
+        )}
+      <RemoveButton onRemove={onRemove} />
+    </span>
+  );
+};
 
 const ChartSettingsButton = ({ series, onReplaceAllVisualizationSettings }) => (
   <ModalWithTrigger

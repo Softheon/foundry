@@ -218,17 +218,7 @@ export default class CrossfilterMap extends Component {
   };
 
   static checkRenderable([{ data: { cols, rows } }], settings) {
-    if (PIN_MAP_TYPES.has(settings["map.type"])) {
-      if (
-        !settings["map.longitude_column"] ||
-        !settings["map.latitude_column"]
-      ) {
-        throw new ChartSettingsError(
-          t`Please select longitude and latitude columns in the chart settings.`,
-          { section: t`Data` },
-        );
-      }
-    } else if (settings["map.type"] === "region") {
+    if (settings["map.type"] === "region") {
       if (!settings["map.region"]) {
         throw new ChartSettingsError(t`Please select a region map.`, {
           section: t`Data`,
@@ -240,6 +230,11 @@ export default class CrossfilterMap extends Component {
           { section: t`Data` },
         );
       }
+    } else {
+      throw new ChartSettingsError(
+        t`Dynamic filter only supports region map type.`,{
+          selection: t`Data`,
+        });
     }
   }
 

@@ -3386,7 +3386,7 @@ databaseChangeLog:
                   type: char(36)
                   remarks: 'Unique UUID used to in publically-accessible links to this Card.'
                   constraints:
-                    unique: true
+                    unique: false
               - column:
                   name: made_public_by_id
                   type: int
@@ -3409,7 +3409,7 @@ databaseChangeLog:
                   type: char(36)
                   remarks: 'Unique UUID used to in publically-accessible links to this Dashboard.'
                   constraints:
-                    unique: true
+                    unique: false
               - column:
                   name: made_public_by_id
                   type: int

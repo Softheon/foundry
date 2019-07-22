@@ -3,6 +3,8 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 import { t } from "c-3po";
+import crossfilter from "crossfilter";
+
 import CardRenderer from "./CardRenderer.jsx";
 import LegendHeader from "./LegendHeader.jsx";
 import { TitleLegendHeader } from "./TitleLegendHeader.jsx";
@@ -13,6 +15,8 @@ import { isNumeric, isDate } from "metabase/lib/schema_metadata";
 import {
   getChartTypeFromData,
   getFriendlyName,
+  getReduceCountFns,
+  getReduceSumFns,
 } from "metabase/visualizations/lib/utils";
 import { addCSSRule } from "metabase/lib/dom";
 import { formatValue } from "metabase/lib/formatting";
@@ -102,6 +106,14 @@ export default class LineAreaBarChart extends Component {
         { section: t`Data` },
         t`Choose fields`,
       );
+    }
+    const dynamicFilterEnabled = settings["graph.aggregation_enabled"];
+    if (dynamicFilterEnabled && series.length > 1) {    
+      throw new ChartSettingsError(
+        t`Aggregation does not support multiple series`,
+        { section: t`Data` },
+        t`Update fields`,
+      )
     }
   }
 
@@ -296,6 +308,61 @@ function getColumnsFromNames(cols, names) {
   return names.map(name => _.findWhere(cols, { name }));
 }
 
+function getComputedDynamicFilteredData(series) {
+  let { card, data } = series;
+  const { cols, rows } = data;
+  const settings = getComputedSettingsForSeries([series]);
+  const dimension = settings["graph.dimensions"].filter(d => d != null);
+  const metrics = settings["graph.metrics"].filter(d => d != null);
+  const dimensionColumnIndexes = dimension.map(dimensionName =>
+    _.findIndex(cols, col => col.name === dimensionName),
+  );
+  const metricColumnIndexes = metrics.map(metricName =>
+    _.findIndex(cols, col => col.name == metricName),
+  );
+  const dimensionColumnIndex = dimensionColumnIndexes[0];
+  const metricColumnIndex = metricColumnIndexes[0];
+  const bubbleColumnIndex = settings["scatter.bubble"] &&
+  _.findIndex(cols, col => col.name === settings["scatter.bubble"]);
+  const isScatter = card.display === "scatter";
+  let aggregatedColumnIndex;
+
+  if (isScatter){
+    if (!bubbleColumnIndex) {
+      return rows;
+    }
+  }
+
+  const dataset = crossfilter(rows);
+  let cfDimension, group;
+  if (isScatter) {
+    cfDimension = dataset.dimension(d => 
+      String(d[dimensionColumnIndex]) + String(d[metricColumnIndex]));
+    aggregatedColumnIndex = bubbleColumnIndex;
+  } else {
+    cfDimension = dataset.dimension(d => d[dimensionColumnIndex]);
+    aggregatedColumnIndex = metricColumnIndex;
+  }
+  
+  const aggregationType = settings["graph.dynamic_filter_aggregation"];
+
+  let { reduceAdd, reduceRemove, reduceInitial } = 
+    getReduceSumFns(dimensionColumnIndex, aggregatedColumnIndex);
+
+    if (aggregationType === "count") {
+      const reduceCountFns = getReduceCountFns(dimensionColumnIndex, aggregatedColumnIndex);
+      reduceAdd = reduceCountFns.reduceAdd;
+      reduceRemove = reduceCountFns.reduceRemove;
+      reduceInitial = reduceCountFns.reduceInitial;
+    }
+  group = cfDimension.group().reduce(reduceAdd, reduceRemove, reduceInitial);
+  const newRows = group.all().map(d => d.value);
+  cfDimension.dispose();
+  
+  return newRows;
+}
+
+
 function transformSingleSeries(s, series, seriesIndex) {
   const { card, data } = s;
 
@@ -304,7 +371,7 @@ function transformSingleSeries(s, series, seriesIndex) {
     return [s];
   }
 
-  const { cols, rows } = data;
+  let { cols, rows } = data;
   const settings = getComputedSettingsForSeries([s]);
 
   const dimensions = settings["graph.dimensions"].filter(d => d != null);
@@ -320,6 +387,13 @@ function transformSingleSeries(s, series, seriesIndex) {
     _.findIndex(cols, col => col.name === settings["scatter.bubble"]);
   const extraColumnIndexes =
     bubbleColumnIndex && bubbleColumnIndex >= 0 ? [bubbleColumnIndex] : [];
+
+  const dynamicFilterEnabled = settings["graph.aggregation_enabled"]
+  const dynamicFilterAggregationType = settings["graph.dynamic_filter_aggregation"];
+  const aggregatedColumnIndex = bubbleColumnIndex ? bubbleColumnIndex : metricColumnIndexes[0];
+  if (dynamicFilterEnabled && card.dataset_query.type === "native") {
+    rows = getComputedDynamicFilteredData(s);
+  }
 
   if (dimensions.length > 1) {
     const [dimensionColumnIndex, seriesColumnIndex] = dimensionColumnIndexes;
@@ -414,7 +488,18 @@ function transformSingleSeries(s, series, seriesIndex) {
             newRow._origin = { seriesIndex, rowIndex, row, cols };
             return newRow;
           }),
-          cols: rowColumnIndexes.map(i => cols[i]),
+          cols: rowColumnIndexes.map(i => {  
+           let column = cols[i];
+           if (i === aggregatedColumnIndex && dynamicFilterEnabled) {   
+            let copy = column;
+            const newDisplayName = copy.name + " " + dynamicFilterAggregationType
+                .charAt(0)
+                .toUpperCase() + dynamicFilterAggregationType.slice(1);
+              copy.display_name = newDisplayName;
+              return copy;
+          }           
+           return column; 
+          }),
           _rawCols: cols,
         },
       };

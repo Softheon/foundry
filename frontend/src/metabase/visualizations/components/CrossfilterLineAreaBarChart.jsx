@@ -103,51 +103,18 @@ export default class CrossfilterLineAreaBarChart extends Component {
         t`Choose fields`
       );
     }
+    const dynamicFilterEnabled = settings["graph.aggregation_enabled"];
+    if (dynamicFilterEnabled && series.length > 1) {
+      throw new ChartSettingsError(
+        t`Aggregation does not support multiple series`,
+        { section: t`Data` },
+        t`Update fields`,
+      )
+    }
   }
 
   static seriesAreCompatible(initialSeries, newSeries) {
     return false;
-    // let initialSettings = getComputedSettingsForSeries([initialSeries]);
-    // let newSettings = getComputedSettingsForSeries([newSeries]);
-
-    // let initialDimensions = getColumnsFromNames(
-    //   initialSeries.data.cols,
-    //   initialSettings["graph.dimensions"],
-    // );
-    // let newDimensions = getColumnsFromNames(
-    //   newSeries.data.cols,
-    //   newSettings["graph.dimensions"],
-    // );
-    // let newMetrics = getColumnsFromNames(
-    //   newSeries.data.cols,
-    //   newSettings["graph.metrics"],
-    // );
-
-    // // must have at least one dimension and one metric
-    // if (newDimensions.length === 0 || newMetrics.length === 0) {
-    //   return false;
-    // }
-
-    // // all metrics must be numeric
-    // if (!_.all(newMetrics, isNumeric)) {
-    //   return false;
-    // }
-
-    // // both or neither primary dimension must be dates
-    // if (isDate(initialDimensions[0]) !== isDate(newDimensions[0])) {
-    //   return false;
-    // }
-
-    // // both or neither primary dimension must be numeric
-    // // a timestamp field is both date and number so don't enforce the condition if both fields are dates; see #2811
-    // if (
-    //   isNumeric(initialDimensions[0]) !== isNumeric(newDimensions[0]) &&
-    //   !(isDate(initialDimensions[0]) && isDate(newDimensions[0]))
-    // ) {
-    //   return false;
-    // }
-
-    // return true;
   }
 
   static transformSeries(series) {
@@ -315,7 +282,8 @@ function transformSingleSeries(s, series, seriesIndex) {
 
   const { cols, rows } = data;
   const settings = getComputedSettingsForSeries([s]);
-
+  const dynamicFilterEnabled = settings["graph.aggregation_enabled"]
+  const aggregationType = settings["graph.dynamic_filter_aggregation"];
   const dimensions = settings["graph.dimensions"].filter(d => d != null);
   const metrics = settings["graph.metrics"].filter(d => d != null);
   const dimensionColumnIndexes = dimensions.map(dimensionName =>
@@ -394,6 +362,11 @@ function transformSingleSeries(s, series, seriesIndex) {
     const dimensionColumnIndex = dimensionColumnIndexes[0];
     return metricColumnIndexes.map(metricColumnIndex => {
       const col = cols[metricColumnIndex];
+      if (dynamicFilterEnabled) {
+        const displayName = col.name + " "  + 
+        aggregationType.chartAt(0).toUpperCase() + aggregationType.slice(1);
+        col.display_name = displayName;
+      }
       const rowColumnIndexes = [dimensionColumnIndex].concat(
         metricColumnIndex,
         extraColumnIndexes

@@ -927,8 +927,6 @@ export default function lineAreaBar(
             children.map(child => {
               child.filterAll();
             });
-           // parent.brush().extent([0, 0]);
-            //parent.redrawGroup();
             props.redrawCrossfilterGroup();
           });
         textSvg

@@ -17,7 +17,10 @@ export default function connectWithCrossfilter(WrappedComponent) {
     static transformSeries = WrappedComponent.transformSeries;
     static noHeader = WrappedComponent.noHeader;
     static aliases = WrappedComponent.aliases;
-
+    static supportsSeries = false;
+    static renderer = WrappedComponent.renderer;
+    static disableSettingsConfig = true;
+ 
     constructor(props) {
       super(props);
       this.initializeCharCrossfilter();

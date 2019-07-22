@@ -38,6 +38,7 @@ export default class CrossfilterCardRenderer extends Component {
     const [{ data: { cols, rows } }] = rawSeries;
     const dimensions = settings["graph.dimensions"].filter(d => d != null);
     const metrics = settings["graph.metrics"].filter(d => d != null);
+    const aggregation = settings["graph.dynamic_filter_aggregation"]
     const dimensionColumnIndexes = dimensions.map(dimensionName =>
       _.findIndex(cols, col => col.name === dimensionName),
     );
@@ -69,11 +70,11 @@ export default class CrossfilterCardRenderer extends Component {
         };
         return data;
       });
-
-      group = dimension.group().reduceSum(d => d[bubbleColumnIndex] || 1);
+ 
+      group = this.getCrossfilterGroup(dimension, bubbleColumnIndex, aggregation);
     } else {
       dimension = dataset.dimension(d => d[dimensionColumnIndex]);
-      group = dimension.group().reduceSum(d => d[metricColumnIndex]);
+      group = this.getCrossfilterGroup(dimension, metricColumnIndex, aggregation);
     }
 
     if (isCrossfilterSource) {
@@ -87,6 +88,18 @@ export default class CrossfilterCardRenderer extends Component {
     } else {
       this.props.setDimension(dimension);
       this.props.setGroup(group);
+    }
+  }
+
+  getCrossfilterGroup(crossfilterDimension, groupIndex, aggregation) {
+    if (aggregation === "sum") {
+        return crossfilterDimension.group().reduceSum(d => d[groupIndex] || 1);
+    }
+    else if (aggregation === "count") {
+      return crossfilterDimension.group().reduceCount();
+    }
+    else {
+      return crossfilterDimension.group().reduceSum(d => d[groupIndex] || 1);
     }
   }
 

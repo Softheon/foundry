@@ -8,7 +8,10 @@ import ChartTooltip from "../components/ChartTooltip.jsx";
 import ChartWithLegend from "../components/ChartWithLegend.jsx";
 
 import { ChartSettingsError } from "metabase/visualizations/lib/errors";
-import { getFriendlyName } from "metabase/visualizations/lib/utils";
+import { 
+  getFriendlyName, 
+  getDynamicFilterData
+ } from "metabase/visualizations/lib/utils";
 import {
   metricSetting,
   dimensionSetting,
@@ -41,17 +44,26 @@ export default class PieChart extends Component {
   static uiName = t`Pie`;
   static identifier = "pie";
   static iconName = "pie";
+
   static minSize = { width: 4, height: 4 };
 
   static isSensible({ cols, rows }) {
     return cols.length === 2;
   }
 
-  static checkRenderable([{ data: { cols, rows } }], settings) {
+  static checkRenderable(series, settings) {
     if (!settings["pie.dimension"] || !settings["pie.metric"]) {
       throw new ChartSettingsError(t`Which columns do you want to use?`, {
         section: `Data`,
       });
+    }
+    const dynamicFilterEnabled = settings["pie.aggregation_enabled"];
+    if (dynamicFilterEnabled && series.length > 1) {
+      throw new ChartSettingsError(
+        t`Aggregation does not support multiple series`,
+        { section: t`Data` },
+        t`Update fields`,
+      )
     }
   }
 
@@ -67,6 +79,42 @@ export default class PieChart extends Component {
       title: t`Measure`,
       showColumnSetting: true,
     }),
+    "pie.aggregation_enabled": {
+      section: t`Data`,
+      title: t`Aggregation`,
+      widget: "buttonGroup",
+      props: {
+       options: [
+         { name: t`On`, value: true },
+         { name:  t`Off`, value: false}
+       ]
+      },
+      getHidden: ([ { card }], vizSettings) => {
+        const queryType = card.dataset_query && card.dataset_query.type;
+        if (!queryType || queryType !== "native"){
+          return true;
+        }
+        return !vizSettings["pie.metric"];
+      },
+      getDefault: ([{ card }], vizSettings) => {
+        return vizSettings["pie.aggregation_enabled"];
+      },
+      readDependencies: ["pie.metric"]
+    },
+    "pie.dynamic_filter_aggregation": {
+      section: t`Data`,
+      title: t`Aggregation type`,
+      widget: "select",
+      props: {
+        options: [
+          { name: t`Sum`, value: "sum"},
+          { name: t`Count`, value: "count"}
+        ]
+      },
+      getHidden: (single, vizSettings) => !vizSettings["pie.aggregation_enabled"],
+      getDefault: (single, vizSettings) => "sum",
+      readDependencies: ["pie.aggregation_enabled"],
+    },
     "pie.show_legend": {
       section: t`Display`,
       title: t`Show legend`,
@@ -142,182 +190,6 @@ export default class PieChart extends Component {
     }
   }
 
-  componentWillMount() {
-    this.renderCount = 0;
-    this.dimensionCount = 0;
-    this._enableCrossfilter = false;
-  }
-
-  componentWillUnmount() {}
-
-  componentDidMount() {
-    let series = this.props.series;
-    this._enableCrossfilter = this.props.enableCrossfilter;
-    if (this._enableCrossfilter) {
-      // when the card is first loaded, initialize a crossfilter instance with the formated data
-      // and add the instance to the global crossfilter registry.
-      if (!this.props.isCrossfilterLoaded()) {
-        const card = series[0].card;
-        if (
-          this.props.isCrossfilterSource &&
-          this.props.isCrossfilterSource(card.id)
-        ) {
-          const [{ data: { cols, rows } }] = series;
-          // const records = this.toCrossfilterRecords(rows, cols);
-          // this.props.addCrossfilter(card.id, records);
-          // const crossfilterInfo = this.props.getCrossfilter();
-          // const crossfilter = crossfilterInfo.crossfilter;
-          // const dimension = this.initializeDimension(crossfilter);
-          // const group = this.initializeGroup(dimension);
-
-          const records = this.toCrossfilterRecords(rows, cols);
-          this.props.addCrossfilter(card.id, rows);
-          const crossfilterInfo = this.props.getCrossfilter();
-          const crossfilter = crossfilterInfo.crossfilter;
-          const dimension = this.initializeDimension(crossfilter);
-          const group = this.initializeGroup2(dimension);
-
-          this.props.setCrossfilterKeyAccessor(d => d.dimensions[0].value);
-          console.log(
-            "xia: adding dimension and group",
-            this.props.addSourceCrossfilterDimensionAndGroup,
-          );
-          const { settings } = this.props;
-          const dimensionIndex = settings["pie._dimensionIndex"];
-          const metricIndex = settings["pie._metricIndex"];
-          this.props.addSourceCrossfilterDimensionAndGroup(
-            dimension,
-            group,
-            dimensionIndex,
-            metricIndex,
-          );
-          this.props.redrawCrossfilterGroup();
-        }
-      }
-    }
-  }
-
-  initChartcCrossfilter() {
-    this.crossfilter = null;
-    this.dimension = null;
-    this.group=null;
-  }
-  toCrossfilterRecords = (rows, cols) => {
-    const records = [];
-    const rowCount = rows.length;
-    const colCount = cols.length;
-    for (let i = 0; i < rowCount; i++) {
-      const rowData = rows[i];
-      const record = {};
-      for (let j = 0; j < colCount; j++) {
-        record[j] = rowData[j];
-      }
-      records.push(record);
-    }
-    return records;
-  };
-
-  initializeDimension(crossfilter) {
-    console.log("initialize dimension");
-    const { settings } = this.props;
-    const dimensionIndex = settings["pie._dimensionIndex"];
-    const dimension = crossfilter.dimension(d => d[dimensionIndex]);
-    this.props.setCrossfilterDimension(dimension);
-    return dimension;
-  }
-
-  initializeGroup(dimension) {
-    const { settings } = this.props;
-    const dimensionIndex = settings["pie._dimensionIndex"];
-
-    const reduceAdd = function(p, v) {
-      const dimensionValue = v[dimensionIndex];
-      p[dimensionValue] = Object.values(v);
-      return p;
-    };
-
-    const reduceRemove = function(p, v) {
-      const dimensionValue = v[dimensionIndex];
-      if (p[dimensionValue]) {
-        delete p[dimensionValue];
-      }
-      return p;
-    };
-
-    const reduceInitial = function() {
-      return {};
-    };
-
-    const group = dimension
-      .group()
-      .reduce(reduceAdd, reduceRemove, reduceInitial);
-    this.props.setCrossfilterGroup(group);
-    return group;
-  }
-
-  initializeGroup2(dimension) {
-    const { settings } = this.props;
-    const dimensionIndex = settings["pie._dimensionIndex"];
-
-    const reduceAdd = function(p, v) {
-      const dimensionValue = v[dimensionIndex];
-      p[dimensionValue] = Object.values(v);
-      return p;
-    };
-
-    const reduceRemove = function(p, v) {
-      const dimensionValue = v[dimensionIndex];
-      if (p[dimensionValue]) {
-        delete p[dimensionValue];
-      }
-      return p;
-    };
-
-    const reduceInitial = function() {
-      return {};
-    };
-
-    const metricIndex = settings["pie._metricIndex"];
-    let group = dimension.group().reduceSum(d => d[metricIndex]);
-
-    this.props.setCrossfilterGroup(group);
-    return group;
-  }
-
-  getFilteredRows2 = () => {
-    const filteredRecords = this.props.crossfilterData();
-    let rows = filteredRecords.map(d => [d.key, d.value]);
-    console.log("xia: [getFilteredRows2]", rows);
-    return rows;
-  };
-
-  getFilteredRows = () => {
-    const data = this.props.crossfilterData();
-    let values = data.map(d => d.value);
-    values = values.map(v => Object.values(v)[0]);
-    return values;
-  };
-
-  isSelectedSlice(d) {
-    return this.props.hasFilter(d);
-  }
-
-  getSliceOpacity(key, index) {
-    if (this.props.enableCrossfilter) {
-      if (this.props.hasFilter()) {
-        return this.isSelectedSlice(key) ? 1 : 0.3;
-      } else {
-        return 1;
-      }
-    } else {
-      const { hovered } = this.props;
-
-      return hovered && hovered.index != null && hovered.index !== index
-        ? 0.3
-        : 1;
-    }
-  }
-
   render() {
     const {
       series,
@@ -333,13 +205,17 @@ export default class PieChart extends Component {
     let [{ data: { cols, rows } }] = series;
     const dimensionIndex = settings["pie._dimensionIndex"];
     const metricIndex = settings["pie._metricIndex"];
-    let dataRowDimensionIndex = dimensionIndex;
-    let dataRowMetricIndex = metricIndex;
 
-    if (this.props.enableCrossfilter && this.props.getCrossfilterGroup()) {
-      rows = this.getFilteredRows2();
-      dataRowDimensionIndex = 0;
-      dataRowMetricIndex = 1;
+    const dynamicFilterEnabled = settings["pie.aggregation_enabled"];
+    if (dynamicFilterEnabled) {
+      const aggregationType = settings["pie.dynamic_filter_aggregation"];
+      const dynamicFilterData = getDynamicFilterData(series[0], {
+        dimensionIndex,
+        metricIndex,
+        aggregationType,
+      })
+      cols = dynamicFilterData.cols;
+      rows = dynamicFilterData.rows;
     }
 
     const formatDimension = (dimension, jsx = true) =>
@@ -368,10 +244,7 @@ export default class PieChart extends Component {
       !PERCENT_REGEX.test(cols[metricIndex].name) &&
       !PERCENT_REGEX.test(cols[metricIndex].display_name);
 
-    let total: number = rows.reduce(
-      (sum, row) => sum + row[dataRowMetricIndex],
-      0,
-    );
+    let total: number = rows.reduce((sum, row) => sum + row[metricIndex], 0);
 
     let sliceThreshold =
       typeof settings["pie.slice_threshold"] === "number"
@@ -380,10 +253,10 @@ export default class PieChart extends Component {
 
     let [slices, others] = _.chain(rows)
       .map((row, index) => ({
-        key: row[dataRowDimensionIndex],
-        value: row[dataRowMetricIndex],
-        percentage: row[dataRowMetricIndex] / total,
-        color: settings["pie._colors"][row[dataRowDimensionIndex]],
+        key: row[dimensionIndex],
+        value: row[metricIndex],
+        percentage: row[metricIndex] / total,
+        color: settings["pie._colors"][row[dimensionIndex]],
       }))
       .partition(d => d.percentage > sliceThreshold)
       .value();
@@ -540,7 +413,13 @@ export default class PieChart extends Component {
                     key={index}
                     d={arc(slice)}
                     fill={slices[index].color}
-                    opacity={this.getSliceOpacity(slices[index].key, index)}
+                    opacity={
+                      hovered &&
+                      hovered.index != null &&
+                      hovered.index !== index
+                        ? 0.3
+                        : 1
+                    }
                     onMouseMove={e =>
                       onHoverChange && onHoverChange(hoverForIndex(index, e))
                     }
@@ -549,21 +428,12 @@ export default class PieChart extends Component {
                       "cursor-pointer": getSliceIsClickable(index),
                     })}
                     onClick={
-                      this.props.enableCrossfilter &&
-                      this.props.getCrossfilterGroup()
-                        ? e => {
-                            console.log("xia: crossfilter click");
-                            this.props.onCrossfilterClick(
-                              getSliceClickObject(index),
-                              e.nativeEvent,
-                            );
-                          }
-                        : getSliceIsClickable(index) &&
-                          (e =>
-                            onVisualizationClick({
-                              ...getSliceClickObject(index),
-                              event: e.nativeEvent,
-                            }))
+                      getSliceIsClickable(index) &&
+                      (e =>
+                        onVisualizationClick({
+                          ...getSliceClickObject(index),
+                          event: e.nativeEvent,
+                        }))
                     }
                   />
                 ))}
