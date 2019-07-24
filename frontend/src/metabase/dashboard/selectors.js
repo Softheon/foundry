@@ -67,6 +67,44 @@ export const getDashboardComplete = createSelector(
     },
 );
 
+export const getNativeDashcardDetail = createSelector(
+  [getDashboardComplete],
+  (dashboard) => {
+    const dashCardMap = new Map();
+    const nativeCardToSrcNativeCard = new Map();
+    const cardToDashcardData = new Map();
+    if (!dashboard) {
+      return {
+        nativeCardToSrcNativeCard,
+        cardToDashcardData
+      }
+    }
+    for (const dashcard of dashboard.ordered_cards) {
+      const card = dashcard.card;
+      const type = card.dataset_query && card.dataset_query.type;
+      if (type === "native") {
+          const databaseIdentifier = "[" + "db_"+ card.dataset_query.database + "]";
+          const key = databaseIdentifier + card.dataset_query.native.query;
+          if (!dashCardMap.has(key)) {
+            const cards = [dashcard.card].concat(dashcard.series || []);
+            const results = cards.map(card => ({ card, dashcard}));
+            dashCardMap.set(key, results);
+            nativeCardToSrcNativeCard.set(card.id, card.id);
+            cardToDashcardData.set(card.id, {card, dashcard})
+          } else {
+            const  cards = dashCardMap.get(key);
+            const sourceCardId = cards[0].card.id;
+            nativeCardToSrcNativeCard.set(card.id, sourceCardId);
+          }       
+      }
+    }
+    return {
+      nativeCardToSrcNativeCard,
+      cardToDashcardData
+    };
+  }
+)
+
 export const getIsDirty = createSelector(
   [getDashboard, getDashcards],
   (dashboard, dashcards) =>

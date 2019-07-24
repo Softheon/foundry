@@ -84,8 +84,24 @@ export default class DashCard extends Component {
     const cards = [mainCard].concat(dashcard.series || []);
     const dashboardId = dashcard.dashboard_id;
     const isEmbed = Utils.isJWT(dashboardId);
+    //console.log("xia: native dashcard detail", this.props.nativeDashcardDetail);
+    const {nativeCardToSrcNativeCard, cardToDashcardData}   = this.props.nativeDashcardDetail;
+    const getDashcardData = card => {
+      //return getIn(dashcardData, [dashcard.id, card.id]);
+      if (!nativeCardToSrcNativeCard.has(card.id)) {
+        return getIn(dashcardData, [dashcard.id, card.id]);
+      }
+      else {
+        const srcCardId = nativeCardToSrcNativeCard.get(card.id);
+        const dashcardDetail = cardToDashcardData.get(srcCardId);
+        const srcCard = dashcardDetail.card;
+        const srcDashcard = dashcardDetail.dashcard;
+        return getIn(dashcardData, [srcDashcard.id, srcCard.id])
+      }
+    }
     const series = cards.map(card => ({
-      ...getIn(dashcardData, [dashcard.id, card.id]),
+      //...getIn(dashcardData, [dashcard.id, card.id]),
+      ...getDashcardData(card),
       card: card,
       isSlow: slowCards[card.id],
       isUsuallyFast:

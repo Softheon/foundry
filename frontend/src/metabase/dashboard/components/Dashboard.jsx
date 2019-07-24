@@ -167,8 +167,8 @@ export default class Dashboard extends Component {
       !_.isEqual(this.props.parameterValues, nextProps.parameterValues) ||
       !this.props.dashboard
     ) {
-      this.props.fetchDashboardCardData({ reload: false, clear: true });
-    }
+      this.props.fetchUniqueDashboardCardData({ reload: false, clear: true });
+    }  
   }
 
   componentWillUnmount() {

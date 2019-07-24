@@ -53,7 +53,7 @@ import {
   MetabaseApi,
 } from "metabase/services";
 
-import { getDashboard, getDashboardComplete } from "./selectors";
+import { getDashboard, getDashboardComplete, getNativeDashcardDetail } from "./selectors";
 import { getMetadata } from "metabase/selectors/metadata";
 import { getCardAfterVisualizationClick } from "metabase/visualizations/lib/utils";
 
@@ -95,6 +95,7 @@ export const UPDATE_DASHCARD_ID = "metabase/dashboard/UPDATE_DASHCARD_ID";
 export const FETCH_DASHBOARD_CARD_DATA =
   "metabase/dashboard/FETCH_DASHBOARD_CARD_DATA";
 export const FETCH_CARD_DATA = "metabase/dashboard/FETCH_CARD_DATA";
+export const FETCH_DUPLICATE_CARD_DATA = "metabase/dashboard/FETCH_DUPLICATE_CARD_DATA";
 
 export const CANCEL_FETCH_DASHBOARD_CARD_DATA =
   "metabase/dashboard/CANCEL_FETCH_DASHBOARD_CARD_DATA";
@@ -399,6 +400,23 @@ function isVirtualDashCard(dashcard) {
   return _.isObject(dashcard.visualization_settings.virtual_card);
 }
 
+export const fetchUniqueDashboardCardData = createThunkAction(
+  FETCH_DASHBOARD_CARD_DATA,
+  options => (dispatch, getState) => {
+    const dashboard = getDashboardComplete(getState());
+    const { nativeCardToSrcNativeCard } = getNativeDashcardDetail(getState());
+    for (const { card, dashcard } of getAllDashboardCards(dashboard)) {
+      // we skip over virtual cards, i.e. dashcards that do not have backing cards in the backend
+      if (!isVirtualDashCard(dashcard)) {
+        if (card.query_type !== "native" || 
+        card.id === nativeCardToSrcNativeCard.get(card.id) ) {
+          dispatch(fetchCardData(card, dashcard, options));
+        } 
+      }
+    }
+  },
+);
+
 export const fetchDashboardCardData = createThunkAction(
   FETCH_DASHBOARD_CARD_DATA,
   options => (dispatch, getState) => {
@@ -478,7 +496,7 @@ export const fetchCardData = createThunkAction(FETCH_CARD_DATA, function(
     if (!reload) {
       // if reload not set, check to see if the last result has the same query dict and return that
       const lastResult = getIn(dashcardData, [dashcard.id, card.id]);
-      // "constraints" is added by the backend, remove it when comparing
+      // "constraints" is added by the backend, remove it when comparing 
       if (
         lastResult &&
         Utils.equals(_.omit(lastResult.json_query, "constraints"), datasetQuery)
@@ -1067,6 +1085,10 @@ const dashcardData = handleActions(
     // clear existing dashboard data when loading a dashboard
     [INITIALIZE]: { next: state => ({}) },
     [FETCH_CARD_DATA]: {
+      next: (state, { payload: { dashcard_id, card_id, result } }) =>
+        assocIn(state, [dashcard_id, card_id], result),
+    },
+    [FETCH_DUPLICATE_CARD_DATA]: {
       next: (state, { payload: { dashcard_id, card_id, result } }) =>
         assocIn(state, [dashcard_id, card_id], result),
     },

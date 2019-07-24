@@ -18,6 +18,7 @@ import {
   getParameterTarget,
   makeGetParameterMappingOptions,
   getMappingsByParameter,
+  getCardData
 } from "../selectors";
 import { setParameterMapping } from "../dashboard";
 
@@ -49,6 +50,7 @@ const makeMapStateToProps = () => {
     ),
     target: getParameterTarget(state, props),
     mappingsByParameter: getMappingsByParameter(state, props),
+    dashcardData: getCardData(state, props),
   });
   return mapStateToProps;
 };
@@ -111,10 +113,11 @@ export default class DashCardCardParameterMapper extends Component {
       parameter,
       dashcard,
       card,
+      dashcardData,
     } = this.props;
 
     // TODO: move some of these to selectors?
-    const disabled = mappingOptions.length === 0;
+    const disabled = mappingOptions.length === 0 || !getIn(dashcardData, [dashcard.id, card.id]);
     const selected = _.find(mappingOptions, o => _.isEqual(o.target, target));
 
     const mapping = getIn(mappingsByParameter, [

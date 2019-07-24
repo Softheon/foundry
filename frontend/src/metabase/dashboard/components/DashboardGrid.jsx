@@ -313,6 +313,7 @@ export default class DashboardGrid extends Component {
         enableCrossfilter={enableCrossfilter}
         resetedCrossfilterId = {this.props.resetedCrossfilterId}
         resetCrossfilter={this.props.resetCrossfilter}
+        nativeDashcardDetail={this.props.nativeDashcardDetail}
       />
     );
   }
