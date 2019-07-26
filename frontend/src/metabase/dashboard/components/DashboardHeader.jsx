@@ -200,20 +200,20 @@ export default class DashboardHeader extends Component {
       const dashcard = dashcards[parameter.dashcard_id];
       if (dashcard && dashcard.card) {
         const card = dashcard.card;
-        const datasetQuery = card.dataset_query
-        const queryString = datasetQuery && datasetQuery.native.query;
-        if (queryString) {
-          cfSourceMap.set(queryString, card);
+        const type = card.dataset_query && card.dataset_query.type;
+        if (type === "native") {
+          const dbKey = "[db_" + card.dataset_query.database +"]";
+          const queryKey = dbKey + card.dataset_query.native.query;
+          cfSourceMap.set(queryKey, card);
         }
       }
     })
-    // gets a list of cards to be used as source of a new crossfilter excluding the cards that have
-    // been used as source of existing crossfilters.
     const result = [];
     nativeDashcards.map(nativeDashcard => {
       const { dashcard_id, card } = nativeDashcard;
       const { dataset_query: { native : {query} }, database_id} = card;
-      if (!cfSourceMap.has(query)) {
+      const key = "[db_"+ database_id + "]" + query;
+      if (!cfSourceMap.has(key)) {
           result.push({
             card_id: card.id,
             dashcard_id: dashcard_id,
@@ -221,18 +221,8 @@ export default class DashboardHeader extends Component {
             name: card.name,
             type: "crossfilter"
           });
-      } else {
-          const cfSourceCard = cfSourceMap.get(query);
-          if (cfSourceCard.dataset_query.database !== database_id){
-            result.push({
-              card_id: card.id,
-              dashcard_id: dashcard_id,
-              database_id: database_id,
-              name: card.name,
-              type: "crossfilter"
-            });
-          }
-      }
+      } 
+     
     })
     return result;
   }

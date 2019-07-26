@@ -139,8 +139,6 @@ export const ParameterOptionsPane = ({
     { !isCrossFilterSection 
       ? <h3 className="p2">{t`What kind of filter?`}</h3>
     : <h3 className="p2">{t`What is the data source?`}</h3> }
-
-    
     <ul>
       {options &&
         options.map(option => (

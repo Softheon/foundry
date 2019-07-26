@@ -1,20 +1,11 @@
 import React, { Component } from "react";
-import crossfilter from "crossfilter";
 import { connect } from "react-redux";
 import { replace } from "react-router-redux";
-import { getIn } from "icepick";
 
 import type { LocationDescriptor } from "metabase/meta/types";
-import { nativeQueryGroupsBySQL } from "../selectors";
-
-const mapStateToProps = (state, props) => {
-  return {
-    nativeQueryGroupsBySQL: nativeQueryGroupsBySQL(state, props),
-  };
-};
 
 export default (ComposedComponent: ReactClass<any>) =>
-  connect(mapStateToProps, { replace })(
+  connect(null, { replace })(
     class extends Component {
       static displayName = "DashboardCrossfilterControl[" +
         (ComposedComponent.displayName || ComposedComponent.name) +

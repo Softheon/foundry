@@ -24,7 +24,6 @@ import {
   makeGetMergedParameterFieldValues,
 } from "metabase/selectors/metadata";
 
-import { getCrossFilterValues } from "metabase/dashboard/selectors";
 
 import { getParameterIconName } from "metabase/meta/Parameter";
 
@@ -51,12 +50,6 @@ const makeMapStateToProps = () => {
 
   const mapStateToProps = (state, props) => {
     let values = getMergedParameterFieldValues(state,props);
-    if (props.parameter.type === "crossfilter") {
-      let crossFilterValues = getCrossFilterValues(state,props);
-      values = crossFilterValues.map(crossFilterValue => {
-       return [crossFilterValue]
-      })
-    }
     return {
       metadata: getMetadata(state),
       values
