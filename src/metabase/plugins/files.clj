@@ -23,6 +23,13 @@
 (defn- get-path-in-filesystem ^Path [^FileSystem filesystem, ^String path-component & more-components]
   (.getPath filesystem path-component (u/varargs String more-components)))
 
+(defn- get-path-in-filesystem ^Path [^FileSystem filesystem, ^String path-component & more-components]
+  (let [path (str/trim path-component)
+        path (if (str/starts-with? path-component "/C")
+               (str/replace path #"/C", "C")
+               path)]
+    (.getPath filesystem path (u/varargs String more-components))))
+
 (defn get-path
   "Get a `Path` for a file or directory in the default (i.e., system) filesystem named by string path component(s).
 

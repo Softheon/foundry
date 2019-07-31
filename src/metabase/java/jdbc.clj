@@ -1820,11 +1820,13 @@ metabase.java.jdbc
      (future
        (try
          (func output rset)
+         (catch Exception _
+           (throw _))
          (finally
-             (.close rset)
-             (.close stmt)
-             (.close ^Connection db)
-             (.close output))))
+           (.close rset)
+           (.close stmt)
+           (.close ^Connection db)
+           )))
      input)
    (if-let [con (db-find-connection db)]
      (let [^PreparedStatement stmt (prepare-statement con sql opts)
@@ -1836,11 +1838,12 @@ metabase.java.jdbc
        (future
          (try
            (func output rset)
+           (catch Exception _
+             (throw _))
            (finally
              (.close rset)
              (.close stmt)
-             (.close con)
-             (.close output))))
+             (.close con))))
        input)
      (let [con (get-connection db opts)
            ^PreparedStatement stmt (prepare-statement con sql opts)
@@ -1852,8 +1855,9 @@ metabase.java.jdbc
        (future
          (try
            (func output rset)
+           (catch Exception _
+             (throw _))
            (finally
-             (.close output)
              (.close rset)
              (.close stmt)
              (.close con))))

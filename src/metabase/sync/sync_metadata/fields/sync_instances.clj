@@ -42,16 +42,17 @@
   "Insert new Field rows for for all the Fields described by `new-field-metadatas`."
   [table :- i/TableInstance, new-field-metadatas :- [i/TableMetadataField], parent-id :- common/ParentID]
   (when (seq new-field-metadatas)
-    (db/insert-many! Field
-      (for [{:keys [database-type base-type field-comment], field-name :name :as field} new-field-metadatas]
-        {:table_id      (u/get-id table)
-         :name          field-name
-         :display_name  (humanization/name->human-readable-name field-name)
-         :database_type (or database-type "NULL") ; placeholder for Fields w/ no type info (e.g. Mongo) & all NULL
-         :base_type     base-type
-         :special_type  (common/special-type field)
-         :parent_id     parent-id
-         :description   field-comment}))))
+    (let [ids    (db/insert-many! Field
+                                  (for [{:keys [database-type base-type field-comment], field-name :name :as field} new-field-metadatas]
+                                    {:table_id      (u/get-id table)
+                                     :name          field-name
+                                     :display_name  (humanization/name->human-readable-name field-name)
+                                     :database_type (or database-type "NULL") ; placeholder for Fields w/ no type info (e.g. Mongo) & all NULL
+                                     :base_type     base-type
+                                     :special_type  (common/special-type field)
+                                     :parent_id     parent-id
+                                     :description   field-comment}))]
+      (map int ids))))
 
 (s/defn ^:private create-or-reactivate-fields! :- (s/maybe [i/FieldInstance])
   "Create (or reactivate) Foundry Field object(s) for any Fields in `new-field-metadatas`. Does *NOT* recursively
