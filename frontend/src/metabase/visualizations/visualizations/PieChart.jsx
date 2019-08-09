@@ -223,7 +223,7 @@ export default class PieChart extends Component {
     if (otherSlice && otherSlice.percentage < OTHER_SLICE_MIN_PERCENTAGE) {
       otherSlice.value = total * OTHER_SLICE_MIN_PERCENTAGE;
     }
-
+    slices.sort((a,b) => a.percentage - b.percentage);
     let legendTitles = slices.map(slice => [
       slice.key === "Other" ? slice.key : formatDimension(slice.key, true),
       settings["pie.show_legend_perecent"]
