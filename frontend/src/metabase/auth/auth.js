@@ -143,12 +143,34 @@ export const passwordReset = createThunkAction(PASSWORD_RESET, function(
   };
 });
 
+export const IDLE_TIMEOUT = "foundry/auth/IDLE_TIMEOUT";
+export const idleSessionTimeout = createThunkAction(
+  IDLE_TIMEOUT,
+  message => (dispatch, getState) => {
+    let sessionId = MetabaseCookies.setSessionCookie();
+    if (sessionId) {
+      SessionApi.delete({ session_id: sessionId });
+    }
+    dispatch(push("/auth/login"));
+    return {
+      data: {
+        errors: {
+          username: "You have been logged out due to inactivity.",
+        },
+      },
+    };
+  },
+);
+
 // reducers
 
 const loginError = handleActions(
   {
     [LOGIN]: { next: (state, { payload }) => (payload ? payload : null) },
     [LOGIN_GOOGLE]: {
+      next: (state, { payload }) => (payload ? payload : null),
+    },
+    [IDLE_TIMEOUT]: {
       next: (state, { payload }) => (payload ? payload : null),
     },
   },

@@ -4,7 +4,7 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 import ScrollToTop from "metabase/hoc/ScrollToTop";
 import Navbar from "metabase/nav/containers/Navbar.jsx";
-
+import TimeoutModal from "metabase/auth/components/TimeoutModal.jsx";
 import UndoListing from "metabase/containers/UndoListing";
 
 import {
@@ -63,6 +63,7 @@ export default class App extends Component {
       <ScrollToTop>
         <div className="relative">
           {currentUser && <Navbar location={location} />}
+          {currentUser && <TimeoutModal idleTimeout={60} modelTimeout={30}/>}
           {errorPage ? getErrorComponent(errorPage) : children}
           <UndoListing />
         </div>
