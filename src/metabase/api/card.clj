@@ -850,11 +850,12 @@
 (api/defendpoint-async POST "/:card-id/query/:export-format"
   "Run the query associated with a Card, and return its results as a file in the specified format. Note that this
   expects the parameters as serialized JSON in the 'parameters' parameter"
-  [{{:keys [card-id export-format parameters]} :params} respond raise]
+  [{{:keys [card-id export-format parameters name]} :params} respond raise]
   {parameters    (s/maybe su/JSONString)
-    export-format dataset-api/ExportFormat}
+   export-format dataset-api/ExportFormat
+   name su/NonBlankString}
   (binding [cache/*ignore-cached-results* true]
-    (dataset-api/as-format-async-file export-format respond raise
+    (dataset-api/as-format-async-file name export-format respond raise
       (run-query-for-card-async-file (Integer/parseUnsignedInt card-id)
         :parameters  (json/parse-string parameters keyword)
         :constraints nil

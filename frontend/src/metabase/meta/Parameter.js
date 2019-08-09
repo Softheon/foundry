@@ -36,7 +36,7 @@ export function getTemplateTagParameters(tags: TemplateTag[]): Parameter[] {
       id: tag.id,
       type:
         tag["widget-type"] ||
-        (tag.type === "date" ? "date/single" : "category"),
+        (tag.type === "date" ? "date/day-month-year" : "category"),
       target:
         tag.type === "dimension"
           ? ["dimension", ["template-tag", tag.name]]

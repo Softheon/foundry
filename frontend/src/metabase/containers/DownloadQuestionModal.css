@@ -1,0 +1,20 @@
+.downloadQuestionModalFields {
+    overflow: hidden;
+  }
+  
+  .downloadQuestionModalFields-enter {
+    max-height: 0px;
+  }
+  .downloadQuestionModalFields-enter.downloadQuestionModalFields-enter-active {
+    /* using 100% max-height breaks the transition */
+    max-height: 300px;
+    transition: max-height 500ms ease-out;
+  }
+  .downloadQuestionModalFields-leave {
+    max-height: 300px;
+  }
+  .downloadQuestionModalFields-leave.downloadQuestionModalFields-leave-active {
+    max-height: 0px;
+    transition: max-height 500ms ease-out;
+  }
+  
