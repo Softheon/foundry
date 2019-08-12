@@ -72,7 +72,7 @@ export const loginGoogle = createThunkAction(LOGIN_GOOGLE, function(
       await dispatch(refreshCurrentUser());
       dispatch(push(redirectUrl || "/"));
     } catch (error) {
-      clearGoogleAuthCredentials();
+      await clearGoogleAuthCredentials();
       // If we see a 428 ("Precondition Required") that means we need to show the "No Foundry account exists for this Google Account" page
       if (error.status === 428) {
         dispatch(push("/auth/google_no_mb_account"));
@@ -86,14 +86,16 @@ export const loginGoogle = createThunkAction(LOGIN_GOOGLE, function(
 // logout
 export const LOGOUT = "metabase/auth/LOGOUT";
 export const logout = createThunkAction(LOGOUT, function() {
-  return function(dispatch, getState) {
+  return async function(dispatch, getState) {
     // TODO: as part of a logout we want to clear out any saved state that we have about anything
 
     let sessionId = MetabaseCookies.setSessionCookie();
     if (sessionId) {
       // actively delete the session
-      SessionApi.delete({ session_id: sessionId });
+      await SessionApi.delete({ session_id: sessionId });
     }
+    // clear Google auth credentials if any are present
+    await clearGoogleAuthCredentials();
     MetabaseAnalytics.trackEvent("Auth", "Logout");
 
     dispatch(push("/auth/login"));
