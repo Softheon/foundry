@@ -97,11 +97,8 @@ export function applyChartTimeseriesXAxis(
   let dimensionColumn = firstSeries.data.cols[0];
 
   // get the data's timezone offset from the first row
-  let dataOffset = parseTimestamp(firstSeries.data.rows[0][0]).utcOffset() / 60;
-
-  // compute the data interval
-  let dataInterval = xInterval;
-  let tickInterval = dataInterval;
+  const dataOffset =
+    parseTimestamp(firstSeries.data.rows[0][0]).utcOffset() / 60;
 
   if (chart.settings["graph.x_axis.labels_enabled"]) {
     chart.xAxisLabel(
@@ -116,28 +113,10 @@ export function applyChartTimeseriesXAxis(
     );
 
     if (dimensionColumn.unit == null) {
-      dimensionColumn = { ...dimensionColumn, unit: dataInterval.interval };
+      dimensionColumn = { ...dimensionColumn, unit: xInterval.interval };
     }
 
-    // special handling for weeks
-    // TODO: are there any other cases where we should do this?
-    if (dataInterval.interval === "week") {
-      // if tick interval is compressed then show months instead of weeks because they're nicer formatted
-      const newTickInterval = computeTimeseriesTicksInterval(
-        xDomain,
-        tickInterval,
-        chart.width(),
-      );
-      if (
-        newTickInterval.interval !== tickInterval.interval ||
-        newTickInterval.count !== tickInterval.count
-      ) {
-        (dimensionColumn = { ...dimensionColumn, unit: "month" }),
-          (tickInterval = { interval: "month", count: 1 });
-      }
-    }
-
-    chart.xAxis().tickFormat(timestamp => {
+    const tickFormat = timestamp => {
       // timestamp is a plain Date object which discards the timezone,
       // so add it back in so it's formatted correctly
       const timestampFixed = moment(timestamp)
@@ -148,13 +127,16 @@ export function applyChartTimeseriesXAxis(
         type: "axis",
         compact: chart.settings["graph.x_axis.axis_enabled"] === "compact",
       });
-    });
+    };
 
-    // Compute a sane interval to display based on the data granularity, domain, and chart width
-    tickInterval = computeTimeseriesTicksInterval(
+    chart.xAxis().tickFormat(tickFormat);
+
+    // Compute tick interval, which maybe drops xInterval ticks on narrow charts
+    const tickInterval = computeTimeseriesTicksInterval(
       xDomain,
-      tickInterval,
+      xInterval,
       chart.width(),
+      tickFormat,
     );
     chart.xAxis().ticks(tickInterval.rangeFn, tickInterval.count);
   } else {
@@ -162,24 +144,35 @@ export function applyChartTimeseriesXAxis(
   }
 
   // pad the domain slightly to prevent clipping
-  xDomain[0] = moment(xDomain[0]).subtract(
-    dataInterval.count * 0.75,
-    dataInterval.interval,
-  );
-  xDomain[1] = moment(xDomain[1]).add(
-    dataInterval.count * 0.75,
-    dataInterval.interval,
-  );
+  xDomain = stretchTimeseriesDomain(xDomain, xInterval);
 
   // set the x scale
-  chart.x(d3.time.scale.utc().domain(xDomain)); //.nice(d3.time[dataInterval.interval]));
+  chart.x(d3.time.scale.utc().domain(xDomain));
 
   // set the x units (used to compute bar size)
   chart.xUnits((start, stop) =>
     Math.ceil(
-      1 + moment(stop).diff(start, dataInterval.interval) / dataInterval.count,
+      1 + moment(stop).diff(start, xInterval.interval) / xInterval.count,
     ),
   );
+}
+
+export function stretchTimeseriesDomain([start, end], { count, interval }) {
+  if (interval === "month") {
+    interval = "day";
+    count *= 30;
+  } else if (interval === "week") {
+    interval = "day";
+    count *= 7;
+  } else if (interval === "day") {
+    interval = "hour";
+    count *= 24;
+  }
+
+  return [
+    moment(start).subtract(count * 0.75, interval),
+    moment(end).add(count * 0.75, interval),
+  ];
 }
 
 export function applyChartQuantitativeXAxis(
