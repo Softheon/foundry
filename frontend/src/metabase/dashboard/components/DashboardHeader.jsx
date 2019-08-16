@@ -211,7 +211,7 @@ export default class DashboardHeader extends Component {
     const result = [];
     nativeDashcards.map(nativeDashcard => {
       const { dashcard_id, dashboard_id, card } = nativeDashcard;
-      if (dashboard_id === this.props.dashboard) {
+      if (dashboard_id === this.props.dashboard.id) {
         const { dataset_query: { native: { query } }, database_id } = card;
         const key = "[db_" + database_id + "]" + query;
         if (!cfSourceMap.has(key)) {
