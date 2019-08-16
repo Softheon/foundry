@@ -160,7 +160,7 @@ export function getXValues(datas) {
 }
 
 export function getFriendlyName(column) {
-  if(!column.name){
+  if (!column.name) {
     return null;
   }
   if (column.display_name && column.display_name !== column.name) {
@@ -334,82 +334,92 @@ export function getDefaultDimensionAndMetric([{ data }]) {
 
 export function getReduceSumFns(dimensionIndex, aggregatedIndex) {
   const reduceAdd = (p, v) => {
-    if (!p) {
-      return v;
+    if (p.length === 0) {
+      return [...v];
     }
     p[aggregatedIndex] += v[aggregatedIndex];
     return p;
   };
   const reduceRemove = (p, v) => {
-    if(p) {
-      p[aggregatedIndex] -= v[aggregatedIndex];
-    }
+    p[aggregatedIndex] -= v[aggregatedIndex];
     return p;
   };
-  const reduceInitial = () => null;
+  const reduceInitial = () => [];
 
   return {
     reduceAdd,
     reduceRemove,
     reduceInitial,
-  }
+  };
 }
 
 export function getReduceCountFns(dimensionIndex, aggregatedIndex) {
   const reduceAdd = (p, v) => {
-    if(!p) {
-      const copy = [...v]
-      copy[aggregatedIndex] = 1;
-      return copy;
+    if (p.length == 0) {
+      const c = [...v];
+      c[aggregatedIndex] = 1;
+      return c;
     }
-    p[aggregatedIndex] +=1;
+    p[aggregatedIndex] += 1;
     return p;
   };
   const reduceRemove = (p, v) => {
-    if(p) {
-      p[aggregatedIndex] -= 1;
-    }
+    p[aggregatedIndex] -= 1;
     return p;
-  }
-  const reduceInitial = (p, v) => null;
+  };
+  const reduceInitial = (p, v) => [];
   return {
     reduceAdd,
     reduceRemove,
     reduceInitial,
-  }
+  };
 }
 
-
-export function getReduceCrossfilterReduceFns(aggregationType, dimensionIndex, metricIndex) {
-  if(aggregationType === "count") {
+export function getReduceCrossfilterReduceFns(
+  aggregationType,
+  dimensionIndex,
+  metricIndex,
+) {
+  if (aggregationType === "count") {
     return getReduceCountFns(dimensionIndex, metricIndex);
-  }
-  else if (aggregationType === "sum") {
+  } else if (aggregationType === "sum") {
     return getReduceSumFns(dimensionIndex, metricIndex);
   } else {
     return getReduceSumFns(dimensionIndex, metricIndex);
   }
 }
 export function getDynamicFilterData(
-  s, 
-  { dimensionIndex, metricIndex, aggregationType}) {
-    let {data: { cols, rows }} = s;
-    const { reduceAdd, reduceRemove, reduceInitial } = getReduceCrossfilterReduceFns(aggregationType, dimensionIndex, metricIndex);
-    const dataset = crossfilter(rows);
-    const cfDimension = dataset.dimension(d => [d[dimensionIndex]]);
-    const group = cfDimension.group().reduce(reduceAdd, reduceRemove, reduceInitial);
-    const newRows = group.all().map(d => d.value);
-    const newCols = cols.map(col => {
-      return {...col};
-    })
-    const dimensionCol = newCols[metricIndex];
-    const display_name = dimensionCol.name + 
-                        " " + 
-                        aggregationType.charAt(0).toUpperCase() +
-                        aggregationType.slice(1);
-    dimensionCol.display_name = display_name;
-    return {
-      cols: newCols,
-      rows: newRows
-    }
+  s,
+  { dimensionIndex, metricIndex, aggregationType },
+) {
+  let { data: { cols, rows } } = s;
+  const {
+    reduceAdd,
+    reduceRemove,
+    reduceInitial,
+  } = getReduceCrossfilterReduceFns(
+    aggregationType,
+    dimensionIndex,
+    metricIndex,
+  );
+  const dataset = crossfilter(rows);
+  const cfDimension = dataset.dimension(d => [d[dimensionIndex]]);
+  const group = cfDimension
+    .group()
+    .reduce(reduceAdd, reduceRemove, reduceInitial);
+  const newRows = group.all().map(d => d.value);
+  const newCols = cols.map(col => {
+    return { ...col };
+  });
+  const dimensionCol = newCols[metricIndex];
+  const display_name =
+    dimensionCol.name +
+    " " +
+    aggregationType.charAt(0).toUpperCase() +
+    aggregationType.slice(1);
+  dimensionCol.display_name = display_name;
+  return {
+    cols: newCols,
+    rows: newRows,
+  };
 }
