@@ -210,20 +210,21 @@ export default class DashboardHeader extends Component {
     })
     const result = [];
     nativeDashcards.map(nativeDashcard => {
-      const { dashcard_id, card } = nativeDashcard;
-      const { dataset_query: { native : {query} }, database_id} = card;
-      const key = "[db_"+ database_id + "]" + query;
-      if (!cfSourceMap.has(key)) {
+      const { dashcard_id, dashboard_id, card } = nativeDashcard;
+      if (dashboard_id === this.props.dashboard) {
+        const { dataset_query: { native: { query } }, database_id } = card;
+        const key = "[db_" + database_id + "]" + query;
+        if (!cfSourceMap.has(key)) {
           result.push({
             card_id: card.id,
             dashcard_id: dashcard_id,
             database_id: card.database_id,
             name: card.name,
-            type: "crossfilter"
+            type: "crossfilter",
           });
-      } 
-     
-    })
+        }
+      }
+    });
     return result;
   }
 

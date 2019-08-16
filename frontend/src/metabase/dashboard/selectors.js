@@ -160,7 +160,8 @@ export const getSQLDashcards = createSelector(
         if (query_type === "native") {
           nativeCards.push({
             card,
-            dashcard_id: dashcard.id
+            dashcard_id: dashcard.id,
+            dashboard_id: dashcard.dashboard_id
           });
         }
     });
