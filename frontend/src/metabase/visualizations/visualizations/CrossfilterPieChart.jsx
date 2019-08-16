@@ -13,9 +13,8 @@ import ChartTooltip from "../components/ChartTooltip.jsx";
 import ChartWithLegend from "../components/ChartWithLegend.jsx";
 
 import { ChartSettingsError } from "metabase/visualizations/lib/errors";
-import { 
-  getFriendlyName, 
-  getReduceCrossfilterReduceFns 
+import {
+  getFriendlyName,
 } from "metabase/visualizations/lib/utils";
 
 import {
@@ -66,7 +65,7 @@ export default class CrossfilterPieChart extends Component {
         t`Aggregation does not support multiple series`,
         { section: t`Data` },
         t`Update fields`,
-      )
+      );
     }
   }
 
@@ -164,13 +163,15 @@ export default class CrossfilterPieChart extends Component {
     const dimensionIndex = settings["pie._dimensionIndex"];
     const metricIndex = settings["pie._metricIndex"];
     const aggregationType = settings["pie.dynamic_filter_aggregation"];
-    const reduceFns = getReduceCrossfilterReduceFns(aggregationType, dimensionIndex, metricIndex);
     const dimension = dataset.dimension(d => d[dimensionIndex]);
-    const group = dimension.group().reduce(
-      reduceFns.reduceAdd,
-      reduceFns.reduceRemove,
-      reduceFns.reduceInitial
-    )
+    let group = null;
+    if (aggregationType === "sum") {
+      group = dimension.group().reduceSum(d => d[metricIndex] || 0);
+    } else if (aggregationType === "count") {
+      group = dimension.group().reduceCount();
+    } else {
+      group = dimension.group().reduceSum(d => d[metricIndex] || 0);
+    }
 
     if (isCrossfilterSource) {
       this.props.addSourceCrossfilter({
@@ -209,10 +210,7 @@ export default class CrossfilterPieChart extends Component {
 
   getFilteredRows = () => {
     const filteredRecords = this.props.crossfilterData();
-    const { settings } = this.props;
-    const metricIndex = settings["pie._metricIndex"];
-    let rows = filteredRecords.map(d => [d.key, d.value[metricIndex]]);
-    return rows;
+    return filteredRecords.map(d => [d.key, d.value]);
   };
 
   isSelectedSlice(d) {
@@ -246,7 +244,6 @@ export default class CrossfilterPieChart extends Component {
     let dataRowMetricIndex = 1;
 
     rows = this.getFilteredRows();
-
     const formatDimension = (dimension, jsx = true) =>
       formatValue(dimension, {
         ...settings.column(cols[dimensionIndex]),
@@ -277,23 +274,25 @@ export default class CrossfilterPieChart extends Component {
     const ndx = this.props.getSourceCrossfilter();
     const all = ndx.groupAll();
     const aggregationType = settings["pie.dynamic_filter_aggregation"];
-    const reduceFns = getReduceCrossfilterReduceFns(aggregationType, dimensionIndex, metricIndex);
-    const groupAll = all.reduce(
-      reduceFns.reduceAdd,
-      reduceFns.reduceRemove,
-      reduceFns.reduceInitial,
-    )
-    
-    let total = groupAll.value()[metricIndex];
-    all.dispose();
-    groupAll.dispose();
+    let allGroup = null;
+    if (aggregationType === "sum") {
+      allGroup = all.reduceSum(d => d[metricIndex] || 0);
+    } else if (aggregationType === "count") {
+      allGroup = all.reduceCount();
+    } else {
+      allGroup = all.reduceSum(d => d[metricIndex] || 0);
+    }
+    const total = allGroup.value();
+    allGroup.dispose();
 
     const dynamicFilterEnabled = settings["pie.aggregation_enabled"];
     if (dynamicFilterEnabled) {
       const metricCol = cols[metricIndex];
-      const display_name = metricCol.name + " "  +
-                          aggregationType.charAt(0).toUpperCase() + 
-                          aggregationType.slice(1);
+      const display_name =
+        metricCol.name +
+        " " +
+        aggregationType.charAt(0).toUpperCase() +
+        aggregationType.slice(1);
       metricCol.display_name = display_name;
     }
     let sliceThreshold =
@@ -367,7 +366,6 @@ export default class CrossfilterPieChart extends Component {
     }
 
     function hoverForIndex(index, event) {
-      console.log("hoverForIndex event", event);
       const slice = slices[index];
       if (!slice || slice.noHover) {
         return null;

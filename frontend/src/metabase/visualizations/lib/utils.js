@@ -346,7 +346,7 @@ export function getReduceSumFns(dimensionIndex, aggregatedIndex) {
     }
     return p;
   };
-  const reduceInitial = (p, v) => null;
+  const reduceInitial = () => null;
 
   return {
     reduceAdd,

@@ -27,10 +27,6 @@ export default (ComposedComponent: ReactClass<any>) =>
         this.updateChartGroup();
       }
 
-      componentWillUpdate() {
-       // this.updateChartGroup();
-      }
-
       getCrossfilterParameters() {
         const { dashboard } = this.props;
         const { parameters } = dashboard;

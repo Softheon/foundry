@@ -301,7 +301,7 @@ export default class DashboardGrid extends Component {
         }
         metadata={this.props.metadata}
         dashboard={this.props.dashboard}
-
+        // crossfitler properties
         chartGroup={chartGroup}
         redrawChartGroup={this.redrawChartGroup(chartGroup)}
         activeGroup={this.props.activeGroup}

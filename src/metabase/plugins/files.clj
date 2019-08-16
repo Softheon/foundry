@@ -28,10 +28,6 @@
         path (if (str/starts-with? path-component "/C")
                (str/replace path #"/C", "C")
                path)]
-    (log/info "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-    (log/info "---- path-component -----" (identity path-component))
-    (log/info "xxxxxxxxxxxxxxx" (identity path))
-    (log/info "**** get-path-in-filesystem *****" (identity path))
     (.getPath filesystem path (u/varargs String more-components))))
 
 (defn get-path

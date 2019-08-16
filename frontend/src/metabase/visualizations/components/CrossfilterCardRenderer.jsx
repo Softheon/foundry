@@ -93,13 +93,13 @@ export default class CrossfilterCardRenderer extends Component {
 
   getCrossfilterGroup(crossfilterDimension, groupIndex, aggregation) {
     if (aggregation === "sum") {
-        return crossfilterDimension.group().reduceSum(d => d[groupIndex] || 1);
+        return crossfilterDimension.group().reduceSum(d => d[groupIndex] || 0);
     }
     else if (aggregation === "count") {
       return crossfilterDimension.group().reduceCount();
     }
     else {
-      return crossfilterDimension.group().reduceSum(d => d[groupIndex] || 1);
+      return crossfilterDimension.group().reduceSum(d => d[groupIndex] || 0);
     }
   }
 

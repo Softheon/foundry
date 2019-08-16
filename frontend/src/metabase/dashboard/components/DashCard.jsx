@@ -84,10 +84,8 @@ export default class DashCard extends Component {
     const cards = [mainCard].concat(dashcard.series || []);
     const dashboardId = dashcard.dashboard_id;
     const isEmbed = Utils.isJWT(dashboardId);
-    //console.log("xia: native dashcard detail", this.props.nativeDashcardDetail);
     const {nativeCardToSrcNativeCard, cardToDashcardData}   = this.props.nativeDashcardDetail;
     const getDashcardData = card => {
-      //return getIn(dashcardData, [dashcard.id, card.id]);
       if (!nativeCardToSrcNativeCard.has(card.id)) {
         return getIn(dashcardData, [dashcard.id, card.id]);
       }
