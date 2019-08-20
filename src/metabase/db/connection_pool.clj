@@ -9,6 +9,7 @@
   (:import com.mchange.v2.c3p0.DataSources
            [java.sql Driver DriverManager]
            [java.util Map Properties]
+           [java.sql Connection]
            javax.sql.DataSource))
 
 ;;; ------------------------------------------------ Proxy DataSource ------------------------------------------------
@@ -22,13 +23,17 @@
   (^DataSource [^Driver driver, ^String jdbc-url, ^Properties properties]
    (reify DataSource
      (getConnection [_]
-       (.connect driver jdbc-url properties))
+                    (let [connectionInstance (.connect driver jdbc-url properties)]
+                      (.setTransactionIsolation connectionInstance (Connection/TRANSACTION_READ_UNCOMMITTED))
+                      connectionInstance))
      (getConnection [_ username password]
-       (doseq [[k v] {"user" username, "password" password}]
-         (if (some? k)
-           (.setProperty properties k (name v))
-           (.remove properties k)))
-       (.connect driver jdbc-url properties)))))
+                    (doseq [[k v] {"user" username, "password" password}]
+                      (if (some? k)
+                        (.setProperty properties k (name v))
+                        (.remove properties k)))
+                    (let [connectionInstance (.connect driver jdbc-url properties)] 
+                      (.setTransactionIsolation connectionInstance (Connection/TRANSACTION_READ_UNCOMMITTED))
+                      connectionInstance)))))
 
 
 ;;; ------------------------------------------- Creating Connection Pools --------------------------------------------
