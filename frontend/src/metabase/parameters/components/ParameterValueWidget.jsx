@@ -186,7 +186,9 @@ export default class ParameterValueWidget extends Component {
       if (isFullscreen) {
         return null;
       }
-
+      if(Widget.noIcon) {
+        return null;
+      }
       if (hasValue && !noReset) {
         return (
           <Icon

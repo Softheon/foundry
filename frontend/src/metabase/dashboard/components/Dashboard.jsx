@@ -167,7 +167,7 @@ export default class Dashboard extends Component {
       !_.isEqual(this.props.parameterValues, nextProps.parameterValues) ||
       !this.props.dashboard
     ) {
-      this.props.fetchUniqueDashboardCardData({ reload: false, clear: true });
+      this.props.fetchDashboardCardData({ reload: false, clear: true });
     }  
   }
 
@@ -180,7 +180,6 @@ export default class Dashboard extends Component {
    if (resetedCrossfilterId !== "") {
       this.setState({
         resetedCrossfilterId: "",
-
       })
     }
   }

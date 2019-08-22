@@ -53,7 +53,10 @@ import {
   MetabaseApi,
 } from "metabase/services";
 
-import { getDashboard, getDashboardComplete, getNativeDashcardDetail } from "./selectors";
+import {
+  getDashboard,
+  getDashboardComplete,
+} from "./selectors";
 import { getMetadata } from "metabase/selectors/metadata";
 import { getCardAfterVisualizationClick } from "metabase/visualizations/lib/utils";
 
@@ -95,7 +98,8 @@ export const UPDATE_DASHCARD_ID = "metabase/dashboard/UPDATE_DASHCARD_ID";
 export const FETCH_DASHBOARD_CARD_DATA =
   "metabase/dashboard/FETCH_DASHBOARD_CARD_DATA";
 export const FETCH_CARD_DATA = "metabase/dashboard/FETCH_CARD_DATA";
-export const FETCH_DUPLICATE_CARD_DATA = "metabase/dashboard/FETCH_DUPLICATE_CARD_DATA";
+export const FETCH_DUPLICATE_CARD_DATA =
+  "metabase/dashboard/FETCH_DUPLICATE_CARD_DATA";
 
 export const CANCEL_FETCH_DASHBOARD_CARD_DATA =
   "metabase/dashboard/CANCEL_FETCH_DASHBOARD_CARD_DATA";
@@ -120,8 +124,10 @@ export const SET_PARAMETER_VALUE = "metabase/dashboard/SET_PARAMETER_VALUE";
 export const SET_PARAMETER_INDEX = "metabase/dashboard/SET_PARAMETER_INDEX";
 export const SET_PARAMETER_DEFAULT_VALUE =
   "metabase/dashboard/SET_PARAMETER_DEFAULT_VALUE";
-export const ADD_CROSSFILTER_PARAMETER = "metabase/dashboard/ADD_CROSSFILTER_PARAMETER";
-export const REMOVE_CROSSFILTER_PARAMETER = "metabase/dashboard/REMOVE_CROSSFILTER_PARAMETER";
+export const ADD_CROSSFILTER_PARAMETER =
+  "metabase/dashboard/ADD_CROSSFILTER_PARAMETER";
+export const REMOVE_CROSSFILTER_PARAMETER =
+  "metabase/dashboard/REMOVE_CROSSFILTER_PARAMETER";
 
 function getDashboardType(id) {
   if (Utils.isUUID(id)) {
@@ -347,7 +353,6 @@ export const saveDashboardAndCards = createThunkAction(
               ),
           }),
         );
-
         const result = await DashboardApi.reposition_cards({
           dashId: dashboard.id,
           cards,
@@ -404,14 +409,9 @@ export const fetchUniqueDashboardCardData = createThunkAction(
   FETCH_DASHBOARD_CARD_DATA,
   options => (dispatch, getState) => {
     const dashboard = getDashboardComplete(getState());
-    const { nativeCardToSrcNativeCard } = getNativeDashcardDetail(getState());
     for (const { card, dashcard } of getAllDashboardCards(dashboard)) {
-      // we skip over virtual cards, i.e. dashcards that do not have backing cards in the backend
       if (!isVirtualDashCard(dashcard)) {
-        if (card.query_type !== "native" || 
-        card.id === nativeCardToSrcNativeCard.get(card.id) ) {
-          dispatch(fetchCardData(card, dashcard, options));
-        } 
+        dispatch(fetchCardData(card, dashcard, options));
       }
     }
   },
@@ -474,7 +474,6 @@ export const fetchCardData = createThunkAction(FETCH_CARD_DATA, function(
         result: { error: { status: 403 } },
       };
     }
-
     const dashboardType = getDashboardType(dashcard.dashboard_id);
 
     const {
@@ -492,7 +491,7 @@ export const fetchCardData = createThunkAction(FETCH_CARD_DATA, function(
       parameterValues,
       dashcard && dashcard.parameter_mappings,
     );
-
+  
     if (!reload) {
       // if reload not set, check to see if the last result has the same query dict and return that
       const lastResult = getIn(dashcardData, [dashcard.id, card.id]);
@@ -509,6 +508,26 @@ export const fetchCardData = createThunkAction(FETCH_CARD_DATA, function(
       }
     }
 
+    let isCrossfilterSourceCard = false;
+    if (datasetQuery && datasetQuery.parameters) {
+      for(let parameter of datasetQuery.parameters) {
+        if (parameter.type === "crossfilter"){
+          if (parameter.target[1][1]!== card.id) {
+            const lastResult = getIn(dashcardData, [dashcard.id, card.id]);
+            return {
+              dashcard_id: dashcard.id,
+              card_id: card.id,
+              result: lastResult,
+            };
+          }
+          else {
+            isCrossfilterSourceCard = true;
+            break;
+          }
+        }
+      }
+    }
+    
     cancelFetchCardData(card.id, dashcard.id);
 
     if (clear) {
@@ -547,24 +566,37 @@ export const fetchCardData = createThunkAction(FETCH_CARD_DATA, function(
             ? JSON.stringify(datasetQuery.parameters)
             : undefined,
         }),
-        queryOptions
+        queryOptions,
       );
     } else if (dashboardType === "embed") {
       result = await fetchDataOrError(
-        EmbedApi.dashboardCardQuery({
-          token: dashcard.dashboard_id,
-          dashcardId: dashcard.id,
-          cardId: card.id,
-          ...getParametersBySlug(dashboard.parameters, parameterValues),
-        },
-        queryOptions),
+        EmbedApi.dashboardCardQuery(
+          {
+            token: dashcard.dashboard_id,
+            dashcardId: dashcard.id,
+            cardId: card.id,
+            ...getParametersBySlug(dashboard.parameters, parameterValues),
+          },
+          queryOptions,
+        ),
       );
     } else if (dashboardType === "transient") {
-      result = await fetchDataOrError(MetabaseApi.dataset(datasetQuery, queryOptions));
+      result = await fetchDataOrError(
+        MetabaseApi.dataset(datasetQuery, queryOptions),
+      );
+    } else if (isCrossfilterSourceCard) {
+      result = await fetchDataOrError(
+        CardApi.fullResultQuery(
+          { cardId: card.id, parameters: datasetQuery.parameters },
+          queryOptions,
+        ),
+      );
     } else {
       result = await fetchDataOrError(
-        CardApi.query({ cardId: card.id, parameters: datasetQuery.parameters },
-        queryOptions),
+        CardApi.query(
+          { cardId: card.id, parameters: datasetQuery.parameters },
+          queryOptions,
+        ),
       );
     }
 
@@ -798,7 +830,6 @@ export const removeParameter = createThunkAction(
     return { id: parameterId };
   },
 );
-
 
 export const setParameterName = createThunkAction(
   SET_PARAMETER_NAME,

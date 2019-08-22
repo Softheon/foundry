@@ -18,7 +18,8 @@ import {
   getParameterTarget,
   makeGetParameterMappingOptions,
   getMappingsByParameter,
-  getCardData
+  getCardData,
+  getNativeDashcardDetail,
 } from "../selectors";
 import { setParameterMapping } from "../dashboard";
 
@@ -51,6 +52,7 @@ const makeMapStateToProps = () => {
     target: getParameterTarget(state, props),
     mappingsByParameter: getMappingsByParameter(state, props),
     dashcardData: getCardData(state, props),
+    nativeDashcardDetails: getNativeDashcardDetail(state, props),
   });
   return mapStateToProps;
 };
@@ -86,11 +88,23 @@ export default class DashCardCardParameterMapper extends Component {
   static defaultProps = {};
 
   componentDidMount() {
-    const { card } = this.props;
+    const { setParameterMapping, parameter, dashcard, card} = this.props;
     // Type check for Flow
 
     card.dataset_query instanceof AtomicQuery &&
       this.props.fetchDatabaseMetadata(card.dataset_query.database);
+    //set crossfilter paramter mapping for current parameter
+    const { nativeCardToSrcNativeCard } = this.props.nativeDashcardDetails;
+    if (parameter.type === "crossfilter" && nativeCardToSrcNativeCard.has(card.id)) {
+     // if (parameter.card_id == card.id) {
+        setParameterMapping(
+          parameter.id, 
+          dashcard.id, 
+          card.id, 
+          ["crossfilter", ["source-card", nativeCardToSrcNativeCard.get(card.id)]]
+        );
+      //}
+    }
   }
 
   onChange = (option: ?ParameterMappingUIOption) => {

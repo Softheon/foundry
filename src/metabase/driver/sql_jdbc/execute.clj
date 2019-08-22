@@ -195,9 +195,11 @@ before finishing)."
                           {:identifiers    identity
                            :as-arrays?     true
                            :read-columns   (read-columns driver (some-> timezone Calendar/getInstance))
-                           :set-parameters (set-parameters-with-timezone timezone)
-                           :max-rows       max-rows})]
-    {:rows    (or rows [])
+                           :set-parameters (set-parameters-with-timezone timezone)})]
+    {:rows    (or (if (= max-rows 0)
+                    rows
+                    (take max-rows rows))
+                  [])
      :columns (map u/keyword->qualified-name columns)}))
 
 

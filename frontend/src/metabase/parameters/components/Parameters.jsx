@@ -61,6 +61,8 @@ export default class Parameters extends Component {
           setParameterValue(parameter.id, query[parameter.slug]);
         } else if (parameter.default != null) {
           setParameterValue(parameter.id, parameter.default);
+        }else if (parameter.type === "crossfilter") {
+          setParameterValue(parameter.id, parameter.name);
         }
       }
     }

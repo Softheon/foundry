@@ -1,11 +1,9 @@
 import React, { Component } from "react";
 import { t, ngettext, msgid } from "c-3po";
-import CrossfilterDimensionPicker from "../../../query_builder/components/filters/pickers/CrossfilterDimensionPicker.jsx";
-
-import SelectPicker from "../../../query_builder/components/filters/pickers/SelectPicker.jsx";
 
 export default class CrossfilterWidget extends Component {
   static noPopover = false;
+  static noIcon = true;
   constructor(props) {
     super(props);
     this.state = {
@@ -19,7 +17,7 @@ export default class CrossfilterWidget extends Component {
       const n = values.length;
       return ngettext(msgid`${n} selection`, `${n} selections`, n);
     } else {
-      return "Select one or more dimensions for this crossfilter";
+      return values;
     }
   }
 
