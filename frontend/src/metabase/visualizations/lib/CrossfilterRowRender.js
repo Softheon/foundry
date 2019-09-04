@@ -1,6 +1,5 @@
 /// Logic for rendering a rows chart.
 
-import crossfilter from "crossfilter";
 import d3 from "d3";
 import dc from "dc";
 

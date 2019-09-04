@@ -125,7 +125,7 @@ function getFormatedCrossfilterData(
     ? data.map(d => {
         const row = [d.key[0], d.key[1]];
         if (isBubble) {
-          row.push(d.key[2]);
+          row.push(d.value);
         }
         else{
           row.push(1);
