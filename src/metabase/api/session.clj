@@ -289,6 +289,7 @@ couldn't be autenticated."
                                                      :email      email}))]
     (create-session! user)))
 
+
 (api/defendpoint POST "/google_auth"
   "Login with Google Auth."
   [:as {{:keys [token]} :body, remote-address :remote-addr, :as request}]
@@ -302,4 +303,34 @@ couldn't be autenticated."
       (mw.session/set-session-cookie request response session-id))))
 
 
+(defn- softheon-auth-token-info [^String token]
+  (let [{:keys [status body]} (http/get "https://softheon-b2b.login-model.softheon.com/oauth2/connect/userinfo" {:oauth-token token})]
+    (when-not (= status 200)
+      (throw (ui18n/ex-info (tru "Invalid Softheon Access token.") {:status-code 400})))
+    (u/prog1 (json/parse-string body keyword))))
+
+
+(s/defn ^:private softheon-auth-create-new-user!
+  [{:keys [email] :as new-user} :- user/NewUser]
+  (user/create-new-iam-auth-user! new-user))
+
+(s/defn ^:private softheon-auth-fetch-or-create-user! :- (s/maybe UUID)
+  [first-name last-name email]
+  (when-let [user (or (db/select-one [User :id :last_login] :email email)
+                      (softheon-auth-create-new-user! (:first_name first-name
+                                                                   :last_name last-name
+                                                                   :email email)))]
+    (create-session! user)))
+
+(api/defendpoint POST "/softheon_auth"
+  "Login with Softheon Auth."
+  [:as {{:keys [token]} :body, remote-address :remote-addr, :as request}]
+  {token su/NonBlankString}
+  (throttle-check (login-throttlers :ip-address) remote-address)
+;; Verify it is a valid Softheon access token
+  (let [{:keys [given_name family_name email]} (softheon-auth-token-info token)]
+    (log/info (trs "Successfully authenticated Softheon Autn token for: {0} {1}" given_name family_name))
+    (let [session-id (api/check-500 (softheon-auth-fetch-or-create-user! given_name family_name email))
+          response {:id session-id}]
+      (mw.session/set-session-cookie request response session-id))))
 (api/define-routes)

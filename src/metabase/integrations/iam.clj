@@ -23,8 +23,7 @@
                 (config/config-str :iam-api-user-info))))
 
 (defn- do-iam-request
-  [request-fn params-key iam-api-base-url endpoint
-   {:keys [token] :as params}]
+  [request-fn params-key iam-api-base-url endpoint {:keys [token] :as params}]
   (request-fn
    (str iam-api-base-url (if endpoint
                            (str "/" (name endpoint))

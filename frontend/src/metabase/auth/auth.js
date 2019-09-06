@@ -83,6 +83,26 @@ export const loginGoogle = createThunkAction(LOGIN_GOOGLE, function(
   };
 });
 
+export const LOGIN_SOFTHEON = "metabase/auth/LOGIN_SOFTHEON";
+export const loginsSoftheon = createThunkAction(LOGIN_SOFTHEON, function(
+  softheonUser,
+  redirectUrl,
+) {
+  return async function(dispatch, getState) {
+    try {
+      let newSession = await SessionApi.createWithSoftheonAuth({
+        token: softheonUser.id_token,
+      });
+
+      MetabaseCookies.setSessionCookie(newSession.id);
+      await dispatch(refreshCurrentUser());
+      dispatch(push(redirectUrl || "/"));
+    } catch (error) {
+      return error;
+    }
+  };
+});
+
 // logout
 export const LOGOUT = "metabase/auth/LOGOUT";
 export const logout = createThunkAction(LOGOUT, function() {

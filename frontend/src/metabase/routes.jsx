@@ -22,7 +22,7 @@ import LoginApp from "metabase/auth/containers/LoginApp.jsx";
 import LogoutApp from "metabase/auth/containers/LogoutApp.jsx";
 import PasswordResetApp from "metabase/auth/containers/PasswordResetApp.jsx";
 import GoogleNoAccount from "metabase/auth/components/GoogleNoAccount.jsx";
-
+import OAuthLogin from "metabase/auth/containers/OAuthLogin.jsx";
 /* Dashboards */
 import DashboardApp from "metabase/dashboard/containers/DashboardApp";
 import AutomaticDashboardApp from "metabase/dashboard/containers/AutomaticDashboardApp";
@@ -180,7 +180,7 @@ export const getRoutes = store => (
       <Route path="/auth" component={AuthApp}>
         <IndexRedirect to="/auth/login" />
         <Route component={IsNotAuthenticated}>
-          <Route path="login" title={t`Login`} component={LoginApp} />
+          <Route path="login" title={t`Login`} component={OAuthLogin} />
         </Route>
         <Route path="logout" component={LogoutApp} />
         <Route path="forgot_password" component={ForgotPasswordApp} />
