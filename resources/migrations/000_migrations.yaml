@@ -5277,12 +5277,12 @@ databaseChangeLog:
             dbms: postgresql
             sql: CREATE UNIQUE INDEX idx_uniq_table_db_id_schema_name_2col ON "metabase_table" ("db_id", "name") WHERE "schema" IS NULL
                 
-        - sql:
-            dmbs: mssql
-            sql: 
-                CREATE UNIQUE NONCLUSTERED INDEX idx_uniq_table_db_id_schema_name 
-                ON [metabase_table] ([db_id], [schema], [name])
-                WHERE [schema] IS NOT NULL
+        # - sql:
+        #     dmbs: mssql
+        #     sql: 
+        #         CREATE UNIQUE NONCLUSTERED INDEX idx_uniq_table_db_id_schema_name 
+        #         ON [metabase_table] ([db_id], [schema], [name])
+        #         WHERE [schema] IS NOT NULL
   - changeSet:
       id: 99
       author: camsaul
