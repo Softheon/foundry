@@ -32,7 +32,6 @@
  ;; Jetty Settings. Full list of options is available here: https://github.com/ring-clojure/ring/blob/master/ring-jetty-adapter/src/ring/adapter/jetty.clj
    :mb-jetty-port          "3000"
    :mb-jetty-join          "true"
-   :mb-enable-iam          "false"
  ;; other application settings
    :mb-password-complexity "normal"
    :mb-version-info-url    ""
@@ -53,7 +52,8 @@
   [k]
   (let [k (keyword k)]
     (or (configuration k)
-        (k environ/env) (k app-defaults))))
+        (k environ/env)
+        (k app-defaults))))
 
 
 ;; These are convenience functions for accessing config values that ensures a specific return type

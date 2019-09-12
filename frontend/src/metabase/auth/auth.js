@@ -83,15 +83,16 @@ export const loginGoogle = createThunkAction(LOGIN_GOOGLE, function(
   };
 });
 
-export const LOGIN_SOFTHEON = "metabase/auth/LOGIN_SOFTHEON";
-export const loginsSoftheon = createThunkAction(LOGIN_SOFTHEON, function(
-  softheonUser,
+export const LOGIN_IAM = "metabase/auth/LOGIN_IAM";
+export const loginIAM = createThunkAction(LOGIN_IAM, function(
+  iam,
   redirectUrl,
 ) {
   return async function(dispatch, getState) {
     try {
-      let newSession = await SessionApi.createWithSoftheonAuth({
-        token: softheonUser.id_token,
+      let newSession = await SessionApi.createWithIamAuth({
+        id_token: iam.id_token,
+        access_token: iam.access_token
       });
 
       MetabaseCookies.setSessionCookie(newSession.id);
@@ -190,6 +191,9 @@ const loginError = handleActions(
   {
     [LOGIN]: { next: (state, { payload }) => (payload ? payload : null) },
     [LOGIN_GOOGLE]: {
+      next: (state, { payload }) => (payload ? payload : null),
+    },
+    [LOGIN_IAM]: {
       next: (state, { payload }) => (payload ? payload : null),
     },
     [IDLE_TIMEOUT]: {
