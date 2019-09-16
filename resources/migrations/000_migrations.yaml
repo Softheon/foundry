@@ -5384,3 +5384,17 @@ databaseChangeLog:
               defaultValue: true
               constraints:
                 nullable: false
+  - changeset:
+      id: 103
+      author: hxia
+      comment: 'Change the default value of iam_auth column to false'
+      changes:
+        - update:
+          tableName: core_user
+          columns:
+            - column:
+              name: iam_auth
+              type: boolean
+              defaultValueBoolean: false
+              constraints: 
+                nullable: false
