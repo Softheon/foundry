@@ -90,14 +90,16 @@ export const loginIAM = createThunkAction(LOGIN_IAM, function(
 ) {
   return async function(dispatch, getState) {
     try {
-      let newSession = await SessionApi.createWithIamAuth({
-        id_token: iam.id_token,
-        access_token: iam.access_token
-      });
+      setTimeout(async () => {
+         let newSession = await SessionApi.createWithIamAuth({
+          id_token: iam.id_token,
+          access_token: iam.access_token
+        });
+        MetabaseCookies.setSessionCookie(newSession.id);
+        await dispatch(refreshCurrentUser());
+        dispatch(push(redirectUrl || "/"));
+      }, 1000);
 
-      MetabaseCookies.setSessionCookie(newSession.id);
-      await dispatch(refreshCurrentUser());
-      dispatch(push(redirectUrl || "/"));
     } catch (error) {
       return error;
     }

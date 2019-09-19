@@ -172,7 +172,7 @@ export const getRoutes = store => (
     {/* APP */}
     <Route
       onEnter={async (nextState, replace, done) => {
-       // await store.dispatch(loadCurrentUser());
+        await store.dispatch(loadCurrentUser());
         done();
       }}
     >
