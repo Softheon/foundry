@@ -90,15 +90,13 @@ export const loginIAM = createThunkAction(LOGIN_IAM, function(
 ) {
   return async function(dispatch, getState) {
     try {
-      setTimeout(async () => {
-         let newSession = await SessionApi.createWithIamAuth({
-          id_token: iam.id_token,
-          access_token: iam.access_token
-        });
-        MetabaseCookies.setSessionCookie(newSession.id);
-        await dispatch(refreshCurrentUser());
-        dispatch(push(redirectUrl || "/"));
-      }, 1000);
+      let newSession = await SessionApi.createWithIamAuth({
+        id_token: iam.id_token,
+        access_token: iam.access_token
+      });
+      //MetabaseCookies.setSessionCookie(newSession.id);
+      await dispatch(refreshCurrentUser());
+      dispatch(push(redirectUrl || "/"))
 
     } catch (error) {
       return error;
@@ -112,11 +110,11 @@ export const logout = createThunkAction(LOGOUT, function() {
   return async function(dispatch, getState) {
     // TODO: as part of a logout we want to clear out any saved state that we have about anything
 
-    let sessionId = MetabaseCookies.setSessionCookie();
-    if (sessionId) {
-      // actively delete the session
-      await SessionApi.delete({ session_id: sessionId });
-    }
+    // let sessionId = MetabaseCookies.setSessionCookie();
+    // if (sessionId) {
+    //   // actively delete the session
+    //   await SessionApi.delete({ session_id: sessionId });
+    // }
     // clear Google auth credentials if any are present
     await clearGoogleAuthCredentials();
     MetabaseAnalytics.trackEvent("Auth", "Logout");
