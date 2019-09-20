@@ -95,9 +95,9 @@ export const loginIAM = createThunkAction(LOGIN_IAM, function(
         access_token: iam.access_token
       });
       //MetabaseCookies.setSessionCookie(newSession.id);
-      await dispatch(refreshCurrentUser());
-      dispatch(push(redirectUrl || "/"))
-
+     // await dispatch(refreshCurrentUser());
+      //dispatch(push(redirectUrl || "/"))
+      window.location.reload(true);
     } catch (error) {
       return error;
     }
