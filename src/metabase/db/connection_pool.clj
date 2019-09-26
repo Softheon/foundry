@@ -24,7 +24,7 @@
    (reify DataSource
      (getConnection [_]
                     (let [connectionInstance (.connect driver jdbc-url properties)]
-                      (.setTransactionIsolation connectionInstance (Connection/TRANSACTION_READ_UNCOMMITTED))
+                      ; (.setTransactionIsolation connectionInstance (Connection/TRANSACTION_READ_UNCOMMITTED))
                       connectionInstance))
      (getConnection [_ username password]
                     (doseq [[k v] {"user" username, "password" password}]
@@ -32,7 +32,7 @@
                         (.setProperty properties k (name v))
                         (.remove properties k)))
                     (let [connectionInstance (.connect driver jdbc-url properties)] 
-                      (.setTransactionIsolation connectionInstance (Connection/TRANSACTION_READ_UNCOMMITTED))
+                      ; (.setTransactionIsolation connectionInstance (Connection/TRANSACTION_READ_UNCOMMITTED))
                       connectionInstance)))))
 
 
