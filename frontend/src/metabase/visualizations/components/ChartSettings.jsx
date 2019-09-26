@@ -108,7 +108,7 @@ class ChartSettings extends Component {
         sections[widget.section].push(widget);
       }
     }
-
+   
     // Move settings from the "undefined" section in the first tab
     if (sections["undefined"] && Object.values(sections).length > 1) {
       let extra = sections["undefined"];

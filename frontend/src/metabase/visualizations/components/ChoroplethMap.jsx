@@ -32,7 +32,7 @@ const HEAT_MAP_ZERO_COLOR = "#CCC";
 
 export function getColorplethColorScale(
   color,
-  { lightness = 92, darken = 0.2, darkenLast = 0.3, saturate = 0.1 } = {},
+  { lightness = 92, darken = 0.3, darkenLast = 0.6, saturate = 0.5, bins = 5 } = {},
 ) {
   let lightColor = Color(color)
     .lightness(lightness)
@@ -47,7 +47,7 @@ export function getColorplethColorScale(
     .domain([0, 1])
     .range([lightColor.string(), darkColor.string()]);
 
-  const colors = d3.range(0, 1.25, 0.25).map(value => scale(value));
+  const colors = d3.range(0, 1.25, 1.25/ bins).map(value => scale(value));
 
   if (darkenLast) {
     colors[colors.length - 1] = Color(color)
@@ -55,7 +55,6 @@ export function getColorplethColorScale(
       .saturate(saturate)
       .string();
   }
-
   return colors;
 }
 
@@ -211,6 +210,17 @@ export default class ChoroplethMap extends Component {
       ],
     });
 
+    const getFeatureHoverObject = (row, feature) => ({
+      value: getFeatureValue(feature),
+      column: cols[metricIndex],
+      dimensions: [
+        {
+          value: row[dimensionIndex],
+          column: cols[dimensionIndex],
+        }
+      ]
+    });
+
     const isClickable =
       onVisualizationClick &&
       visualizationIsClickable(getFeatureClickObject(rows[0]));
@@ -232,7 +242,7 @@ export default class ChoroplethMap extends Component {
         const row = hover && rowByFeatureKey.get(getFeatureKey(hover.feature));
         if (row && onHoverChange) {
           onHoverChange({
-            ...getFeatureClickObject(row),
+            ...getFeatureHoverObject(row, hover.feature),
             event: hover.event,
           });
         } else if (onHoverChange) {
@@ -241,12 +251,13 @@ export default class ChoroplethMap extends Component {
       });
 
     const valuesMap = {};
-    const domain = [];
     for (const row of rows) {
       valuesMap[getRowKey(row)] =
         (valuesMap[getRowKey(row)] || 0) + getRowValue(row);
     }
+    const domain = Object.values(valuesMap);
     Object.values(valuesMap).map(val => domain.push(val));
+
     const heatMapColors = settings["map.colors"] || HEAT_MAP_COLORS;
 
     const groups = ss.ckmeans(domain, heatMapColors.length);

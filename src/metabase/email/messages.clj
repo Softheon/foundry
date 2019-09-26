@@ -120,7 +120,9 @@
                                           {:emailType        "password_reset"
                                            :hostname         hostname
                                            :sso              google-auth?
-                                           :iam              iam-auth?
+                                           :iam              (and iam-auth?
+                                                                  (config/config-bool
+                                                                   :mb-enable-iam))
                                            :passwordResetUrl password-reset-url
                                            :logoHeader       true})]
     (email/send-message!

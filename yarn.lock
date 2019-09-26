@@ -9551,6 +9551,11 @@ pleeease-filters@^3.0.0:
     onecolor "~2.4.0"
     postcss "^5.0.4"
 
+plural-forms@0.3.3:
+  version "0.3.3"
+  resolved "https://registry.yarnpkg.com/plural-forms/-/plural-forms-0.3.3.tgz#22d9cddf3fe50d7f6930e3aa1eea339bdc27e152"
+  integrity sha512-9CEFxpHa1KrtZFoa0FybZcxyDx1ceWelowtlSWtFsmRzBgQ9Dj47YmyY6cynPAJUoA/kLm2B7VYi0CfNIDZnCw==
+
 pluralize@^1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/pluralize/-/pluralize-1.2.1.tgz#d1a21483fd22bb41e58a12fa3421823140897c45"
@@ -12953,6 +12958,14 @@ trough@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/trough/-/trough-1.0.1.tgz#a9fd8b0394b0ae8fff82e0633a0a36ccad5b5f86"
   integrity sha1-qf2LA5Swro//guBjOgo2zK1bX4Y=
+
+ttag@^1.7.8:
+  version "1.7.17"
+  resolved "https://registry.yarnpkg.com/ttag/-/ttag-1.7.17.tgz#cff8a1f8342f46759f3ca686b0da908aff6a61a3"
+  integrity sha512-LqrlfIOIs0pxCyfpAgHCiL0PNWwryNRPKV46Wd8S/qiPphNz2QQ+8wJOnNiy8hFzHyCjyvh8oeps6uJ+vjGegw==
+  dependencies:
+    dedent "^0.7.0"
+    plural-forms "0.3.3"
 
 tty-browserify@0.0.0:
   version "0.0.0"

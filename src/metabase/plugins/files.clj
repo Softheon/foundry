@@ -84,7 +84,7 @@
   (when (or (not (exists? dest))
             (pos? (.compareTo (last-modified-time source) (last-modified-time dest))))
     (du/profile (trs "Extract file {0} -> {1}" source dest)
-      (Files/copy source dest (u/varargs CopyOption [StandardCopyOption/REPLACE_EXISTING])))))
+                (Files/copy source dest (u/varargs CopyOption [StandardCopyOption/REPLACE_EXISTING])))))
 
 (defn copy-files!
   "Copy all files in `source-dir` to `dest-dir`. Overwrites existing files if last modified date is older than that of

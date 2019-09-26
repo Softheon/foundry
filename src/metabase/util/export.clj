@@ -67,11 +67,13 @@
 (defn csv-stream-writer
   [writer results]
   (let [out (io/make-writer writer {})]
-    (try 
+    (try
       (csv/write-csv out results)
       (.flush out)
       (catch Exception e
-        (throw e)))))
+        (throw e))
+      (finally
+        (.close out)))))
 
 (def export-formats
   "Map of export types to their relevant metadata"

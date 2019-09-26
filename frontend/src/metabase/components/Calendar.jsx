@@ -27,6 +27,7 @@ export default class Calendar extends Component {
 
   static defaultProps = {
     isRangePicker: true,
+    enablePrevAndNextMonthSelection: true
   };
 
   componentWillReceiveProps(nextProps) {
@@ -90,7 +91,7 @@ export default class Calendar extends Component {
   renderMonthHeader(current, side) {
     return (
       <div className="Calendar-header flex align-center">
-        {side !== "right" && (
+        {side !== "right" && this.props.enablePrevAndNextMonthSelection && (
           <div
             className="bordered rounded p1 cursor-pointer transition-border border-hover px1"
             onClick={this.previous}
@@ -99,11 +100,18 @@ export default class Calendar extends Component {
           </div>
         )}
         <span className="flex-full" />
-        <h4 className="cursor-pointer rounded p1">
-          {current.format("MMMM YYYY")}
+        <h4
+          className="cursor-pointer rounded p1"
+          onClick={() =>
+            this.props.onHeaderClick && this.props.onHeaderClick(current)
+          }
+        >
+          {this.props.onHeaderClick
+            ? current.format("MMM D, YYYY")
+            : current.format("MMMM YYYY")}
         </h4>
         <span className="flex-full" />
-        {side !== "left" && (
+        {side !== "left" && this.props.enablePrevAndNextMonthSelection && (
           <div
             className="bordered border-hover rounded p1 transition-border cursor-pointer px1"
             onClick={this.next}

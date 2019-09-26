@@ -17,6 +17,8 @@ import CategoryWidget from "./widgets/CategoryWidget.jsx";
 import TextWidget from "./widgets/TextWidget.jsx";
 import ParameterFieldWidget from "./widgets/ParameterFieldWidget";
 import CrossfilterWidget from "./widgets/CrossfilterWidget";
+import DateDayMonthYearWidget from "./widgets/DateDayMonthYearWidget.jsx";
+
 
 import { fetchField, fetchFieldValues } from "metabase/redux/metadata";
 import {
@@ -39,6 +41,7 @@ const DATE_WIDGETS = {
   "date/month-year": DateMonthYearWidget,
   "date/quarter-year": DateQuarterYearWidget,
   "date/all-options": DateAllOptionsWidget,
+  "date/day-month-year" : DateDayMonthYearWidget,
 };
 
 const CROSS_FILTER_WIDGETS = {
