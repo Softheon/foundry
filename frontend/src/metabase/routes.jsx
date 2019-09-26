@@ -95,6 +95,7 @@ import Overworld from "metabase/containers/Overworld";
 
 import ArchiveApp from "metabase/home/containers/ArchiveApp.jsx";
 import SearchApp from "metabase/home/containers/SearchApp";
+import IamEmailNotVerified from "./auth/components/IamEmailNotVerified";
 
 const MetabaseIsSetup = UserAuthWrapper({
   predicate: authData => !authData.hasSetupToken,
@@ -185,7 +186,8 @@ export const getRoutes = store => (
         <Route path="logout" component={LogoutApp} />
         <Route path="forgot_password" component={ForgotPasswordApp} />
         <Route path="reset_password/:token" component={PasswordResetApp} />
-        <Route path="google_no_mb_account" component={GoogleNoAccount} />
+        {/* <Route path="google_no_mb_account" component={GoogleNoAccount} /> */}
+        <Route path="iam_email_is_not_verified" component={IamEmailNotVerified}/>
       </Route>
 
       {/* MAIN */}

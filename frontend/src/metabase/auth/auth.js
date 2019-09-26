@@ -90,16 +90,17 @@ export const loginIAM = createThunkAction(LOGIN_IAM, function(
 ) {
   return async function(dispatch, getState) {
     try {
-      let newSession = await SessionApi.createWithIamAuth({
+      await SessionApi.createWithIamAuth({
         id_token: iam.id_token,
-        access_token: iam.access_token
+        access_token: iam.access_token,
       });
-      //MetabaseCookies.setSessionCookie(newSession.id);
-     // await dispatch(refreshCurrentUser());
-      //dispatch(push(redirectUrl || "/"))
       window.location.reload(true);
     } catch (error) {
-      return error;
+      if (error.status === 428) {
+        dispatch(push("/auth/iam_email_is_not_verified"));
+      } else {
+        return error;
+      }
     }
   };
 });

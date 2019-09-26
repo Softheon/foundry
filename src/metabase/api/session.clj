@@ -296,10 +296,13 @@ couldn't be autenticated."
 (defn- iam-auth-token-info [^String token]
   (let [{:keys [status body]} (http/get (config/config-str :iam-api-user-info) {:oauth-token token})]
     (when-not (= status 200)
-      (throw (ui18n/ex-info (tru "Invalid Iam Access token.") {:status-code 400})))
+      (throw (ui18n/ex-info (tru "Invalid Iam Access token.") {:status-code 400
+                                                               :message (tru "Invalid Iam Access token")})))
     (u/prog1 (json/parse-string body keyword)
              (when-not (= (:email_verified <>) true)
-               (throw (ui18n/ex-info (tru "Email is not verified.") {:status-code 400}))))))
+               (throw (ui18n/ex-info (tru "Email is not verified.")
+                                     {:status-code 428
+                                      :message (tru "Email is not verified. You will need to verify your email before you can use Iam to log in.")}))))))
 
 
 (s/defn ^:private iam-auth-create-new-user!
