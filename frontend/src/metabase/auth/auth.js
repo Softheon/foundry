@@ -171,12 +171,9 @@ export const passwordReset = createThunkAction(PASSWORD_RESET, function(
 export const IDLE_TIMEOUT = "foundry/auth/IDLE_TIMEOUT";
 export const idleSessionTimeout = createThunkAction(
   IDLE_TIMEOUT,
-  message => (dispatch, getState) => {
-    let sessionId = MetabaseCookies.setSessionCookie();
-    if (sessionId) {
-      SessionApi.delete({ session_id: sessionId });
-    }
-    dispatch(push("/auth/login"));
+  message => async (dispatch, getState) => {
+    await SessionApi.delete();
+    await dispatch(push("/auth/login"));
     return {
       data: {
         errors: {
