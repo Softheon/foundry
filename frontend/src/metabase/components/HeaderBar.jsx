@@ -35,13 +35,20 @@ export default class Header extends Component {
               this.props.setItemAttributeFn("name", e.target.value)
             }
           />
-          <InputBlurChange
+          <textarea
+            // className={cx(
+            //   "full flex-full flex flex-column bg-light bordered drag-disabled",
+            //   styles["text-card-textarea"],
+            // )}
             className="AdminInput rounded-bottom h4"
             type="text"
             value={description}
             onChange={e =>
               this.props.setItemAttributeFn("description", e.target.value)
             }
+            style={{
+              resize: "vertical"
+            }}
             placeholder={t`No description yet`}
           />
         </div>
@@ -49,7 +56,7 @@ export default class Header extends Component {
     } else {
       if (name && description) {
         titleAndDescription = (
-          <TitleAndDescription title={name} description={description} />
+          <TitleAndDescription title={name} description={description && null} />
         );
       } else {
         titleAndDescription = (

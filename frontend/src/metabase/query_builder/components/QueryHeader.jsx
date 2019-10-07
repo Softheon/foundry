@@ -38,6 +38,9 @@ import { getUser } from "metabase/home/selectors";
 import { fetchAlertsForQuestion } from "metabase/alert/alert";
 
 import Collections from "metabase/entities/collections";
+import ReactMarkdown from "react-markdown";
+import styles from "metabase/visualizations/visualizations/Text.css";
+import ModalContent from "metabase/components/ModalContent";
 
 const mapStateToProps = (state, props) => ({
   questionAlerts: getQuestionAlerts(state),
@@ -440,46 +443,50 @@ export default class QueryHeader extends Component {
       </Tooltip>,
     ]);
 
-    // if (
-    //   !isEditing &&
-    //   card &&
-    //   question.alertType(visualizationSettings) !== null
-    // ) {
-    //   const createAlertItem = {
-    //     title: t`Get alerts about this`,
-    //     icon: "alert",
-    //     action: () => this.setState({ modal: "create-alert" }),
-    //   };
-    //   const createAlertAfterSavingQuestionItem = {
-    //     title: t`Get alerts about this`,
-    //     icon: "alert",
-    //     action: () => this.setState({ modal: "save-question-before-alert" }),
-    //   };
+    if (
+      !isEditing &&
+      card &&
+      question.alertType(visualizationSettings) !== null
+    ) {
+      // const createAlertItem = {
+      //   title: t`Get alerts about this`,
+      //   icon: "alert",
+      //   action: () => this.setState({ modal: "create-alert" }),
+      // };
+      // const createAlertAfterSavingQuestionItem = {
+      //   title: t`Get alerts about this`,
+      //   icon: "alert",
+      //   action: () => this.setState({ modal: "save-question-before-alert" }),
+      // };
 
-    //   const updateAlertItem = {
-    //     title: t`Alerts are on`,
-    //     icon: "alert",
-    //     content: (toggleMenu, setMenuFreeze) => (
-    //       <AlertListPopoverContent
-    //         closeMenu={toggleMenu}
-    //         setMenuFreeze={setMenuFreeze}
-    //       />
-    //     ),
-    //   };
+      // const updateAlertItem = {
+      //   title: t`Alerts are on`,
+      //   icon: "alert",
+      //   content: (toggleMenu, setMenuFreeze) => (
+      //     <AlertListPopoverContent
+      //       closeMenu={toggleMenu}
+      //       setMenuFreeze={setMenuFreeze}
+      //     />
+      //   ),
+      // };
 
-    //   buttonSections.push([
-    //     <div className="mr1" style={{ marginLeft: "-15px" }}>
-    //       <EntityMenu
-    //         triggerIcon="burger"
-    //         items={[
-    //           !isNew && Object.values(questionAlerts).length > 0
-    //             ? updateAlertItem
-    //             : isNew ? createAlertAfterSavingQuestionItem : createAlertItem,
-    //         ]}
-    //       />
-    //     </div>,
-    //   ]);
-    // }
+      const viewDescription = {
+        title: t`View Report Description`,
+        icon: "reference",
+        action: () => this.setState({ modal: "view-question-description" }),
+      };
+
+      buttonSections.push([
+        <div className="mr1" style={{ marginLeft: "-15px" }}>
+          <EntityMenu
+            triggerIcon="burger"
+            items={[
+              viewDescription,
+            ]}
+          />
+        </div>,
+      ]);
+    }
 
     return (
       <ButtonBar
@@ -598,6 +605,23 @@ export default class QueryHeader extends Component {
             multiStep
             initiCollectionId={this.props.initiCollectionId}
           />
+        </Modal>
+
+        <Modal
+          full
+          isOpen={this.state.modal === "view-question-description"}
+          onClose={this.onCloseModal}
+        >
+          <ModalContent onClose={this.onCloseModal}>
+            <ReactMarkdown
+              className={cx(
+                "full  flex flex-column text-card-markdown py2 px2",
+                styles["text-card-markdown"],
+              )}
+              source={this.props.card && this.props.card.description ? `${this.props.card.description}` : "No Documentation is available." }
+              escapeHtml={true}
+            />
+          </ModalContent>
         </Modal>
       </div>
     );
