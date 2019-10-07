@@ -21,81 +21,76 @@ const mapDispatchToProps = {
   idleSessionTimeout,
 };
 
+const TIMEOUT_MODAL_COUNTER = 30;
+const SESSION_TIMEOUT = 60;
+
 @connect(mapStateToProps, mapDispatchToProps)
 export default class TimeoutModal extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      open: false,
+      counter: SESSION_TIMEOUT,
     };
-    this.modalTimeoutId = null;
-    this.idleTimeoutId = null;
+    this.timer = null;
     this.debouncedOnUserActivity = _.debounce(this.onUserActivity, 1000);
-   
   }
 
-  resetIdleTime = () => {
-    clearTimeout(this.idleTimeoutId);
-    this.idleTimeoutId = setTimeout(() => {
-      this.props.idleSessionTimeout();
-    }, this.props.idleTimeout * 1000 * 60);
-  };
-
   onUserActivity = () => {
-    this.resetIdleTime();
-    clearTimeout(this.modalTimeoutId);
-    this.modalTimeoutId = setTimeout(() => {
-      this.setState({ open: true });
-    }, this.props.modelTimeout * 1000 * 60);
+    this.setState({
+      counter: SESSION_TIMEOUT,
+    });
   };
 
   registerUserActivityListeners = () => {
-    clearTimeout(this.modalTimeoutId);
     defaultEvents.forEach(event => {
       window.addEventListener(event, this.debouncedOnUserActivity);
     });
   };
 
   unregisterUserActivityListeners = () => {
-    clearTimeout(this.modalTimeoutId);
     defaultEvents.forEach(event => {
       window.removeEventListener(event, this.debouncedOnUserActivity);
     });
   };
 
   componentDidMount() {
-    this.registerUserActivityListeners();
-    this.resetIdleTime();
+    this.timer = setInterval(() => {
+      this.setState({
+        counter: this.state.counter - 1,
+      });
+    }, 1000 * 60);
   }
 
   componentDidUpdate() {
-    if (this.state.open) {
+    if (this.state.counter === TIMEOUT_MODAL_COUNTER) {
       this.unregisterUserActivityListeners();
+    } else if (this.state.counter <= 0) {
+      clearTimeout(this.timer);
+      this.unregisterUserActivityListeners();
+      this.props.idleSessionTimeout();
     }
-  }
-  componentWillUnmount() {
-    clearTimeout(this.idleTimeoutId);
-    this.unregisterUserActivityListeners();
   }
 
   onClose = () => {
     this.registerUserActivityListeners();
-    this.onUserActivity();
-    this.resetIdleTime();
     this.setState({
-      open: false,
+      counter: SESSION_TIMEOUT,
     });
   };
 
   render() {
-    if (this.state.open) {
+    if (this.state.counter >= 0 && this.state.counter <= TIMEOUT_MODAL_COUNTER ) {
       return (
         <Modal full={false} isOpen={true}>
           <div className="TutorialModalContent p2">
             <div className="px4">
               <div className="text-centered">
                 <h2>{t`Your Session is about to end`}</h2>
-                <p className="my2 text-medium">{t`You have been inactive for 30 minutes, if you do not have any activity in the next 30 minutes you will be logged out.`}</p>
+                <p className="my2 text-medium">{t`If you do not have any activity in the next ${
+                  this.state.counter
+                } ${
+                  this.state.counter > 1 ? "minutes" : "minute"
+                }, you will be logged out.`}</p>
                 <button
                   className="Button Button--primary z6"
                   onClick={this.onClose}

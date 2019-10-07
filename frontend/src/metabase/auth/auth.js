@@ -83,18 +83,41 @@ export const loginGoogle = createThunkAction(LOGIN_GOOGLE, function(
   };
 });
 
+export const LOGIN_IAM = "metabase/auth/LOGIN_IAM";
+export const loginIAM = createThunkAction(LOGIN_IAM, function(
+  iam,
+  redirectUrl,
+) {
+  return async function(dispatch, getState) {
+    try {
+      await SessionApi.createWithIamAuth({
+        id_token: iam.id_token,
+        access_token: iam.access_token,
+      });
+      window.location.reload(true);
+    } catch (error) {
+      if (error.status === 428) {
+        dispatch(push("/auth/iam_email_is_not_verified"));
+      } else {
+        return error;
+      }
+    }
+  };
+});
+
 // logout
 export const LOGOUT = "metabase/auth/LOGOUT";
 export const logout = createThunkAction(LOGOUT, function() {
   return async function(dispatch, getState) {
     // TODO: as part of a logout we want to clear out any saved state that we have about anything
 
-    let sessionId = MetabaseCookies.setSessionCookie();
-    if (sessionId) {
-      // actively delete the session
-      await SessionApi.delete({ session_id: sessionId });
-    }
+    // let sessionId = MetabaseCookies.setSessionCookie();
+    // if (sessionId) {
+    //   // actively delete the session
+    //   await SessionApi.delete({ session_id: sessionId });
+    // }
     // clear Google auth credentials if any are present
+    await SessionApi.delete();
     await clearGoogleAuthCredentials();
     MetabaseAnalytics.trackEvent("Auth", "Logout");
 
@@ -148,12 +171,9 @@ export const passwordReset = createThunkAction(PASSWORD_RESET, function(
 export const IDLE_TIMEOUT = "foundry/auth/IDLE_TIMEOUT";
 export const idleSessionTimeout = createThunkAction(
   IDLE_TIMEOUT,
-  message => (dispatch, getState) => {
-    let sessionId = MetabaseCookies.setSessionCookie();
-    if (sessionId) {
-      SessionApi.delete({ session_id: sessionId });
-    }
-    dispatch(push("/auth/login"));
+  message => async (dispatch, getState) => {
+    await SessionApi.delete();
+    await dispatch(push("/auth/login"));
     return {
       data: {
         errors: {
@@ -170,6 +190,9 @@ const loginError = handleActions(
   {
     [LOGIN]: { next: (state, { payload }) => (payload ? payload : null) },
     [LOGIN_GOOGLE]: {
+      next: (state, { payload }) => (payload ? payload : null),
+    },
+    [LOGIN_IAM]: {
       next: (state, { payload }) => (payload ? payload : null),
     },
     [IDLE_TIMEOUT]: {

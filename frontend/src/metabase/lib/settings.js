@@ -59,6 +59,17 @@ const MetabaseSettings = {
     return mb_settings.ldap_configured;
   },
 
+  iamEnabled: function() {
+    return mb_settings.enable_iam_auth &&
+    mb_settings.iam_authorization_endpoint && 
+    mb_settings.iam_auth_redirect &&
+    mb_settings.iam_auth_client_id
+  },
+  
+  emailLoginEnabled: function() {
+    return mb_settings.enable_email_login
+  },
+
   hideEmbedBranding: () => mb_settings.hide_embed_branding,
 
   metastoreUrl: () => mb_settings.metastore_url,

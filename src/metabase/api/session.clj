@@ -13,7 +13,6 @@
             [metabase.api.common :as api]
             [metabase.email.messages :as email]
             [metabase.integrations.ldap :as ldap]
-            [metabase.integrations.iam :as iam]
             [metabase.middleware.session :as mw.session]
             [metabase.models
              [session :refer [Session]]
@@ -35,11 +34,11 @@
             :last_login s/Any
             s/Keyword   s/Any}]
   (u/prog1 (UUID/randomUUID)
-    (db/insert! Session
-      :id      (str <>)
-      :user_id (:id user))
-    (events/publish-event! :user-login
-      {:user_id (:id user), :session_id (str <>), :first_login (nil? (:last_login user))})))
+           (db/insert! Session
+                       :id      (str <>)
+                       :user_id (:id user))
+           (events/publish-event! :user-login
+                                  {:user_id (:id user), :session_id (str <>), :first_login (nil? (:last_login user))})))
 
 ;;; ## API Endpoints
 
@@ -50,6 +49,7 @@
 
 (def ^:private password-fail-message (tru "Password did not match stored password."))
 (def ^:private password-fail-snippet (tru "did not match stored password"))
+(def ^:private invalid-login-method-message (tru "Invalid Login method, try to login using IAM."))
 
 (s/defn ^:private ldap-login :- (s/maybe UUID)
   "If LDAP is enabled and a matching user exists return a new Session for them, or `nil` if they couldn't be
@@ -71,20 +71,6 @@
 
 (def ^:private iam-fail-message (tru "Foundry can't verify your identit. Make sure you enterted correct username/email and password."))
 (def ^:private iam-fail-snippet (tru "can't verify your identity."))
-
-(s/defn ^:private iam-login :- (s/maybe UUID)
-  "If a matching user exists in IAM, then return a new Session for them, or `nil` if they couldn't be 
-authenticated."
-  [username password]
-  (when (iam/iam-configured?)
-    (try (let [user-info (iam/find-user username password)]
-           (when (nil? user-info)
-             (throw (ui18n/ex-info iam-fail-message
-                                   {:status-code  400
-                                    :errors {:password iam-fail-snippet}})))
-           (create-session! (iam/fetch-or-create-user! user-info password)))
-         (catch Exception e
-           (log/error e (trs "Problem connectin to IAM service, will fall back to local authentication if it is enabled"))))))
 
 (s/defn ^:private email-login :- (s/maybe UUID)
   "Find a matching `User` if one exists and return a new Session for them, or `nil` if they couldn't be authenticated."
@@ -118,9 +104,12 @@ couldn't be autenticated."
   [username :- su/NonBlankString, password :- su/NonBlankString]
   ;; Primitive "strategy implementation", should be reworked for modular providers in #3210
   (or
-   (if (config/config-bool :mb-enable-iam)
-     (iam-login username password)
-     (email-login username password))
+   (if (config/config-bool :enable-email-login)
+     (email-login username password)
+     (throw
+      (ui18n/ex-info invalid-login-method-message
+                     {:status-code 400
+                      :error {:username invalid-login-method-message}})))
   ;(ldap-login username password)    ; First try LDAP if it's enabled
    (admin-email-login username password)   ; Then try local authentication
       ;; If nothing succeeded complain about it
@@ -166,17 +155,18 @@ couldn't be autenticated."
   {email su/Email}
   (throttle-check (forgot-password-throttlers :ip-address) remote-address)
   (throttle-check (forgot-password-throttlers :email)      email)
+  (if (config/config-bool :enable-email-login)
   ;; Don't leak whether the account doesn't exist, just pretend everything is ok
-  (when-let [{user-id :id, google-auth? :google_auth, iam-auth? :iam_auth} (db/select-one [User :id :google_auth :iam_auth]
-                                                                                          :email email, :is_active true)]
-    (let [reset-token        (if (config/config-bool :mb-enable-iam)
-                               nil
-                               (user/set-password-reset-token! user-id))
-          password-reset-url (if reset-token
-                               (str (public-settings/site-url) "/auth/reset_password/" reset-token)
-                               (config/config-str :iam-password-reset-url))]
-      (email/send-password-reset-email! email google-auth? iam-auth? server-name password-reset-url)
-      (log/info password-reset-url))))
+    (when-let [{user-id :id, google-auth? :google_auth, iam-auth? :iam_auth} (db/select-one [User :id :google_auth :iam_auth]
+                                                                                            :email email, :is_active true)]
+      (let [reset-token        (if (config/config-bool :mb-enable-iam)
+                                 nil
+                                 (user/set-password-reset-token! user-id))
+            password-reset-url (if reset-token
+                                 (str (public-settings/site-url) "/auth/reset_password/" reset-token)
+                                 (config/config-str :iam-password-reset-url))]
+        (email/send-password-reset-email! email google-auth? iam-auth? server-name password-reset-url)
+        (log/info password-reset-url)))))
 
 
 (def ^:private ^:const reset-token-ttl-ms
@@ -190,10 +180,10 @@ couldn't be autenticated."
     (let [user-id (Integer/parseInt user-id)]
       (when-let [{:keys [reset_token reset_triggered], :as user} (db/select-one [User :id :last_login :reset_triggered
                                                                                  :reset_token]
-                                                                   :id user-id, :is_active true)]
+                                                                                :id user-id, :is_active true)]
         ;; Make sure the plaintext token matches up with the hashed one for this user
         (when (u/ignore-exceptions
-                (creds/bcrypt-verify token reset_token))
+               (creds/bcrypt-verify token reset_token))
           ;; check that the reset was triggered within the last 48 HOURS, after that the token is considered expired
           (let [token-age (- (System/currentTimeMillis) reset_triggered)]
             (when (< token-age reset-token-ttl-ms)
@@ -250,8 +240,8 @@ couldn't be autenticated."
     (when-not (= status 200)
       (throw (ui18n/ex-info (tru "Invalid Google Auth token.") {:status-code 400})))
     (u/prog1 (json/parse-string body keyword)
-      (when-not (= (:email_verified <>) "true")
-        (throw (ui18n/ex-info (tru "Email is not verified.") {:status-code 400}))))))
+             (when-not (= (:email_verified <>) "true")
+               (throw (ui18n/ex-info (tru "Email is not verified.") {:status-code 400}))))))
 
 ;; TODO - are these general enough to move to `metabase.util`?
 (defn- email->domain ^String [email]
@@ -271,7 +261,7 @@ couldn't be autenticated."
     ;; to this situation
     (throw
      (ui18n/ex-info (tru "You''ll need an administrator to create a Foundry account before you can use Google to log in.")
-       {:status-code 428}))))
+                    {:status-code 428}))))
 
 (s/defn ^:private google-auth-create-new-user!
   [{:keys [email] :as new-user} :- user/NewUser]
@@ -289,6 +279,7 @@ couldn't be autenticated."
                                                      :email      email}))]
     (create-session! user)))
 
+
 (api/defendpoint POST "/google_auth"
   "Login with Google Auth."
   [:as {{:keys [token]} :body, remote-address :remote-addr, :as request}]
@@ -301,5 +292,42 @@ couldn't be autenticated."
           response   {:id session-id}]
       (mw.session/set-session-cookie request response session-id))))
 
+
+(defn- iam-auth-token-info [^String token]
+  (let [{:keys [status body]} (http/get (config/config-str :iam-api-user-info) {:oauth-token token})]
+    (when-not (= status 200)
+      (throw (ui18n/ex-info (tru "Invalid Iam Access token.") {:status-code 400
+                                                               :message (tru "Invalid Iam Access token")})))
+    (u/prog1 (json/parse-string body keyword)
+             (when-not (= (:email_verified <>) true)
+               (throw (ui18n/ex-info (tru "Email is not verified.")
+                                     {:status-code 428
+                                      :message (tru "Email is not verified. You will need to verify your email before you can use Iam to log in.")}))))))
+
+
+(s/defn ^:private iam-auth-create-new-user!
+  [{:keys [email] :as new-user} :- user/NewUser]
+  (user/create-new-iam-auth-user! new-user))
+
+(s/defn ^:private softheon-auth-fetch-or-create-user! :- (s/maybe UUID)
+  [first-name last-name email]
+  (when-let [user (or (db/select-one [User :id :last_login] :email email)
+                      (iam-auth-create-new-user! {:first_name first-name
+                                                  :last_name last-name
+                                                  :email email}))]
+    (create-session! user)))
+
+(api/defendpoint POST "/iam_auth"
+  "Login with IAM Auth."
+  [:as {{:keys [id_token, access_token]} :body, remote-address :remote-addr, :as request}]
+  {id_token su/NonBlankString
+   access_token su/NonBlankString}
+ ;; (throttle-check (login-throttlers :ip-address) remote-address)
+;; Verify it is a valid Softheon access token
+  (let [{:keys [given_name family_name email] :as body} (iam-auth-token-info access_token)]
+    (log/info (trs "Successfully authenticated Softheon Autn token for: {0} {1}" given_name family_name))
+    (let [session-id (api/check-500 (softheon-auth-fetch-or-create-user! given_name family_name email))
+          response {:id session-id}]
+      (mw.session/set-session-cookie request response session-id))))
 
 (api/define-routes)

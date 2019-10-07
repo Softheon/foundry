@@ -366,6 +366,15 @@ export const ICON_PATHS = {
   slack: {
     img: "app/assets/img/slack.png",
   },
+  iam: {
+    img: "app/assets/img/favicon.ico",
+    attrs: {
+      style: {
+        width: "20px",
+        height: "20px"
+      }
+    }
+  }
 };
 
 // $FlowFixMe
