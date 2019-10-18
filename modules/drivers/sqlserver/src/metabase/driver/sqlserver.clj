@@ -102,7 +102,7 @@
   expr)
 
 (defmethod sql.qp/date [:sqlserver :minute] [_ _ expr]
-  (hx/cast :smalldatetime expr))
+  (hx/cast :datetime expr))
 
 (defmethod sql.qp/date [:sqlserver :minute-of-hour] [_ _ expr]
   (date-part :minute expr))
