@@ -40,7 +40,7 @@ export const login = createThunkAction(LOGIN, function(
 
       // since we succeeded, lets set the session cookie
       //MetabaseCookies.setSessionCookie(newSession.id);
-
+      MetabaseCookies.removeBNESCookies();
       MetabaseAnalytics.trackEvent("Auth", "Login");
       // TODO: redirect after login (carry user to intended destination)
       await dispatch(refreshCurrentUser());
