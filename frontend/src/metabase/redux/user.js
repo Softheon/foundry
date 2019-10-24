@@ -12,9 +12,9 @@ import { LOGOUT } from "metabase/auth/auth";
 import { UserApi } from "metabase/services";
 
 export const REFRESH_CURRENT_USER = "metabase/user/REFRESH_CURRENT_USER";
-export const refreshCurrentUser = createAction(REFRESH_CURRENT_USER, () => {
+export const refreshCurrentUser = createThunkAction(REFRESH_CURRENT_USER, () => async (dispatch, getState) => {
   try {
-    return UserApi.current();
+    return await UserApi.current();
   } catch (e) {
     return null;
   }

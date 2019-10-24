@@ -39,8 +39,8 @@ export const login = createThunkAction(LOGIN, function(
       let newSession = await SessionApi.create(credentials);
 
       // since we succeeded, lets set the session cookie
-      MetabaseCookies.setSessionCookie(newSession.id);
-
+      //MetabaseCookies.setSessionCookie(newSession.id);
+      MetabaseCookies.removeBNESCookies();
       MetabaseAnalytics.trackEvent("Auth", "Login");
       // TODO: redirect after login (carry user to intended destination)
       await dispatch(refreshCurrentUser());
@@ -110,12 +110,15 @@ export const LOGOUT = "metabase/auth/LOGOUT";
 export const logout = createThunkAction(LOGOUT, function() {
   return async function(dispatch, getState) {
     // TODO: as part of a logout we want to clear out any saved state that we have about anything
-
+    // console.log("logging out")
+    // alert("logging out");
     // let sessionId = MetabaseCookies.setSessionCookie();
     // if (sessionId) {
     //   // actively delete the session
     //   await SessionApi.delete({ session_id: sessionId });
     // }
+    // await SessionApi.delete({ session_id: sessionId });
+    await SessionApi.delete();
     // clear Google auth credentials if any are present
     await SessionApi.delete();
     await clearGoogleAuthCredentials();
