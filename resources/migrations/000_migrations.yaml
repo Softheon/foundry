@@ -1,4 +1,4 @@
-databaseChangeLog: 
+databaseChangeLog:
 # The quoting strategy decides when things like column names should be quoted.
 # This is in place to deal with Liquibase not knowing about all of the new
 # reserved words in MySQL 8+. Using a column name that is a reserved word
@@ -3112,15 +3112,15 @@ databaseChangeLog:
         - dropForeignKeyConstraint:
             baseTableName: query_queryexecution
             constraintName: fk_queryexecution_ref_query_id
-        - dropIndex: 
+        - dropIndex:
             indexName: idx_queryexecution_query_id
             tableName: query_queryexecution
         - dropIndex:
             indexName: idx_dashboard_organization_id
-            tableName: report_dashboard      
+            tableName: report_dashboard
         - dropIndex:
             indexName: idx_database_organization_id
-            tableName: metabase_database 
+            tableName: metabase_database
         - dropIndex:
             indexName: idx_card_organization_id
             tableName: report_card
@@ -3896,7 +3896,7 @@ databaseChangeLog:
         - sql:
             sql: drop table if exists computation_job_result
         - sql:
-            sql: drop table if exists computation_job 
+            sql: drop table if exists computation_job
         - modifySql:
           dbms: h2,mysql,postgresql,mariadb
           append:
@@ -4296,7 +4296,7 @@ databaseChangeLog:
                 deleteCascade: true
         - sql:
             dbms: mssql
-            sql: 
+            sql:
               CREATE UNIQUE NONCLUSTERED INDEX unique_collection_personal_owner_id
               ON collection(personal_owner_id)
               WHERE personal_owner_id IS NOT NULL;
@@ -4333,8 +4333,8 @@ databaseChangeLog:
             dbms: mssql
             sql: DECLARE @uniqueConstraintName nvarchar(256)
                 declare @Command  nvarchar(1000)
-                SELECT @uniqueConstraintName = name  
-                FROM sys.objects  
+                SELECT @uniqueConstraintName = name
+                FROM sys.objects
                 WHERE type = 'UQ' AND OBJECT_NAME(parent_object_id) = N'collection'
                 select @Command = 'ALTER TABLE dbo.collection ' +  ' DROP CONSTRAINT ' +  @uniqueConstraintName
                 EXECUTE (@Command);
@@ -4345,7 +4345,7 @@ databaseChangeLog:
             tableName: collection
             columnName: _slug
             columnDataType: varchar(254)
-        - dropIndex: 
+        - dropIndex:
             indexName: idx_collection_slug
             tableName: collection
         - dropColumn:
@@ -5193,7 +5193,7 @@ databaseChangeLog:
               name: _value
               type: varchar(max)
         - sql:
-            dbms: mysql,postgresql,h2,mariadb 
+            dbms: mysql,postgresql,h2,mariadb
             sql: UPDATE setting SET _value = value;
         - sql:
             dbms: mssql
@@ -5246,6 +5246,7 @@ databaseChangeLog:
       id: 98
       author: camsaul
       comment: 'Added 0.32.0'
+      runOnChange: true
       preConditions:
         - onFail: MARK_RAN
         - onUpdateSQL: IGNORE
@@ -5276,11 +5277,11 @@ databaseChangeLog:
         - sql:
             dbms: postgresql
             sql: CREATE UNIQUE INDEX idx_uniq_table_db_id_schema_name_2col ON "metabase_table" ("db_id", "name") WHERE "schema" IS NULL
-                
+
         # - sql:
         #     dmbs: mssql
-        #     sql: 
-        #         CREATE UNIQUE NONCLUSTERED INDEX idx_uniq_table_db_id_schema_name 
+        #     sql:
+        #         CREATE UNIQUE NONCLUSTERED INDEX idx_uniq_table_db_id_schema_name
         #         ON [metabase_table] ([db_id], [schema], [name])
         #         WHERE [schema] IS NOT NULL
   - changeSet:
@@ -5318,10 +5319,10 @@ databaseChangeLog:
         # - sql:
         #     dbms: postgresql
         #     sql: CREATE UNIQUE INDEX idx_uniq_field_table_id_parent_id_name_2col ON "metabase_field" ("table_id", "name") WHERE "parent_id" IS NULL
-        
+
         - sql:
             dmbs: mssql
-            sql: CREATE UNIQUE NONCLUSTERED INDEX idx_uniq_field_table_id_parent_id_name 
+            sql: CREATE UNIQUE NONCLUSTERED INDEX idx_uniq_field_table_id_parent_id_name
                 ON [metabase_field] ([table_id], [parent_id], [name])
                 WHERE [parent_id] IS NOT NULL
 
@@ -5357,7 +5358,7 @@ databaseChangeLog:
             replace:
               replace: NOT
               with: "~"
-            
+
 
 # Very helpful for performance reasons. See #9519
   - changeSet:
