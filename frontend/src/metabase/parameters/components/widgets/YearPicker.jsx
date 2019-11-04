@@ -3,7 +3,8 @@ import React from "react";
 import Select from "metabase/components/Select.jsx";
 import _ from "underscore";
 
-const YEARS = _.range(new Date().getFullYear(), 1900, -1);
+const NUMBER_OF_FUTURE_YEARS = 10;
+const YEARS = _.range(new Date().getFullYear() + NUMBER_OF_FUTURE_YEARS, 1900, -1);
 
 const YearPicker = ({ value, onChange }) => (
   <Select
