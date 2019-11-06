@@ -36,7 +36,7 @@ let MetabaseCookies = {
     }
   },
   removeBNESCookies :  () => {
-    document.cookie =`${BNES_METABASE_SESSION}=;path=/; Max-Age=-1;`
+   // document.cookie =`${BNES_METABASE_SESSION}=;path=/; Max-Age=-1;`
     document.cookie =`${BNES_METABASE_SESSION}=;path=/api; Max-Age=-1;`
     document.cookie =`${BNES_METABASE_SESSION_ID}=;path=/; Max-Age=-1;`
     document.cookie =`${METABASE_SESSION_COOKIE}=;path=/; Max-Age=-1;`
