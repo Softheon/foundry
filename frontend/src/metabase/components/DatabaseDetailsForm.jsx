@@ -20,19 +20,19 @@ const AUTH_URL_PREFIXES = {
   bigquery_with_drive:
     "",
   googleanalytics:
-    "",
+  "https://accounts.google.com/o/oauth2/auth?access_type=offline&redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=code&scope=https://www.googleapis.com/auth/analytics.readonly&client_id=",
 };
 
 const ENABLE_API_PREFIXES = {
   googleanalytics:
-    "",
+  "https://console.developers.google.com/apis/api/analytics.googleapis.com/overview?project=",
 };
 
 const CREDENTIALS_URL_PREFIXES = {
   bigquery:
     "",
   googleanalytics:
-    "",
+    "https://console.developers.google.com/apis/credentials/oauthclient?project=",
 };
 
 const isTunnelField = field => /^tunnel-/.test(field.name);
