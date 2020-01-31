@@ -167,7 +167,7 @@ export default class NativeQuery extends AtomicQuery {
       this._originalQuestion,
       updateIn(
         this._datasetQuery,
-        ["native", "template_tags"],
+        ["native", "template-tags"],
         templateTags => {
           const entries = Array.from(Object.entries(templateTags));
           const oldIndex = _.findIndex(entries, entry => entry[1].id === id);
@@ -302,7 +302,7 @@ export default class NativeQuery extends AtomicQuery {
   }
 
   addOrderClause(order_by){
-  
+
     this._nativeDatasetQuery.order_by =[order_by];
   }
 }
