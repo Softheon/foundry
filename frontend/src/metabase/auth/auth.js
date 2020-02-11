@@ -120,8 +120,8 @@ export const logout = createThunkAction(LOGOUT, function() {
     // await SessionApi.delete({ session_id: sessionId });
     await SessionApi.delete();
     // clear Google auth credentials if any are present
-    await SessionApi.delete();
-    await clearGoogleAuthCredentials();
+    //await SessionApi.delete();
+    //await clearGoogleAuthCredentials();
     MetabaseAnalytics.trackEvent("Auth", "Logout");
 
     dispatch(push("/auth/login"));
