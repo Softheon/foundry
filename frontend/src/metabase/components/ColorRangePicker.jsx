@@ -22,51 +22,73 @@ type Props = {
   columns?: number,
 };
 
-const ColorRangePicker = ({
-  value,
-  onChange,
-  ranges,
-  className,
-  style,
-  sections = 5,
-  quantile = false,
-  columns = 2,
-}: Props) => (
-  <PopoverWithTrigger
-    triggerElement={
-      <ColorRangePreview
-        colors={value}
-        className={cx(className, "bordered rounded overflow-hidden")}
-        style={{ height: 30, ...style }}
-        sections={value.length}
-        quantile={quantile}
-      />
+class ColorRangePicker extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+
+  componentDidUpdate() {
+    const { value, ranges, onChange } = this.props;
+    if (value.length !== ranges[0].length) {
+      onChange(ranges[0]); 
     }
-  >
-    {({ onClose }) => (
-      <div className="pt1 mr1 flex flex-wrap" style={{ width: 300 }}>
-        {ranges.map(range => (
-          <div
-            className={"mb1 pl1"}
-            style={{ flex: `1 1 ${Math.round(100 / columns)}%` }}
-          >
-            <ColorRangePreview
-              colors={range}
-              onClick={() => {
-                onChange(range);
-                onClose();
-              }}
-              className={cx("bordered rounded overflow-hidden cursor-pointer")}
-              style={{ height: 30 }}
-              sections={value.length}
-              quantile={quantile}
-            />
+  }
+
+  render() {
+    const  {
+      value,
+      onChange,
+      ranges,
+      className,
+      style,
+      sections = 5,
+      quantile = false,
+      columns = 2,
+    } = this.props;
+
+    return (
+      <PopoverWithTrigger
+        triggerElement={
+          <ColorRangePreview
+            colors={value}
+            className={cx(className, "bordered rounded overflow-hidden")}
+            style={{ height: 30, ...style }}
+            sections={value.length}
+            quantile={quantile}
+          />
+        }
+      >
+        {({ onClose }) => (
+          <div className="pt1 mr1 flex flex-wrap" style={{ width: 300 }}>
+            {ranges.map(range => (
+              <div
+                className={"mb1 pl1"}
+                style={{ flex: `1 1 ${Math.round(100 / columns)}%` }}
+              >
+                <ColorRangePreview
+                  colors={range}
+                  onClick={() => {
+                    onChange(range);
+                    onClose();
+                  }}
+                  className={cx(
+                    "bordered rounded overflow-hidden cursor-pointer",
+                  )}
+                  style={{ height: 30 }}
+                  sections={value.length}
+                  quantile={quantile}
+                />
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-    )}
-  </PopoverWithTrigger>
-);
+        )}
+      </PopoverWithTrigger>
+    );
+  }
+}
+
+
+
 
 type ColorRangePreviewProps = {
   colors: ColorString[],

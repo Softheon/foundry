@@ -288,6 +288,6 @@
   "Convenience for creating a new user via IAM. This account is considered active immediately; thus
 all active admins will receive an email right away."
   [new-user :- NewUser]
-  (insert-new-user! (-> new-user
-                        (dissoc :password)
-                        (assoc :iam_auth true))))
+  (u/prog1 (insert-new-user! (assoc new-user :iam_auth true))
+  ;; send an email to everyone including the site admin if that's set
+           (email/send-user-joined-admin-notification-email! <>, :iam_auth? true)))

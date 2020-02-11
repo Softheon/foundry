@@ -11,6 +11,7 @@ const LegacyChoropleth = ({
   getColor,
   onHoverFeature,
   onClickFeature,
+  getFillOpacity = () => 1,
 }) => {
   let geo = d3.geo.path().projection(projection);
 
@@ -18,20 +19,15 @@ const LegacyChoropleth = ({
   let width = translate[0] * 2;
   let height = translate[1] * 2;
 
-  return (
-    <div className="absolute top bottom left right flex layout-centered">
-      <ShouldUpdate
-        series={series}
-        shouldUpdate={(props, nextProps) =>
-          !isSameSeries(props.series, nextProps.series)
-        }
-      >
-        {() => (
-          // eslint-disable-line react/display-name
+  return <div className="absolute top bottom left right flex layout-centered">
+      <ShouldUpdate series={series} shouldUpdate={(props, nextProps) => !isSameSeries(props.series, nextProps.series) 
+        || nextProps.crossfilterGroup === nextProps.activeGroup || props.crossfilterGroup === props.resetedCrossfilterId}>
+        {() => // eslint-disable-line react/display-name
           <svg className="flex-full m1" viewBox={`0 0 ${width} ${height}`}>
             {geoJson.features.map((feature, index) => (
               <path
-                d={geo(feature, index)}
+              key={index}  
+              d={geo(feature, index)}
                 stroke="white"
                 strokeWidth={1}
                 fill={getColor(feature)}
@@ -41,6 +37,7 @@ const LegacyChoropleth = ({
                     event: e.nativeEvent,
                   })
                 }
+                fillOpacity={getFillOpacity(feature)}
                 onMouseLeave={() => onHoverFeature(null)}
                 className={cx({ "cursor-pointer": !!onClickFeature })}
                 onClick={
@@ -53,11 +50,9 @@ const LegacyChoropleth = ({
                 }
               />
             ))}
-          </svg>
-        )}
+          </svg>}
       </ShouldUpdate>
-    </div>
-  );
+    </div>;
 };
 
 class ShouldUpdate extends Component {

@@ -19,4 +19,6 @@
                           (qputil/query-without-aggregations-or-limits? query))
                      (assoc-in [:query :limit] max-rows))
           results  (qp query)]
-      (update results :rows (partial take max-rows)))))
+      (if (= max-rows 0)
+        results
+        (update results :rows (partial take max-rows))))))

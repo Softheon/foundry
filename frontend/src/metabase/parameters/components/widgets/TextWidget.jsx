@@ -65,6 +65,7 @@ export default class TextWidget extends Component {
         className={className}
         type="text"
         value={this.state.value || ""}
+        disabled = {this.props.disabled}
         onChange={e => {
           this.setState({ value: e.target.value });
           if (this.props.commitImmediately) {
@@ -87,7 +88,10 @@ export default class TextWidget extends Component {
           this.setState({ value: this.props.value });
         }}
         placeholder={
-          isEditing ? t`Enter a default value...` : defaultPlaceholder
+          !isEditing ? defaultPlaceholder
+          : this.props.disabled 
+          ? this.props.placeholder 
+          : t`Enter a default value...`
         }
       />
     );

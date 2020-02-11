@@ -3,13 +3,12 @@
 import { t } from "c-3po";
 import LineAreaBarChart from "../components/LineAreaBarChart.jsx";
 import { barRenderer } from "../lib/LineAreaBarRenderer";
-
 import {
   GRAPH_DATA_SETTINGS,
   STACKABLE_SETTINGS,
   GRAPH_GOAL_SETTINGS,
   GRAPH_COLORS_SETTINGS,
-  GRAPH_AXIS_SETTINGS,
+  GRAPH_AXIS_SETTINGS
 } from "../lib/settings/graph";
 
 export default class BarChart extends LineAreaBarChart {
@@ -23,7 +22,7 @@ export default class BarChart extends LineAreaBarChart {
     ...STACKABLE_SETTINGS,
     ...GRAPH_GOAL_SETTINGS,
     ...GRAPH_COLORS_SETTINGS,
-    ...GRAPH_AXIS_SETTINGS,
+    ...GRAPH_AXIS_SETTINGS
   };
 
   static renderer = barRenderer;

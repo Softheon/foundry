@@ -11,12 +11,14 @@ import {
   createThunkAction,
 } from "metabase/lib/redux";
 import { open } from "metabase/lib/dom";
+import { defer } from "metabase/lib/promise";
 import { normalize, schema } from "normalizr";
 
 import Dashboards from "metabase/entities/dashboards";
 
 import {
   createParameter,
+  createCrossfilterParameter,
   setParameterName as setParamName,
   setParameterDefaultValue as setParamDefaultValue,
 } from "metabase/meta/Dashboard";
@@ -51,7 +53,10 @@ import {
   MetabaseApi,
 } from "metabase/services";
 
-import { getDashboard, getDashboardComplete } from "./selectors";
+import {
+  getDashboard,
+  getDashboardComplete,
+} from "./selectors";
 import { getMetadata } from "metabase/selectors/metadata";
 import { getCardAfterVisualizationClick } from "metabase/visualizations/lib/utils";
 
@@ -93,6 +98,14 @@ export const UPDATE_DASHCARD_ID = "metabase/dashboard/UPDATE_DASHCARD_ID";
 export const FETCH_DASHBOARD_CARD_DATA =
   "metabase/dashboard/FETCH_DASHBOARD_CARD_DATA";
 export const FETCH_CARD_DATA = "metabase/dashboard/FETCH_CARD_DATA";
+export const FETCH_DUPLICATE_CARD_DATA =
+  "metabase/dashboard/FETCH_DUPLICATE_CARD_DATA";
+
+export const CANCEL_FETCH_DASHBOARD_CARD_DATA =
+  "metabase/dashboard/CANCEL_FETCH_DASHBOARD_CARD_DATA";
+export const CANCEL_FETCH_CARD_DATA =
+  "metabase/dashboard/CANCEL_FETCH_CARD_DATA";
+
 export const MARK_CARD_AS_SLOW = "metabase/dashboard/MARK_CARD_AS_SLOW";
 export const CLEAR_CARD_DATA = "metabase/dashboard/CLEAR_CARD_DATA";
 
@@ -111,6 +124,10 @@ export const SET_PARAMETER_VALUE = "metabase/dashboard/SET_PARAMETER_VALUE";
 export const SET_PARAMETER_INDEX = "metabase/dashboard/SET_PARAMETER_INDEX";
 export const SET_PARAMETER_DEFAULT_VALUE =
   "metabase/dashboard/SET_PARAMETER_DEFAULT_VALUE";
+export const ADD_CROSSFILTER_PARAMETER =
+  "metabase/dashboard/ADD_CROSSFILTER_PARAMETER";
+export const REMOVE_CROSSFILTER_PARAMETER =
+  "metabase/dashboard/REMOVE_CROSSFILTER_PARAMETER";
 
 function getDashboardType(id) {
   if (Utils.isUUID(id)) {
@@ -336,7 +353,6 @@ export const saveDashboardAndCards = createThunkAction(
               ),
           }),
         );
-
         const result = await DashboardApi.reposition_cards({
           dashId: dashboard.id,
           cards,
@@ -374,24 +390,74 @@ export async function fetchDataOrError(dataPromise) {
   }
 }
 
-export const fetchDashboardCardData = createThunkAction(
+function getAllDashboardCards(dashboard) {
+  const results = [];
+  if (dashboard) {
+    for (const dashcard of dashboard.ordered_cards) {
+      const cards = [dashcard.card].concat(dashcard.series || []);
+      results.push(...cards.map(card => ({ card, dashcard })));
+    }
+  }
+  return results;
+}
+
+function isVirtualDashCard(dashcard) {
+  return _.isObject(dashcard.visualization_settings.virtual_card);
+}
+
+export const fetchUniqueDashboardCardData = createThunkAction(
   FETCH_DASHBOARD_CARD_DATA,
-  options => async (dispatch, getState) => {
+  options => (dispatch, getState) => {
     const dashboard = getDashboardComplete(getState());
-    if (dashboard) {
-      for (const dashcard of dashboard.ordered_cards) {
-        // we skip over virtual cards, i.e. dashcards that do not have backing cards in the backend
-        if (_.isObject(dashcard.visualization_settings.virtual_card)) {
-          continue;
-        }
-        const cards = [dashcard.card].concat(dashcard.series || []);
-        for (const card of cards) {
-          dispatch(fetchCardData(card, dashcard, options));
-        }
+    for (const { card, dashcard } of getAllDashboardCards(dashboard)) {
+      if (!isVirtualDashCard(dashcard)) {
+        dispatch(fetchCardData(card, dashcard, options));
       }
     }
   },
 );
+
+export const fetchDashboardCardData = createThunkAction(
+  FETCH_DASHBOARD_CARD_DATA,
+  options => (dispatch, getState) => {
+    const dashboard = getDashboardComplete(getState());
+    for (const { card, dashcard } of getAllDashboardCards(dashboard)) {
+      // we skip over virtual cards, i.e. dashcards that do not have backing cards in the backend
+      if (!isVirtualDashCard(dashcard)) {
+        dispatch(fetchCardData(card, dashcard, options));
+      }
+    }
+  },
+);
+
+export const cancelFetchDashboardCardData = createThunkAction(
+  CANCEL_FETCH_DASHBOARD_CARD_DATA,
+  () => (dispatch, getState) => {
+    const dashboard = getDashboardComplete(getState());
+    for (const { card, dashcard } of getAllDashboardCards(dashboard)) {
+      dispatch(cancelFetchCardData(card.id, dashcard.id));
+    }
+  },
+);
+
+// TODO: this doesn't need to be stored in Redux, does it?
+const cardDataCancelDeferreds = {};
+
+// machinery to support query cancellation
+export const cancelFetchCardData = createAction(
+  CANCEL_FETCH_CARD_DATA,
+  (card_id, dashcard_id) => {
+    const deferred = cardDataCancelDeferreds[`${dashcard_id},${card_id}`];
+    if (deferred) {
+      deferred.resolve();
+      cardDataCancelDeferreds[`${dashcard_id},${card_id}`] = null;
+    }
+    return { dashcard_id, card_id };
+  },
+);
+function setFetchCardDataCancel(card_id, dashcard_id, deferred) {
+  cardDataCancelDeferreds[`${dashcard_id},${card_id}`] = deferred;
+}
 
 export const fetchCardData = createThunkAction(FETCH_CARD_DATA, function(
   card,
@@ -408,7 +474,6 @@ export const fetchCardData = createThunkAction(FETCH_CARD_DATA, function(
         result: { error: { status: 403 } },
       };
     }
-
     const dashboardType = getDashboardType(dashcard.dashboard_id);
 
     const {
@@ -426,11 +491,11 @@ export const fetchCardData = createThunkAction(FETCH_CARD_DATA, function(
       parameterValues,
       dashcard && dashcard.parameter_mappings,
     );
-
+  
     if (!reload) {
       // if reload not set, check to see if the last result has the same query dict and return that
       const lastResult = getIn(dashcardData, [dashcard.id, card.id]);
-      // "constraints" is added by the backend, remove it when comparing
+      // "constraints" is added by the backend, remove it when comparing 
       if (
         lastResult &&
         Utils.equals(_.omit(lastResult.json_query, "constraints"), datasetQuery)
@@ -442,6 +507,28 @@ export const fetchCardData = createThunkAction(FETCH_CARD_DATA, function(
         };
       }
     }
+
+    let isCrossfilterSourceCard = false;
+    if (datasetQuery && datasetQuery.parameters) {
+      for(let parameter of datasetQuery.parameters) {
+        if (parameter.type === "crossfilter"){
+          if (parameter.target[1][1]!== card.id) {
+            const lastResult = getIn(dashcardData, [dashcard.id, card.id]);
+            return {
+              dashcard_id: dashcard.id,
+              card_id: card.id,
+              result: lastResult,
+            };
+          }
+          else {
+            isCrossfilterSourceCard = true;
+            break;
+          }
+        }
+      }
+    }
+    
+    cancelFetchCardData(card.id, dashcard.id);
 
     if (clear) {
       // clears the card data to indicate the card is reloading
@@ -457,6 +544,18 @@ export const fetchCardData = createThunkAction(FETCH_CARD_DATA, function(
       }
     }, DATASET_SLOW_TIMEOUT);
 
+    const deferred = defer();
+    setFetchCardDataCancel(card.id, dashcard.id, deferred);
+
+    let cancelled = false;
+    deferred.promise.then(() => {
+      cancelled = true;
+    });
+
+    const queryOptions = {
+      cancelled: deferred.promise,
+    };
+
     // make the actual request
     if (dashboardType === "public") {
       result = await fetchDataOrError(
@@ -467,30 +566,47 @@ export const fetchCardData = createThunkAction(FETCH_CARD_DATA, function(
             ? JSON.stringify(datasetQuery.parameters)
             : undefined,
         }),
+        queryOptions,
       );
     } else if (dashboardType === "embed") {
       result = await fetchDataOrError(
-        EmbedApi.dashboardCardQuery({
-          token: dashcard.dashboard_id,
-          dashcardId: dashcard.id,
-          cardId: card.id,
-          ...getParametersBySlug(dashboard.parameters, parameterValues),
-        }),
+        EmbedApi.dashboardCardQuery(
+          {
+            token: dashcard.dashboard_id,
+            dashcardId: dashcard.id,
+            cardId: card.id,
+            ...getParametersBySlug(dashboard.parameters, parameterValues),
+          },
+          queryOptions,
+        ),
       );
     } else if (dashboardType === "transient") {
-      result = await fetchDataOrError(MetabaseApi.dataset(datasetQuery));
+      result = await fetchDataOrError(
+        MetabaseApi.dataset(datasetQuery, queryOptions),
+      );
+    } else if (isCrossfilterSourceCard) {
+      result = await fetchDataOrError(
+        CardApi.fullResultQuery(
+          { cardId: card.id, parameters: datasetQuery.parameters },
+          queryOptions,
+        ),
+      );
     } else {
       result = await fetchDataOrError(
-        CardApi.query({ cardId: card.id, parameters: datasetQuery.parameters }),
+        CardApi.query(
+          { cardId: card.id, parameters: datasetQuery.parameters },
+          queryOptions,
+        ),
       );
     }
 
+    setFetchCardDataCancel(card.id, dashcard.id, null);
     clearTimeout(slowCardTimer);
 
     return {
       dashcard_id: dashcard.id,
       card_id: card.id,
-      result: result,
+      result: cancelled? null : result,
     };
   };
 });
@@ -694,7 +810,11 @@ export const addParameter = createThunkAction(
   parameterOption => (dispatch, getState) => {
     let parameter;
     updateParameters(dispatch, getState, parameters => {
-      parameter = createParameter(parameterOption, parameters);
+      if (parameterOption.type === "crossfilter") {
+        parameter = createCrossfilterParameter(parameterOption, parameters);
+      } else {
+        parameter = createParameter(parameterOption, parameters);
+      }
       return parameters.concat(parameter);
     });
     return parameter;
@@ -996,6 +1116,10 @@ const dashcardData = handleActions(
     // clear existing dashboard data when loading a dashboard
     [INITIALIZE]: { next: state => ({}) },
     [FETCH_CARD_DATA]: {
+      next: (state, { payload: { dashcard_id, card_id, result } }) =>
+        assocIn(state, [dashcard_id, card_id], result),
+    },
+    [FETCH_DUPLICATE_CARD_DATA]: {
       next: (state, { payload: { dashcard_id, card_id, result } }) =>
         assocIn(state, [dashcard_id, card_id], result),
     },

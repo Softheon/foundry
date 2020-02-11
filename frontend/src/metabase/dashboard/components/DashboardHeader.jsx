@@ -36,6 +36,8 @@ import type {
 } from "metabase/meta/types/Dashboard";
 import type { RevisionId } from "metabase/meta/types/Revision";
 import { Link } from "react-router";
+import { PARAMETER_SECTIONS } from "metabase/meta/Dashboard";
+import { consolidateStreamedStyles } from "styled-components";
 
 type Props = {
   location: LocationDescriptor,
@@ -185,6 +187,59 @@ export default class DashboardHeader extends Component {
     ];
   }
 
+  getUniqueCrossfilterSources = () => {
+    const { parameters } = this.props.dashboard ;
+    const { dashcards, nativeDashcards } = this.props;
+    
+    // maps the values of crossfilter parameters  to its corresonding cards.
+    const crossfilterParameters = parameters.filter(parameter => {
+      return parameter.type === "crossfilter"
+    });
+    const cfSourceMap = new Map();
+    crossfilterParameters.map(parameter => {
+      const dashcard = dashcards[parameter.dashcard_id];
+      if (dashcard && dashcard.card) {
+        const card = dashcard.card;
+        const type = card.dataset_query && card.dataset_query.type;
+        if (type === "native") {
+          const dbKey = "[db_" + card.dataset_query.database +"]";
+          const queryKey = dbKey + card.dataset_query.native.query;
+          cfSourceMap.set(queryKey, card);
+        }
+      }
+    })
+    const result = [];
+    nativeDashcards.map(nativeDashcard => {
+      const { dashcard_id, dashboard_id, card } = nativeDashcard;
+      if (dashboard_id === this.props.dashboard.id) {
+        const { dataset_query: { native: { query } }, database_id } = card;
+        const key = "[db_" + database_id + "]" + query;
+        if (!cfSourceMap.has(key)) {
+          result.push({
+            card_id: card.id,
+            dashcard_id: dashcard_id,
+            database_id: card.database_id,
+            name: card.name,
+            type: "crossfilter",
+          });
+        }
+      }
+    });
+    return result;
+  }
+
+  updateCrossFilterParameterSection (parameterSections) {
+    for(const section of parameterSections) {
+      if (section.id === "crossfilter") {
+        let options = this.getUniqueCrossfilterSources();
+        section.options = options;
+        return parameterSections;
+      }
+    }
+    return parameterSections;
+  } 
+
+
   getHeaderButtons() {
     const {
       dashboard,
@@ -207,6 +262,7 @@ export default class DashboardHeader extends Component {
       buttons.push(parametersWidget);
     }
 
+    // Add question to dashboard button.
     if (!isFullscreen && canEdit) {
       buttons.push(
         <ModalWithTrigger
@@ -264,6 +320,8 @@ export default class DashboardHeader extends Component {
                 <ParametersPopover
                   onAddParameter={this.props.addParameter}
                   onClose={() => this.setState({ modal: null })}
+                  parameterSections={this.updateCrossFilterParameterSection(PARAMETER_SECTIONS)}
+                  getCrossfilterParameterValues={this.getUniqueCrossfilterSources}
                 />
               </Popover>
             )}
@@ -376,6 +434,8 @@ export default class DashboardHeader extends Component {
         }
         onHeaderModalDone={() => this.props.setEditingParameter(null)}
       />
+
+
     );
   }
 }

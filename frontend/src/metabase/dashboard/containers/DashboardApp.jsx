@@ -22,6 +22,9 @@ import {
   getEditingParameter,
   getParameters,
   getParameterValues,
+  getDashcards,
+  getSQLDashcards,
+  getNativeDashcardDetail,
 } from "../selectors";
 import { getDatabases, getMetadata } from "metabase/selectors/metadata";
 import { getUserIsAdmin } from "metabase/selectors/user";
@@ -49,6 +52,9 @@ const mapStateToProps = (state, props) => {
     parameters: getParameters(state, props),
     parameterValues: getParameterValues(state, props),
     metadata: getMetadata(state),
+    dashcards: getDashcards(state, props),
+    nativeDashcards: getSQLDashcards (state, props),
+    nativeDashcardDetail: getNativeDashcardDetail(state, props)
   };
 };
 

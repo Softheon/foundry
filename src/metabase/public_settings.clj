@@ -230,4 +230,9 @@
    :timezones             common/timezones
    :types                 (types/types->parents :type/*)
    :entities              (types/types->parents :entity/*)
-   :version               config/mb-version-info})
+   :version               config/mb-version-info
+   :iam_authorization_endpoint (config/config-str :iam-authorization-endpoint)
+   :iam_auth_client_id    (config/config-str :iam-auth-client-id)
+   :iam_auth_redirect     (config/config-str :iam-auth-redirect)
+   :enable_email_login    (config/config-bool :enable-email-login)
+   :enable_iam_auth (config/config-bool :enable-iam-auth)})

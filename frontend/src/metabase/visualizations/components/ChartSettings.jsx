@@ -145,7 +145,7 @@ class ChartSettings extends Component {
       onShowWidget: this.handleShowWidget,
       onEndShowWidget: this.handleEndShowWidget,
     };
-
+    
     return (
       <div className="flex flex-column spread">
         {sectionNames.length > 1 && (

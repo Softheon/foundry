@@ -8,7 +8,10 @@ import ChartTooltip from "../components/ChartTooltip.jsx";
 import ChartWithLegend from "../components/ChartWithLegend.jsx";
 
 import { ChartSettingsError } from "metabase/visualizations/lib/errors";
-import { getFriendlyName } from "metabase/visualizations/lib/utils";
+import { 
+  getFriendlyName, 
+  getDynamicFilterData
+ } from "metabase/visualizations/lib/utils";
 import {
   metricSetting,
   dimensionSetting,
@@ -48,11 +51,19 @@ export default class PieChart extends Component {
     return cols.length === 2;
   }
 
-  static checkRenderable([{ data: { cols, rows } }], settings) {
+  static checkRenderable(series, settings) {
     if (!settings["pie.dimension"] || !settings["pie.metric"]) {
       throw new ChartSettingsError(t`Which columns do you want to use?`, {
         section: `Data`,
       });
+    }
+    const dynamicFilterEnabled = settings["pie.aggregation_enabled"];
+    if (dynamicFilterEnabled && series.length > 1) {
+      throw new ChartSettingsError(
+        t`Aggregation does not support multiple series`,
+        { section: t`Data` },
+        t`Update fields`,
+      )
     }
   }
 
@@ -68,6 +79,42 @@ export default class PieChart extends Component {
       title: t`Measure`,
       showColumnSetting: true,
     }),
+    "pie.aggregation_enabled": {
+      section: t`Data`,
+      title: t`Aggregation`,
+      widget: "buttonGroup",
+      props: {
+       options: [
+         { name: t`On`, value: true },
+         { name:  t`Off`, value: false}
+       ]
+      },
+      getHidden: ([ { card }], vizSettings) => {
+        const queryType = card.dataset_query && card.dataset_query.type;
+        if (!queryType || queryType !== "native"){
+          return true;
+        }
+        return !vizSettings["pie.metric"];
+      },
+      getDefault: ([{ card }], vizSettings) => {
+        return vizSettings["pie.aggregation_enabled"];
+      },
+      readDependencies: ["pie.metric"]
+    },
+    "pie.dynamic_filter_aggregation": {
+      section: t`Data`,
+      title: t`Aggregation type`,
+      widget: "select",
+      props: {
+        options: [
+          { name: t`Sum`, value: "sum"},
+          { name: t`Count`, value: "count"}
+        ]
+      },
+      getHidden: (single, vizSettings) => !vizSettings["pie.aggregation_enabled"],
+      getDefault: (single, vizSettings) => "sum",
+      readDependencies: ["pie.aggregation_enabled"],
+    },
     "pie.show_legend": {
       section: t`Display`,
       title: t`Show legend`,
@@ -155,9 +202,21 @@ export default class PieChart extends Component {
       settings,
     } = this.props;
 
-    const [{ data: { cols, rows } }] = series;
+    let [{ data: { cols, rows } }] = series;
     const dimensionIndex = settings["pie._dimensionIndex"];
     const metricIndex = settings["pie._metricIndex"];
+
+    const dynamicFilterEnabled = settings["pie.aggregation_enabled"];
+    if (dynamicFilterEnabled) {
+      const aggregationType = settings["pie.dynamic_filter_aggregation"];
+      const dynamicFilterData = getDynamicFilterData(series[0], {
+        dimensionIndex,
+        metricIndex,
+        aggregationType,
+      })
+      cols = dynamicFilterData.cols;
+      rows = dynamicFilterData.rows;
+    }
 
     const formatDimension = (dimension, jsx = true) =>
       formatValue(dimension, {

@@ -247,6 +247,41 @@ export default class Map extends Component {
       default: 1,
       getHidden: (series, vizSettings) => vizSettings["map.type"] !== "heat",
     },
+    "map.aggregation_enabled": {
+      title: t`Aggregation`,
+      widget:"buttonGroup",
+      props: {
+        options: [
+          { name: t`On`, value: true },
+          { name: t`Off`, value: false }
+        ]
+      },
+      getHidden: (series, vizSettings) => {
+        const {card }  = series[0];
+        const queryType = card.dataset_query && card.dataset_query.type;
+        if(!queryType || queryType !== "native") {
+          return true;
+        }
+        return vizSettings["map.type"] !== "region"
+      },
+      getDefault: (series, vizSettings) => {
+        return !!vizSettings["graph.aggregation_enabled"];
+      },
+      readDependencies: ["map.type"]
+    },
+    "map.dynamic_filter_aggregation": {
+      title: t`Aggregation by`,
+      widget: "select",
+      props: {
+        options: [
+          { name: t`Sum`, value: "sum" },
+          { name: t`Count`, value: "count"}
+        ]
+      },
+      getHidden: (single, vizSettings) => !vizSettings["map.aggregation_enabled"],
+      default: "sum",
+      readDependencies: ["map.aggregation_enabled"]
+    },
   };
 
   static checkRenderable([{ data: { cols, rows } }], settings) {

@@ -32,6 +32,7 @@ const HEADER_ACTION_STYLE = {
   padding: 4,
 };
 
+
 export default class DashCard extends Component {
   static propTypes = {
     dashcard: PropTypes.object.isRequired,
@@ -83,8 +84,22 @@ export default class DashCard extends Component {
     const cards = [mainCard].concat(dashcard.series || []);
     const dashboardId = dashcard.dashboard_id;
     const isEmbed = Utils.isJWT(dashboardId);
+    const {nativeCardToSrcNativeCard, cardToDashcardData}   = this.props.nativeDashcardDetail;
+    const getDashcardData = card => {
+      if (!nativeCardToSrcNativeCard.has(card.id)) {
+        return getIn(dashcardData, [dashcard.id, card.id]);
+      }
+      else {
+        const srcCardId = nativeCardToSrcNativeCard.get(card.id);
+        const dashcardDetail = cardToDashcardData.get(srcCardId);
+        const srcCard = dashcardDetail.card;
+        const srcDashcard = dashcardDetail.dashcard;
+        return getIn(dashcardData, [srcDashcard.id, srcCard.id])
+      }
+    }
     const series = cards.map(card => ({
-      ...getIn(dashcardData, [dashcard.id, card.id]),
+      //...getIn(dashcardData, [dashcard.id, card.id]),
+      ...getDashcardData(card),
       card: card,
       isSlow: slowCards[card.id],
       isUsuallyFast:
@@ -121,7 +136,6 @@ export default class DashCard extends Component {
     const hideBackground =
       !isEditing &&
       mainCard.visualization_settings["dashcard.background"] === false;
-
     return (
       <div
         className={cx(
@@ -163,6 +177,7 @@ export default class DashCard extends Component {
                 onReplaceAllVisualizationSettings={
                   this.props.onReplaceAllVisualizationSettings
                 }
+                crossfilterEnabled={this.props.enableCrossfilter}
               />
             ) : isEmbed ? (
               <QueryDownloadWidget
@@ -199,6 +214,17 @@ export default class DashCard extends Component {
                 }
               : null
           }
+
+          chartGroup={this.props.chartGroup}
+          redrawChartGroup={this.props.redrawChartGroup}
+          activeGroup={this.props.activeGroup}
+          enableCrossfilter={this.props.enableCrossfilter} 
+          isSourceChartGroup={this.props.isSourceChartGroup}
+          isChartGroupLoaded={this.props.isChartGroupLoaded}
+          loadChartGroup={this.props.loadChartGroup}
+          getChartGroupDetail={this.props.getChartGroupDetail}
+          getChartGroupCrossfilter={this.props.getChartGroupCrossfilter}
+          resetedCrossfilterId={this.props.resetedCrossfilterId}
         />
       </div>
     );
@@ -210,24 +236,41 @@ const DashCardActionButtons = ({
   onRemove,
   onAddSeries,
   onReplaceAllVisualizationSettings,
-}) => (
-  <span
-    className="DashCard-actions flex align-center"
-    style={{ lineHeight: 1 }}
-  >
-    {getVisualizationRaw(series).CardVisualization.supportsSeries && (
-      <AddSeriesButton series={series} onAddSeries={onAddSeries} />
-    )}
-    {onReplaceAllVisualizationSettings &&
-      !getVisualizationRaw(series).CardVisualization.disableSettingsConfig && (
-        <ChartSettingsButton
-          series={series}
-          onReplaceAllVisualizationSettings={onReplaceAllVisualizationSettings}
-        />
+  crossfilterEnabled = false,
+}) => {
+  if (crossfilterEnabled) {
+    return (
+      <span
+        className="DashCard-actions flex align-center"
+        style={{ lineHeight: 1 }}
+      >
+        <RemoveButton onRemove={onRemove} />
+      </span>
+    );
+  }
+  return (
+    <span
+      className="DashCard-actions flex align-center"
+      style={{ lineHeight: 1 }}
+    >
+
+      {getVisualizationRaw(series).CardVisualization.supportsSeries && (
+        <AddSeriesButton series={series} onAddSeries={onAddSeries} />
       )}
-    <RemoveButton onRemove={onRemove} />
-  </span>
-);
+      {onReplaceAllVisualizationSettings &&
+        !getVisualizationRaw(series).CardVisualization
+          .disableSettingsConfig && (
+          <ChartSettingsButton
+            series={series}
+            onReplaceAllVisualizationSettings={
+              onReplaceAllVisualizationSettings
+            }
+          />
+        )}
+      <RemoveButton onRemove={onRemove} />
+    </span>
+  );
+};
 
 const ChartSettingsButton = ({ series, onReplaceAllVisualizationSettings }) => (
   <ModalWithTrigger

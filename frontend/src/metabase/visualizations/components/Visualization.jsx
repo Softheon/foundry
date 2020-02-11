@@ -104,6 +104,11 @@ type State = {
     noHeader: boolean,
   }),
 
+  CrossfilterCardVisualization: ?(Component<void, VisualizationSettings, void> & {
+    checkRenderable: (any, any) => void,
+    noHeader: boolean,
+  }),
+
   hovered: ?HoverObject,
   clicked: ?ClickObject,
 
@@ -131,6 +136,7 @@ export default class Visualization extends Component {
       yAxisSplit: null,
       series: null,
       CardVisualization: null,
+      CrossfilterCardVisualization: null,
     };
   }
 
@@ -151,7 +157,8 @@ export default class Visualization extends Component {
   componentWillReceiveProps(newProps) {
     if (
       !isSameSeries(newProps.rawSeries, this.props.rawSeries) ||
-      !Utils.equals(newProps.settings, this.props.settings)
+      !Utils.equals(newProps.settings, this.props.settings) ||
+      this.props.enableCrossfilter !== newProps.enableCrossfilter
     ) {
       this.transform(newProps);
     }
@@ -333,7 +340,7 @@ export default class Visualization extends Component {
       expectedDuration,
       replacementContent,
     } = this.props;
-    const { series, CardVisualization } = this.state;
+    let { series, CardVisualization, CrossfilterCardVisualization } = this.state;
     const small = width < 330;
 
     let { hovered, clicked } = this.state;
@@ -353,6 +360,17 @@ export default class Visualization extends Component {
       )
     );
     let noResults = false;
+
+    if(this.props.enableCrossfilter) {
+      CardVisualization = CrossfilterCardVisualization;
+      if (!loading ) {
+        if (this.props.isSourceChartGroup) {
+          loading = false;
+        } else if (!this.props.isChartGroupLoaded()){
+          loading = true;
+        }
+      }
+    } 
 
     // don't try to load settings unless data is loaded
     let settings = this.props.settings || {};

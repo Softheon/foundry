@@ -598,8 +598,19 @@ export default function lineAndBarOnRender(
   isStacked,
 ) {
   beforeRender(chart);
-  chart.on("renderlet.on-render", () =>
+  chart.on("postRender.on-render", () =>
     onRender(chart, onGoalHover, isSplitAxis, isStacked),
   );
   chart.render();
+}
+
+export function crossfilterLineandBarOnRender(
+  chart,
+  onGoalHover,
+  isSplitAxis,
+  isStacked,
+) {
+  beforeRender(chart);
+  chart.render();
+  onRender(chart, onGoalHover, isSplitAxis, isStacked);
 }

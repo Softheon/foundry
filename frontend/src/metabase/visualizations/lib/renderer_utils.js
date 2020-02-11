@@ -24,6 +24,17 @@ export function initChart(chart, element) {
   }
 }
 
+export function initCrossfilterChart(chart, element) {
+  // set the bounds
+  chart.width(getAvailableCanvasWidth(element));
+  chart.height(getAvailableCanvasHeight(element));
+  // disable animations
+  //chart.transitionDuration(0);
+  // disable brush
+  // if (chart.brushOn) {
+  //   chart.brushOn(false);
+  // }
+}
 export function makeIndexMap(values: Array<Value>): Map<Value, number> {
   let indexMap = new Map();
   for (const [index, key] of values.entries()) {

@@ -89,11 +89,11 @@
 
 (defn send-user-joined-admin-notification-email!
   "Send an email to the INVITOR (the Admin who invited NEW-USER) letting them know NEW-USER has joined."
-  [new-user & {:keys [google-auth?]}]
+  [new-user & {:keys [google-auth? iam_auth?]}]
   {:pre [(map? new-user)]}
   (let [recipients (all-admin-recipients)]
     (email/send-message!
-      :subject      (str (if google-auth?
+      :subject      (str (if (or google-auth? iam_auth?)
                            (trs "{0} created a Foundry account"     (:common_name new-user))
                            (trs "{0} accepted their Foundry invite" (:common_name new-user))))
       :recipients   recipients
@@ -120,9 +120,7 @@
                                           {:emailType        "password_reset"
                                            :hostname         hostname
                                            :sso              google-auth?
-                                           :iam              (and iam-auth?
-                                                                  (config/config-bool
-                                                                   :mb-enable-iam))
+                                           :iam              iam-auth?                                          
                                            :passwordResetUrl password-reset-url
                                            :logoHeader       true})]
     (email/send-message!

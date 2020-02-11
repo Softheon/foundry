@@ -247,6 +247,8 @@ export default class Table extends Component {
     data: DatasetData,
     settings: VisualizationSettings,
   }) {
+
+
     if (settings["table.pivot"]) {
       const pivotIndex = _.findIndex(
         data.cols,
@@ -308,6 +310,13 @@ export default class Table extends Component {
     }
   };
 
+  getFilteredRows = () => {
+    const data = this.props.crossfilterData();
+    let values = data.map(d => d.value);
+    values = values.map(v => Object.values(v)[0]); 
+    return values;
+  }
+
   render() {
     const { card, isDashboard, settings } = this.props;
     const { data } = this.state;
@@ -320,6 +329,7 @@ export default class Table extends Component {
     if (!data) {
       return null;
     }
+
 
     if (isColumnsDisabled) {
       return (

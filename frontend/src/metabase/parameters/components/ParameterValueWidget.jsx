@@ -16,13 +16,16 @@ import DateAllOptionsWidget from "./widgets/DateAllOptionsWidget.jsx";
 import CategoryWidget from "./widgets/CategoryWidget.jsx";
 import TextWidget from "./widgets/TextWidget.jsx";
 import ParameterFieldWidget from "./widgets/ParameterFieldWidget";
+import CrossfilterWidget from "./widgets/CrossfilterWidget";
 import DateDayMonthYearWidget from "./widgets/DateDayMonthYearWidget.jsx";
+
 
 import { fetchField, fetchFieldValues } from "metabase/redux/metadata";
 import {
   getMetadata,
   makeGetMergedParameterFieldValues,
 } from "metabase/selectors/metadata";
+
 
 import { getParameterIconName } from "metabase/meta/Parameter";
 
@@ -41,12 +44,20 @@ const DATE_WIDGETS = {
   "date/day-month-year" : DateDayMonthYearWidget,
 };
 
+const CROSS_FILTER_WIDGETS = {
+  "crossfilter": CrossfilterWidget,
+}
+
 const makeMapStateToProps = () => {
   const getMergedParameterFieldValues = makeGetMergedParameterFieldValues();
-  const mapStateToProps = (state, props) => ({
-    metadata: getMetadata(state),
-    values: getMergedParameterFieldValues(state, props),
-  });
+
+  const mapStateToProps = (state, props) => {
+    let values = getMergedParameterFieldValues(state,props);
+    return {
+      metadata: getMetadata(state),
+      values
+    }
+  }
   return mapStateToProps;
 };
 
@@ -94,6 +105,9 @@ export default class ParameterValueWidget extends Component {
     const { parameter, values } = this.props;
     if (DATE_WIDGETS[parameter.type]) {
       return DATE_WIDGETS[parameter.type];
+    } else if (CROSS_FILTER_WIDGETS[parameter.type]) {
+      return CROSS_FILTER_WIDGETS[parameter.type];
+    // return TextWidget;
     } else if (this.getField()) {
       return ParameterFieldWidget;
     } else if (values && values.length > 0) {
@@ -135,6 +149,7 @@ export default class ParameterValueWidget extends Component {
       value,
       values,
       setValue,
+      resetCrossfilter,
       isEditing,
       placeholder,
       isFullscreen,
@@ -147,6 +162,7 @@ export default class ParameterValueWidget extends Component {
     let hasValue = value != null;
 
     let Widget = this.getWidget();
+    let isCrossfilterParameter = parameter.type === 'crossfilter';
 
     const focusChanged = isFocused => {
       if (parentFocusChanged) {
@@ -173,7 +189,9 @@ export default class ParameterValueWidget extends Component {
       if (isFullscreen) {
         return null;
       }
-
+      if(Widget.noIcon) {
+        return null;
+      }
       if (hasValue && !noReset) {
         return (
           <Icon
@@ -233,6 +251,7 @@ export default class ParameterValueWidget extends Component {
             isEditing={isEditing}
             commitImmediately={commitImmediately}
             focusChanged={focusChanged}
+            disabled={isCrossfilterParameter}
           />
           {getWidgetStatusIcon()}
         </div>
@@ -241,7 +260,7 @@ export default class ParameterValueWidget extends Component {
       let placeholderText = isEditing
         ? t`Select a default value…`
         : placeholder || t`Select…`;
-
+      
       return (
         <PopoverWithTrigger
           ref="valuePopover"
@@ -265,6 +284,7 @@ export default class ParameterValueWidget extends Component {
             value={value}
             values={values}
             setValue={setValue}
+            resetCrossfilter={resetCrossfilter}
             onClose={() => this.refs.valuePopover.close()}
           />
         </PopoverWithTrigger>

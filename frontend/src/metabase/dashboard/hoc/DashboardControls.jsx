@@ -29,7 +29,6 @@ type State = {
 };
 
 const TICK_PERIOD = 0.25; // seconds
-
 /* This contains some state for dashboard controls on both private and embedded dashboards.
  * It should probably be in Redux?
  */
@@ -194,7 +193,7 @@ export default (ComposedComponent: ReactClass<any>) =>
         // NOTE Atte Keinänen 8/10/17: For some reason `document` object isn't present in Jest tests
         // when _showNav is called for the first time
         if (window.document) {
-          const nav = window.document.querySelector(".Nav");
+          const nav = window.document.querySelector(".Nav");        
           if (show && nav) {
             nav.classList.remove("hide");
           } else if (!show && nav) {

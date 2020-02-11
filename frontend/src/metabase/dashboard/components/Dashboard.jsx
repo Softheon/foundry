@@ -10,9 +10,7 @@ import DashboardGrid from "../components/DashboardGrid.jsx";
 import LoadingAndErrorWrapper from "metabase/components/LoadingAndErrorWrapper.jsx";
 import { t } from "c-3po";
 import Parameters from "metabase/parameters/components/Parameters.jsx";
-
 import DashboardControls from "../hoc/DashboardControls";
-
 import _ from "underscore";
 import cx from "classnames";
 
@@ -76,6 +74,7 @@ type Props = {
     reload: boolean,
     clear: boolean,
   }) => Promise<void>,
+  cancelFetchDashboardCardData: () => Promise<void>,
 
   setEditingParameter: (parameterId: ?ParameterId) => void,
   setEditingDashboard: (isEditing: boolean) => void,
@@ -125,6 +124,7 @@ export default class Dashboard extends Component {
   props: Props;
   state: State = {
     error: null,
+    resetedCrossfilterId: "",
   };
 
   static propTypes = {
@@ -168,9 +168,22 @@ export default class Dashboard extends Component {
       !this.props.dashboard
     ) {
       this.props.fetchDashboardCardData({ reload: false, clear: true });
-    }
+    }  
   }
 
+  componentWillUnmount() {
+    this.props.cancelFetchDashboardCardData();
+  }
+
+  componentDidUpdate () {
+    const { resetedCrossfilterId } = this.state;
+   if (resetedCrossfilterId !== "") {
+      this.setState({
+        resetedCrossfilterId: "",
+      })
+    }
+  }
+  
   async loadDashboard(dashboardId: DashboardId) {
     this.props.initialize();
 
@@ -214,6 +227,12 @@ export default class Dashboard extends Component {
     });
   };
 
+  resetCrossfilter = id => {
+    this.setState({
+      resetedCrossfilterId: id,
+    })
+  }
+
   render() {
     let {
       dashboard,
@@ -248,6 +267,7 @@ export default class Dashboard extends Component {
           setParameterDefaultValue={this.props.setParameterDefaultValue}
           removeParameter={this.props.removeParameter}
           setParameterValue={this.props.setParameterValue}
+          resetCrossfilter={this.resetCrossfilter}
         />
       );
     }
@@ -293,6 +313,8 @@ export default class Dashboard extends Component {
                 <DashboardGrid
                   {...this.props}
                   onEditingChange={this.setEditing}
+                  resetedCrossfilterId={this.state.resetedCrossfilterId}
+                  resetCrossfilter={this.resetCrossfilter}
                 />
               )}
             </div>

@@ -1,7 +1,7 @@
 /* @flow weak */
 
 import _ from "underscore";
-import { setIn } from "icepick";
+import { setIn, getIn } from "icepick";
 
 import { createSelector } from "reselect";
 
@@ -11,6 +11,7 @@ import * as Dashboard from "metabase/meta/Dashboard";
 
 import { getParameterTargetFieldId } from "metabase/meta/Parameter";
 
+
 import type { CardId, Card } from "metabase/meta/types/Card";
 import type { DashCardId } from "metabase/meta/types/Dashboard";
 import type {
@@ -19,6 +20,10 @@ import type {
   ParameterMapping,
   ParameterMappingUIOption,
 } from "metabase/meta/types/Parameter";
+import { getComputedSettingsForSeries } from "metabase/visualizations/lib/settings/visualization";
+import { getFriendlyName } from "metabase/visualizations/lib/utils";
+import { getVisualizationTransformed, extractRemappings } from  "metabase/visualizations";
+import { create } from "domain";
 
 export type AugmentedParameterMapping = ParameterMapping & {
   dashcard_id: DashCardId,
@@ -62,6 +67,44 @@ export const getDashboardComplete = createSelector(
     },
 );
 
+export const getNativeDashcardDetail = createSelector(
+  [getDashboardComplete],
+  (dashboard) => {
+    const dashCardMap = new Map();
+    const nativeCardToSrcNativeCard = new Map();
+    const cardToDashcardData = new Map();
+    if (!dashboard) {
+      return {
+        nativeCardToSrcNativeCard,
+        cardToDashcardData
+      }
+    }
+    for (const dashcard of dashboard.ordered_cards) {
+      const card = dashcard.card;
+      const type = card.dataset_query && card.dataset_query.type;
+      if (type === "native") {
+          const databaseIdentifier = "[" + "db_"+ card.dataset_query.database + "]";
+          const key = databaseIdentifier + card.dataset_query.native.query;
+          if (!dashCardMap.has(key)) {
+            const cards = [dashcard.card].concat(dashcard.series || []);
+            const results = cards.map(card => ({ card, dashcard}));
+            dashCardMap.set(key, results);
+            nativeCardToSrcNativeCard.set(card.id, card.id);
+            cardToDashcardData.set(card.id, {card, dashcard})
+          } else {
+            const  cards = dashCardMap.get(key);
+            const sourceCardId = cards[0].card.id;
+            nativeCardToSrcNativeCard.set(card.id, sourceCardId);
+          }       
+      }
+    }
+    return {
+      nativeCardToSrcNativeCard,
+      cardToDashcardData
+    };
+  }
+)
+
 export const getIsDirty = createSelector(
   [getDashboard, getDashcards],
   (dashboard, dashcards) =>
@@ -78,6 +121,53 @@ export const getIsDirty = createSelector(
         ))
     ),
 );
+
+const getCrossfilterParameter = (state, props) => {
+  return props.parameter;
+};
+export const getDashboardState = state => state.dashboard;
+export const getEntitiesState = state => state.entities;
+
+
+const isTheSameNativeQuery = (a, b) => {
+  // check if two native queries are from The same database
+  if (a.database !== b.database) {
+    return false;
+  }
+  // check if the two native queries are the same
+  if (a.native.query !== b.native.query) {
+    return false;
+  }
+  return true;
+}
+const isTheSameStructureQuery = (a, b) => {
+  if (a.database !== b.database) {
+    return false;
+  }
+  if (a.query["source-table"] !== b.query["source-table"]) {
+    return false;
+  }
+  return true;
+}
+
+export const getSQLDashcards = createSelector(
+  [getDashcards],
+  (dashcards) => {
+    const nativeCards = [];
+    Object.values(dashcards).map(dashcard => {
+        const card = dashcard.card;
+        const { query_type } = card;
+        if (query_type === "native") {
+          nativeCards.push({
+            card,
+            dashcard_id: dashcard.id,
+            dashboard_id: dashcard.dashboard_id
+          });
+        }
+    });
+    return nativeCards;
+  }
+)
 
 export const getCardList = createSelector(
   [getCardIdList, getCards],

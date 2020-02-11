@@ -28,7 +28,7 @@ export default class ParameterWidget extends Component {
     commitImmediately: false,
   };
 
-  renderPopover(value, setValue, placeholder, isFullscreen) {
+  renderPopover(value, setValue, resetCrossfilter, placeholder, isFullscreen) {
     const { parameter, editingParameter, commitImmediately } = this.props;
     const isEditingParameter = !!(
       editingParameter && editingParameter.id === parameter.id
@@ -44,6 +44,7 @@ export default class ParameterWidget extends Component {
         focusChanged={this.focusChanged}
         isFullscreen={isFullscreen}
         commitImmediately={commitImmediately}
+        resetCrossfilter={resetCrossfilter}
       />
     );
   }
@@ -51,6 +52,27 @@ export default class ParameterWidget extends Component {
   focusChanged = isFocused => {
     this.setState({ isFocused });
   };
+
+  
+  renderCrossfilterPopver(value, setValue, placeholder, isFullscreen) {
+    const { parameter, editingParameter, commitImmediately }= this.props;
+    const isEditingParameter = !!(
+      editingParameter && editingParameter.id === parameter.id
+    );
+    return (
+      <ParameterValueWidget
+        parameter={parameter}
+        name={parameter.name}
+        value={value}
+        setValue={setValue}
+        isEditing={isEditingParameter}
+        placeholder={placeholder}
+        forcusChanged={this.forcusChanged}
+        isFullscreen={isFullscreen}
+        commitImmediately={commitImmediately}
+      />
+    );
+  }
 
   render() {
     const {
@@ -63,6 +85,7 @@ export default class ParameterWidget extends Component {
       setEditingParameter,
       setName,
       setValue,
+      resetCrossfilter,
       setDefaultValue,
       remove,
       children,
@@ -88,6 +111,7 @@ export default class ParameterWidget extends Component {
           {this.renderPopover(
             parameter.value,
             value => setValue(value),
+            resetCrossfilter,
             parameter.name,
             isFullscreen,
           )}
@@ -185,6 +209,42 @@ export default class ParameterWidget extends Component {
         </FieldSet>
       );
     };
+
+    const renderSetCrossfilterValueUI = () => {
+      const editNameButton = (
+        <span className={S.editNameIconContainer}>
+          <Icon
+            name="pencil"
+            size={12}
+            className="text-brand cursor-pointer"
+            onClick={() => this.setState({ isEditingName: true})}
+          />
+        </span>
+      )
+
+      const legend = (
+        <span>
+          {parameter.name} {editNameButton}
+        </span>
+      )
+
+      return (
+        <FieldSet
+          legend={legend}
+          noPadding={true}
+          className={cx(className, S.container)}
+        >
+          {this.renderCrossfilterPopver(
+            parameter.default,
+            value => setDefaultValue(value),
+            parameter.name,
+            isFullscreen,
+          )}
+          {children}
+        </FieldSet>
+      )
+    }
+
 
     if (isFullscreen) {
       if (parameter.value != null) {

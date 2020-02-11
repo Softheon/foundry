@@ -34,6 +34,8 @@ const HISTOGRAM_DATE_EXTRACTS = new Set([
   // "week-of-year",
 ]);
 
+const DYNAMIC_FILTER_DISPLAY_TYPES = new Set(["line", "area", "scatter", "pie", "bar", "map", "row"]);
+
 export function getDefaultColumns(series) {
   if (series[0].card.display === "scatter") {
     return getDefaultScatterColumns(series);
@@ -191,6 +193,46 @@ export const GRAPH_DATA_SETTINGS = {
     writeDependencies: ["graph.dimensions"],
     dashboard: false,
     useRawSeries: true,
+  },
+  "graph.aggregation_enabled": {
+    section: t`Data`,
+    title: t`Aggregation`,
+    widget:"buttonGroup",
+    props: {
+      options: [
+        { name: t`On`, value: true },
+        { name: t`Off`, value: false }
+      ]
+    },
+    getHidden: ([{ card }], vizSettings) => {
+      const queryType = card.dataset_query && card.dataset_query.type;
+      if (!queryType || queryType !== "native") {
+        return true;
+      } 
+      return !DYNAMIC_FILTER_DISPLAY_TYPES.has(card.display) || !vizSettings["graph.metrics"];
+    },
+    getDefault: ([{ card }], vizSettings) => {
+      const queryType = card.dataset_query && card.dataset_query.type;
+      if (!queryType || queryType !== "native") {
+        return false;
+      } 
+      return !!vizSettings["graph.aggregation_enabled"];
+    },
+    readDependencies: ["graph.metrics"]
+  },
+  "graph.dynamic_filter_aggregation": {
+    section: t`Data`,
+    title: t`Aggregation Type`,
+    widget: "select",
+    props: {
+      options: [
+        { name: t`Sum`, value: "sum" },
+        { name: t`Count`, value: "count"}
+      ]
+    },
+    getHidden: (single, vizSettings) => !vizSettings["graph.aggregation_enabled"],
+    getDefault: (single, vizSettings) => "sum",
+    readDependencies: ["graph.aggregation_enabled"]
   },
   ...seriesSetting(),
 };

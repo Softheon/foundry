@@ -633,6 +633,30 @@
   (binding [cache/*ignore-cached-results* ignore_cache]
     (run-query-for-card-async card-id, :parameters parameters)))
 
+(defn run-full-query-for-card-async
+  "Run the query for Card with `parameters` and `constraints`, and return results in a core.async channel. Will throw an
+Exception if preconditions (such as read perms) are not met before returning a channel."
+  {:style/indent 1}
+  [card-id & {:keys [parameters constraints context dashboard-id middleware]
+              :or   {constraints constraints/unlimited-rows-constraints
+                     context     :question}}]
+  {:pre [(u/maybe? sequential? parameters)]}
+  (let [card    (api/read-check (Card card-id))
+        query   (query-for-card card parameters constraints middleware)
+        options {:executed-by  api/*current-user-id*
+                 :context      context
+                 :card-id      card-id
+                 :dashboard-id dashboard-id}]
+    (api/check-not-archived card)
+    (qp.async/process-query-and-save-execution! query options)))
+
+(api/defendpoint POST "/:card-id/full/query"
+  "Run the query associated with a Card."
+  [card-id :as {{:keys [parameters ignore_cache], :or {ignore_cache false}} :body}]
+  {ignore_cache (s/maybe s/Bool)}
+  (binding [cache/*ignore-cached-results* ignore_cache]
+    (run-full-query-for-card-async card-id, :parameters parameters)))
+
 (api/defendpoint-async POST "/:card-id/query/:export-format"
   "Run the query associated with a Card, and return its results as a file in the specified format. Note that this
   expects the parameters as serialized JSON in the 'parameters' parameter"
@@ -749,8 +773,6 @@
             (let [first-element (get mbql 0 nil)
                   second-element (get mbql 1 nil)
                   third-element (get mbql 2 nil)]
-              (log/info (identity second-element))
-              (log/info (identity third-element))
               (cond
                 (= (name first-element) "field-id") (recur size
                                                            size (conj

@@ -156,7 +156,7 @@ function getDimensionsAndGroupsForScatterChart(datas) {
     const dim = crossfilter(data).dimension(row => row);
     return [dim.group().reduceSum(d => d[2] || 1)];
   });
-
+ 
   return { dimension, groups };
 }
 
@@ -415,7 +415,6 @@ function applyChartLineBarSettings(
 // TODO - give this a good name when I figure out what it does
 function doScatterChartStuff(chart, datas, index, { yExtent, yExtents }) {
   chart.keyAccessor(d => d.key[0]).valueAccessor(d => d.key[1]);
-
   if (chart.radiusValueAccessor) {
     const isBubble = datas[index][0].length > 2;
     if (isBubble) {

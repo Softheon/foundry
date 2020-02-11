@@ -21,10 +21,12 @@ import {
 
 import _ from "underscore";
 import cx from "classnames";
+import DashboardCrossfilterControl from "../hoc/DashboardCrossfilterControl";
 
 const MOBILE_ASPECT_RATIO = 3 / 2;
 const MOBILE_TEXT_CARD_ROW_HEIGHT = 40;
 
+@DashboardCrossfilterControl
 @ExplicitSize()
 export default class DashboardGrid extends Component {
   constructor(props, context) {
@@ -200,7 +202,76 @@ export default class DashboardGrid extends Component {
     this.setState({ addSeriesModalDashCard: dc });
   }
 
+  getNativeQuery(dc) {
+    if (
+      dc.card &&
+      dc.card.dataset_query &&
+      dc.card.dataset_query.native &&
+      dc.card.dataset_query.native.query
+    ) {
+      return dc.card.dataset_query.native.query;
+    }
+    return null;
+  }
+
+  getSharedCrossfilterDimension = (cardId, native) => () => {
+    return this.props.getSharedCrossfilterDimension(cardId, native);
+  };
+
+  isSourceCrossfilterLoaded = (cardId, native) => () => {
+    return this.props.isSourceCrossfilterLoaded(cardId, native);
+  };
+
+  addCrossfilterGroup = (cardId, native) => ({
+    crossfilter,
+    dimension,
+    group,
+    dimensionIndex,
+    metricIndex,
+  }) => {
+    return this.props.addCrossfilterGroup({
+      cardId,
+      native,
+      crossfilter,
+      dimension,
+      group,
+      dimensionIndex,
+      metricIndex,
+    });
+  };
+
+  getCrossfilterGroupId = (cardId, native) => () => {
+    return this.props.getCrossfilterGroupId(cardId, native);
+  }
+  
+  isSourceChartGroup = (cardId) => () => {
+    return this.props.isSourceChartGroup(cardId);
+  }
+  
+  getChartGroupDetail = groupId => () => {
+    return this.props.getChartGroupDetail(groupId);
+  }
+
+  isChartGroupLoaded = groupId => () => {
+    return this.props.isChartGroupLoaded(groupId);
+  }
+
+  loadChartGroup = groupId => info => {
+    return this.props.loadChartGroup(groupId, info);
+  }
+  
+  redrawChartGroup = groupId => () => {
+    return this.props.redrawChartGroup(groupId);
+  }
+
+  getChartGroupCrossfilter = groupId => () => {
+    return this.props.getChartGroupCrossfilter(groupId);
+  }
+
   renderDashCard(dc, isMobile) {
+    const native = this.getNativeQuery(dc);
+    const chartGroup = this.props.getChartGroup(native);
+    const enableCrossfilter = chartGroup ? true : false;
     return (
       <DashCard
         dashcard={dc}
@@ -228,6 +299,19 @@ export default class DashboardGrid extends Component {
         }
         metadata={this.props.metadata}
         dashboard={this.props.dashboard}
+        // crossfitler properties
+        chartGroup={chartGroup}
+        redrawChartGroup={this.redrawChartGroup(chartGroup)}
+        activeGroup={this.props.activeGroup}
+        isSourceChartGroup={this.props.isSourceChartGroup(dc.card.id)}
+        isChartGroupLoaded={this.isChartGroupLoaded(chartGroup)}
+        loadChartGroup={this.loadChartGroup(chartGroup)}
+        getChartGroupDetail={this.getChartGroupDetail(chartGroup)}
+        getChartGroupCrossfilter={this.getChartGroupCrossfilter(chartGroup)}
+        enableCrossfilter={enableCrossfilter}
+        resetedCrossfilterId = {this.props.resetedCrossfilterId}
+        resetCrossfilter={this.props.resetCrossfilter}
+        nativeDashcardDetail={this.props.nativeDashcardDetail}
       />
     );
   }

@@ -15,6 +15,10 @@ that specify the `:add-default-userland-constraints?` `:middleware` options.")
   {:max-results           max-results
    :max-results-bare-rows max-results-bare-rows})
 
+(def unlimited-rows-constraints
+  {:max-results 0
+   :max-results-bare-rows 0})
+
 (defn- ensure-valid-constraints
   "`:max-results-bare-rows` must be less than or equal to `:max-results`, so if someone sets `:max-results` but not
 `:max-results-bare-rows` or sets an both but sets an invalid value for `:max-results-bare-row` use the same value
