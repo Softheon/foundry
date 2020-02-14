@@ -86,7 +86,8 @@
          :http-only true
          :path      "/"
          ;; max-session age-is in minutes; Max-Age= directive should be in seconds
-         :max-age   (* 60 (config/config-int :max-session-age))}
+         ;; :max-age   (* 60 (config/config-int :max-session-age))
+         }
         ;; If the authentication request request was made over HTTPS (hopefully always except for local dev instances)
         ;; add `Secure` attribute so the cookie is only sent over HTTPS.
         (when (https-request? request)
@@ -101,9 +102,10 @@
       (clear-cookie metabase-legacy-session-cookie)))
 
 (defn- wrap-session-id* [{:keys [cookies headers] :as request}]
-  (let [session-id (or (get-in cookies [metabase-session-cookie :value])
-                       (get-in cookies [metabase-legacy-session-cookie :value])
-                       (headers metabase-session-header))]
+  (let [session-id (or
+                        ;(get-in cookies [metabase-session-cookie :value])
+                      ;(get-in cookies [metabase-legacy-session-cookie :value])
+                    (headers metabase-session-header))]
     (if (seq session-id)
       (assoc request :metabase-session-id session-id)
       request)))
