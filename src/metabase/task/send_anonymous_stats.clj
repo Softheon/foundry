@@ -25,14 +25,14 @@
 (def ^:private job-key     "metabase.task.anonymous-stats.job")
 (def ^:private trigger-key "metabase.task.anonymous-stats.trigger")
 
-(defmethod task/init! ::SendAnonymousUsageStats [_]
-  (let [job     (jobs/build
-                 (jobs/of-type SendAnonymousUsageStats)
-                 (jobs/with-identity (jobs/key job-key)))
-        trigger (triggers/build
-                 (triggers/with-identity (triggers/key trigger-key))
-                 (triggers/start-now)
-                 (triggers/with-schedule
-                   ;; run twice a day
-                   (cron/cron-schedule "0 15 7 * * ? *")))]
-    (task/schedule-task! job trigger)))
+; (defmethod task/init! ::SendAnonymousUsageStats [_]
+;   (let [job     (jobs/build
+;                  (jobs/of-type SendAnonymousUsageStats)
+;                  (jobs/with-identity (jobs/key job-key)))
+;         trigger (triggers/build
+;                  (triggers/with-identity (triggers/key trigger-key))
+;                  (triggers/start-now)
+;                  (triggers/with-schedule
+;                    ;; run twice a day
+;                    (cron/cron-schedule "0 15 7 * * ? *")))]
+;     (task/schedule-task! job trigger)))

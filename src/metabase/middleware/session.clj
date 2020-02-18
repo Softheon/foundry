@@ -11,6 +11,7 @@
              [user :as user :refer [User]]]
             [ring.util.response :as resp]
             [schema.core :as s]
+            [clojure.tools.logging :as log]
             [metabase.toucan.db :as db])
   (:import java.util.UUID
            org.joda.time.DateTime))
@@ -32,7 +33,7 @@
 (def ^:private ^String metabase-session-header        "x-metabase-session")
 
 (defn- clear-cookie [response cookie-name]
-  (resp/set-cookie response cookie-name nil {:expires (DateTime. 0), :path "/"}))
+  (resp/set-cookie response cookie-name nil {:expires "Thu, 1 Jan 1970 00:00:00 GMT", :path "/"}))
 
 (defn- wrap-body-if-needed
   "You can't add a cookie (by setting the `:cookies` key of a response) if the response is an unwrapped JSON response;
@@ -102,10 +103,14 @@
       (clear-cookie metabase-legacy-session-cookie)))
 
 (defn- wrap-session-id* [{:keys [cookies headers] :as request}]
+  (log/info "Cookies")
+  (log/info (identity cookies))
+  (log/info (identity request))
   (let [session-id (or
-                        ;(get-in cookies [metabase-session-cookie :value])
+                    (get-in cookies [metabase-session-cookie :value])
                       ;(get-in cookies [metabase-legacy-session-cookie :value])
-                    (headers metabase-session-header))]
+;                    (headers metabase-session-header)
+                    )]
     (if (seq session-id)
       (assoc request :metabase-session-id session-id)
       request)))
@@ -128,7 +133,7 @@
     (db/qualify Session :id) session-id))
 
 (defn- session-age-ms [session]
-  (- (System/currentTimeMillis) (or (when-let [^java.util.Date created-at (:created_at session)]
+  (- (System/currentTimeMillis) (or (when-let [created-at (:created_at session)]
                                       (.getTime created-at))
                                     0)))
 

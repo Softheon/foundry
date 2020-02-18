@@ -16,24 +16,24 @@ let MetabaseCookies = {
       secure: window.location.protocol === "https:",
     };
 
-    try {
-      if (sessionId) {
-        // set a session cookie
-        Cookies.set(METABASE_SESSION_COOKIE, sessionId, options);
-        Cookies.remove(BNES_METABASE_SESSION_ID);
-      } else {
-        sessionId = Cookies.get(METABASE_SESSION_COOKIE);
-        Cookies.remove(BNES_METABASE_SESSION_ID);
+    // try {
+    //   if (sessionId) {
+    //     // set a session cookie
+    //     Cookies.set(METABASE_SESSION_COOKIE, sessionId, options);
+    //     Cookies.remove(BNES_METABASE_SESSION_ID);
+    //   } else {
+    //     sessionId = Cookies.get(METABASE_SESSION_COOKIE);
+    //     Cookies.remove(BNES_METABASE_SESSION_ID);
 
-        // delete the current session cookie and Google Auth creds
-        Cookies.remove(METABASE_SESSION_COOKIE);
-        clearGoogleAuthCredentials();
+    //     // delete the current session cookie and Google Auth creds
+    //     Cookies.remove(METABASE_SESSION_COOKIE);
+    //     clearGoogleAuthCredentials();
 
-        return sessionId;
-      }
-    } catch (e) {
-      console.error("setSessionCookie:", e);
-    }
+    //     return sessionId;
+    //   }
+    // } catch (e) {
+    //   console.error("setSessionCookie:", e);
+    // }
   },
   removeBNESCookies :  () => {
    // document.cookie =`${BNES_METABASE_SESSION}=;path=/; Max-Age=-1;`

@@ -128,14 +128,14 @@
 (def ^:private abandonment-emails-job-key     "metabase.task.abandonment-emails.job")
 (def ^:private abandonment-emails-trigger-key "metabase.task.abandonment-emails.trigger")
 
-(defmethod task/init! ::SendAbandomentEmails [_]
-  (let [job     (jobs/build
-                 (jobs/of-type AbandonmentEmail)
-                 (jobs/with-identity (jobs/key abandonment-emails-job-key)))
-        trigger (triggers/build
-                 (triggers/with-identity (triggers/key abandonment-emails-trigger-key))
-                 (triggers/start-now)
-                 (triggers/with-schedule
-                   ;; run once a day
-                   (cron/cron-schedule "0 0 12 * * ? *")))]
-    (task/schedule-task! job trigger)))
+; (defmethod task/init! ::SendAbandomentEmails [_]
+;   (let [job     (jobs/build
+;                  (jobs/of-type AbandonmentEmail)
+;                  (jobs/with-identity (jobs/key abandonment-emails-job-key)))
+;         trigger (triggers/build
+;                  (triggers/with-identity (triggers/key abandonment-emails-trigger-key))
+;                  (triggers/start-now)
+;                  (triggers/with-schedule
+;                    ;; run once a day
+;                    (cron/cron-schedule "0 0 12 * * ? *")))]
+;     (task/schedule-task! job trigger)))

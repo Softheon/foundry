@@ -36,12 +36,12 @@ export const login = createThunkAction(LOGIN, function(
     // }
 
     try {
-      let newSession = await SessionApi.create(credentials);
-
+      // let newSession = await SessionApi.create(credentials);
+      await SessionApi.create(credentials);
       // since we succeeded, lets set the session cookie
       //MetabaseCookies.setSessionCookie(newSession.id);
-      MetabaseCookies.removeBNESCookies();
-      MetabaseAnalytics.trackEvent("Auth", "Login");
+      // MetabaseCookies.removeBNESCookies();
+      // MetabaseAnalytics.trackEvent("Auth", "Login");
       // TODO: redirect after login (carry user to intended destination)
       await dispatch(refreshCurrentUser());
       dispatch(push(redirectUrl || "/"));
@@ -151,10 +151,10 @@ export const passwordReset = createThunkAction(PASSWORD_RESET, function(
         password: credentials.password,
       });
 
-      if (result.session_id) {
-        // we should have a valid session that we can use immediately!
-        MetabaseCookies.setSessionCookie(result.session_id);
-      }
+      // if (result.session_id) {
+      //   // we should have a valid session that we can use immediately!
+      //   MetabaseCookies.setSessionCookie(result.session_id);
+      // }
 
       MetabaseAnalytics.trackEvent("Auth", "Password Reset");
 
