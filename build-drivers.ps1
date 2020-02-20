@@ -421,7 +421,7 @@ $DriversToBuild = @{
     "sqlserver"       = 1;
 };
 foreach ($Driver in $Drivers) {
-    if ($DriversToBuild.Contains($Drivers)) {
+    if ($DriversToBuild.Contains($Driver)) {
         Write-Host "Build: $Driver"
         $result = Build-Driver -Driver $Driver
         if (!$result) {
