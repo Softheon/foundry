@@ -1,5 +1,5 @@
 param (
-    [Parameter(Position=0,mandatory=$true)]
+    [Parameter(Position = 0, mandatory = $true)]
     [string] $M2
 )
 
@@ -18,7 +18,7 @@ function Verify-Driver {
     $DriverMainClass = "metabase/driver/$($MungedDriver)__init.class"
 
     $command = "jar -tf $DriverFile"
-     
+
     $Files = Invoke-Expression -Command $command -ErrorAction Stop
     $result = $false
     foreach ($File in $Files) {
@@ -27,7 +27,7 @@ function Verify-Driver {
             break;
         }
     }
-    
+
     if ($result) {
         Write-Host "Main class file found."
     }
@@ -97,12 +97,13 @@ function Install-MetabaseCore() {
             lein clean
             lein install-for-building-drivers
             return $true;
-        } 
+        }
         else {
             Write-Host "metabase-core already installed to local Maven repo."
             return $true
-        } 
-    } catch {
+        }
+    }
+    catch {
         Write-Host "Building and installing jar locally"
         lein clean
         lein install-for-building-drivers
@@ -184,7 +185,7 @@ function Build-DriverUberJar {
         $TargetJar`
     )
     Write-Host "Building $Driver"
-    
+
     Set-Location $DriverProjectDir
 
     Remove-Item -Path ".\target" -Force -Recurse -ErrorAction Ignore
@@ -195,7 +196,7 @@ function Build-DriverUberJar {
     lein uberjar
 
     Set-Location $ProjectRoot
-    
+
     if (!(Test-Path -Path $TargetJar)) {
         Write-Error "Error: could not find $TargetJar. Build failed."
         return $false
@@ -218,7 +219,7 @@ function Strip-Compress () {
         Invoke-Expression -Command $LeinCmd -ErrorAction Stop
 
         # Next, remove any classes found in any of the parent jar
- 
+
         foreach ($Parent in $Parents) {
             Write-Host "Removing duplicate classes with $Parent uberjar..."
             $LeinCmd = "lein strip-and-compress $TargetJr resources\modules\$($Parent).metabase-driver.jar"
@@ -268,13 +269,13 @@ function Verify-Build () {
 
 function Calculate-Checksum {
     param (
-        $DriverProjectDir  
+        $DriverProjectDir
     )
-    $TempCombinedFile = ".\.combinedContent" 
+    $TempCombinedFile = ".\.combinedContent"
     Get-ChildItem  -Path $DriverProjectDir -Include "*.clj"
     Get-ChildItem  -Path $DriverProjectDir -Include "*.clj" -Recurse -ErrorAction Stop | Sort-Object | ForEach-Object {
         $content = Get-Content $_.FullName;
-        $content | Out-File -FilePath $TempCombinedFile -Append 
+        $content | Out-File -FilePath $TempCombinedFile -Append
     }
     Get-ChildItem -Path $DriverProjectDir -Include "*.yaml" -Recurse -ErrorAction Stop | Sort-Object | ForEach-Object {
         $content = Get-Content $_.FullName;
@@ -290,7 +291,7 @@ function Calculate-Checksum {
 function Save-Checksum() {
     param(
         $DriverProjectDir,
-        $ChecksumFile      
+        $ChecksumFile
     )
     Write-Host "Saving checksum for source files to $ChecksumFile"
     $Cheksum = Calculate-Checksum -DriverProjectDir $DriverProjectDir
@@ -412,12 +413,19 @@ function Retry() {
 }
 
 mkdir -Path "resources\modules" -ErrorAction Ignore
-$Drivers = Get-ChildItem -Directory  -Path "modules\drivers"  -Name 
+$Drivers = Get-ChildItem -Directory  -Path "modules\drivers"  -Name
+$DriversToBuild = @{
+    "google"          = 1;
+    "googleanalytics" = 1;
+    "sqlite"          = 1;
+    "sqlserver"       = 1;
+};
 foreach ($Driver in $Drivers) {
-    Write-Host "Build: $Driver"
-    $result =  Build-Driver -Driver $Driver
-    if (!$result) {
-        throw "Failed to build driver $Driver"
+    if ($DriversToBuild.Contains($Drivers)) {
+        Write-Host "Build: $Driver"
+        $result = Build-Driver -Driver $Driver
+        if (!$result) {
+            throw "Failed to build driver $Driver"
+        }
     }
-    
 }
