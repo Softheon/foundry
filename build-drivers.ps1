@@ -322,7 +322,7 @@ function Checksum-IsSame() {
 }
 
 function Clean-LocalRepo {
-
+    Write-Host "Deleting existing installed metabase-core and driver dependencies..."
     $UserDir = $M2
     Remove-Item -Recurse -Force -Path "$Userdir\.m2\repository\metabase-core" -ErrorAction Ignore
     Remove-Item -Recurse -Force -Path "$Userdir\.m2\repository\*-driver" -ErrorAction Ignore
@@ -407,6 +407,7 @@ function Retry() {
         $ChecksumFile,
         $ProjectRoot
     )
+    Write-Host "Building without cleaning failed. Retrying clean build..."
     Clean-LocalRepo
     $Result = Build-DriverPipeline -DriverProjectDir $DriverProjectDir -Driver $Driver -ProjectRoot $ProjectRoot -DriverJar $DriverJar -Destination $DestLocation -MetabaseUberJar $MetabaseUberjar -TargetJar $TargetJar -ChecksumFile $ChecksumFile
     return $Result[0]
@@ -420,6 +421,7 @@ $DriversToBuild = @{
     "sqlite"          = 1;
     "sqlserver"       = 1;
 };
+Clean-LocalRepo
 foreach ($Driver in $Drivers) {
     if ($DriversToBuild.Contains($Driver)) {
         Write-Host "Build: $Driver"
