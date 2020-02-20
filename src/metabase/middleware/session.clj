@@ -103,9 +103,6 @@
       (clear-cookie metabase-legacy-session-cookie)))
 
 (defn- wrap-session-id* [{:keys [cookies headers] :as request}]
-  (log/info "Cookies")
-  (log/info (identity cookies))
-  (log/info (identity request))
   (let [session-id (or
                     (get-in cookies [metabase-session-cookie :value])
                       ;(get-in cookies [metabase-legacy-session-cookie :value])
