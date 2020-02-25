@@ -80,18 +80,17 @@
   {"csv"  {:export-fn    csv-stream-writer
            :content-type "text/csv"
            :ext          "csv"
-           :context      :csv-download},
-  ;  "xlsx" {:export-fn    export-to-xlsx
-  ;          :content-type "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-  ;          :ext          "xlsx"
-  ;          :context      :xlsx-download},
+           :context      :csv-download}
+   "xlsx" {:export-fn    export-to-xlsx
+           :content-type "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+           :ext          "xlsx"
+           :context      :xlsx-download}
   ;  "json" {:export-fn    export-to-json
   ;          :content-type "applicaton/json"
   ;          :ext          "json"
   ;          :context      :json-download}
-           
-           })
-          
+   })
+
 (defn- export-card-to-json
   [card]
   (assoc {}
