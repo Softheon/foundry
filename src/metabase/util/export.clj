@@ -77,7 +77,7 @@
 
 (def export-formats
   "Map of export types to their relevant metadata"
-  {"csv"  {:export-fn    csv-stream-writer
+  {"csv"  {:export-fn    export-to-csv
            :content-type "text/csv"
            :ext          "csv"
            :context      :csv-download}

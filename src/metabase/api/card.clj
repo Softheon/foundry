@@ -671,7 +671,7 @@ Exception if preconditions (such as read perms) are not met before returning a c
         :context     (dataset-api/export-format->context export-format)
         :middleware  {:skip-results-metadata? true}))))
 
-      
+
 ;;; ----------------------------------------------- Sharing is Caring ------------------------------------------------
 
 (api/defendpoint POST "/:card-id/public_link"
@@ -757,7 +757,7 @@ Exception if preconditions (such as read perms) are not met before returning a c
     (into {} result)))
 
 (defn- parse-field-id
-"Recursively finds 'field-id' clauses and updetes their values to the foramt 
+"Recursively finds 'field-id' clauses and updetes their values to the foramt
 [field-table, field-name]."
 [mbql]
 (if (not (vector? mbql))
@@ -812,7 +812,7 @@ Exception if preconditions (such as read perms) are not met before returning a c
     (let [parent-collection (db/select-one Collection :id id)
           locations (into []
                           (rest (str/split (:location parent-collection) #"/")))]
-      (concat (parent-collections locations) [parent-collection])))) 
+      (concat (parent-collections locations) [parent-collection]))))
 
 (defn- card-json
   [card]
@@ -847,8 +847,8 @@ Exception if preconditions (such as read perms) are not met before returning a c
                               (str "attachment; filename=\"" (card :name) "." (:ext export-conf) "\"")}}
                    {:status 500
                     :body (str "something went wrong")}))))
-          
-                    
+
+
 ;;; ----------------------------------------------- Streaming a Card ------------------------------------------------
 
 (defn run-query-for-card-async-file
@@ -866,22 +866,22 @@ Exception if preconditions (such as read perms) are not met before returning a c
                  :card-id      card-id
                  :dashboard-id dashboard-id}]
     (api/check-not-archived card)
-    
+
     (qp.async/process-query-and-stream-file! query options)))
 
-(api/defendpoint-async POST "/:card-id/query/:export-format"
-  "Run the query associated with a Card, and return its results as a file in the specified format. Note that this
-  expects the parameters as serialized JSON in the 'parameters' parameter"
-  [{{:keys [card-id export-format parameters name]} :params} respond raise]
-  {parameters    (s/maybe su/JSONString)
-   export-format dataset-api/ExportFormat
-   name su/NonBlankString}
-  (binding [cache/*ignore-cached-results* true]
-    (dataset-api/as-format-async-file name export-format respond raise
-      (run-query-for-card-async-file (Integer/parseUnsignedInt card-id)
-        :parameters  (json/parse-string parameters keyword)
-        :constraints nil
-        :context     (dataset-api/export-format->context export-format)
-        :middleware  {:skip-results-metadata? true}))))
+;; (api/defendpoint-async POST "/:card-id/query/:export-format"
+;;   "Run the query associated with a Card, and return its results as a file in the specified format. Note that this
+;;   expects the parameters as serialized JSON in the 'parameters' parameter"
+;;   [{{:keys [card-id export-format parameters name]} :params} respond raise]
+;;   {parameters    (s/maybe su/JSONString)
+;;    export-format dataset-api/ExportFormat
+;;    name su/NonBlankString}
+;;   (binding [cache/*ignore-cached-results* true]
+;;     (dataset-api/as-format-async-file name export-format respond raise
+;;       (run-query-for-card-async-file (Integer/parseUnsignedInt card-id)
+;;         :parameters  (json/parse-string parameters keyword)
+;;         :constraints nil
+;;         :context     (dataset-api/export-format->context export-format)
+;;         :middleware  {:skip-results-metadata? true}))))
 
 (api/define-routes)

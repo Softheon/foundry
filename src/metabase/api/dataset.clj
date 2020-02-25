@@ -136,20 +136,20 @@
      (api/defendpoint POST [\"/:export-format\", :export-format export-format-regex]"
   (re-pattern (str "(" (str/join "|" (keys ex/export-formats)) ")")))
 
-; (api/defendpoint-async POST ["/:export-format", :export-format export-format-regex]
+ (api/defendpoint-async POST ["/:export-format", :export-format export-format-regex]
 ;   "Execute a query and download the result data as a file in the specified format."
-;   [{{:keys [export-format query]} :params} respond raise]
-;   {query         su/JSONString
-;    export-format ExportFormat}
-;   (let [{:keys [database] :as query} (json/parse-string query keyword)]
-;     (when-not (= database database/virtual-id)
-;       (api/read-check Database database))
-;     (as-format-async export-format respond raise
-;       (qp.async/process-query-and-save-execution!
-;        (-> query
-;            (dissoc :constraints)
-;            (assoc-in [:middleware :skip-results-metadata?] true))
-;        {:executed-by api/*current-user-id*, :context (export-format->context export-format)}))))
+   [{{:keys [export-format query]} :params} respond raise]
+   {query         su/JSONString
+    export-format ExportFormat}
+   (let [{:keys [database] :as query} (json/parse-string query keyword)]
+     (when-not (= database database/virtual-id)
+       (api/read-check Database database))
+     (as-format-async export-format respond raise
+                      (qp.async/process-query-and-save-execution!
+                       (-> query
+                           (dissoc :constraints)
+                           (assoc-in [:middleware :skip-results-metadata?] true))
+                       {:executed-by api/*current-user-id*, :context (export-format->context export-format)}))))
 
 
 ;;; ------------------------------------------------ Other Endpoints -------------------------------------------------
@@ -203,21 +203,21 @@
   nil)
 
 
-(api/defendpoint-async POST ["/:export-format", :export-format export-format-regex]
-    "Execute a query and download the result data as a file in the specified format."
-    [{{:keys [export-format query name]} :params} respond raise]
-    {query         su/JSONString
-     export-format ExportFormat
-     name su/NonBlankString}
-    (let [{:keys [database] :as query} (json/parse-string query keyword)]
-      (when-not (= database database/virtual-id)
-        (api/read-check Database database))
-      (as-format-async-file name export-format respond raise
-        (qp.async/process-query-and-stream-file!
-         (-> query
-             (dissoc :constraints)
-             (m/dissoc-in [:middleware :add-default-userland-constraints?])
-             (assoc-in [:middleware :skip-results-metadata?] true))
-         {:executed-by api/*current-user-id*, :context (export-format->context export-format)}))))
+;; (api/defendpoint-async POST ["/:export-format", :export-format export-format-regex]
+;;     "Execute a query and download the result data as a file in the specified format."
+;;     [{{:keys [export-format query name]} :params} respond raise]
+;;     {query         su/JSONString
+;;      export-format ExportFormat
+;;      name su/NonBlankString}
+;;     (let [{:keys [database] :as query} (json/parse-string query keyword)]
+;;       (when-not (= database database/virtual-id)
+;;         (api/read-check Database database))
+;;       (as-format-async-file name export-format respond raise
+;;         (qp.async/process-query-and-stream-file!
+;;          (-> query
+;;              (dissoc :constraints)
+;;              (m/dissoc-in [:middleware :add-default-userland-constraints?])
+;;              (assoc-in [:middleware :skip-results-metadata?] true))
+;;          {:executed-by api/*current-user-id*, :context (export-format->context export-format)}))))
 
 (api/define-routes)
