@@ -17,7 +17,7 @@ import _ from "underscore";
 import cx from "classnames";
 import {getSettingValues} from "../../admin/settings/selectors"
 import { connect } from  "react-redux"
-// const EXPORT_FORMATS = ["csv", "xlsx"];
+const EXPORT_FORMATS = ["csv", "xlsx"];
 
 const mapStateToProps = (state, props) => {
   return {
@@ -151,7 +151,7 @@ const QueryDownloadWidget_old = ({
           </Box>
         )}
       <Box>
-        {getExportFormats().map(type => (
+        {EXPORT_FORMATS.map(type => (
           <Box w={"100%"}>
             {dashcardId && token ? (
               <DashboardEmbedQueryButton
