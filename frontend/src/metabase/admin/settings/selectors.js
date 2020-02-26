@@ -447,6 +447,17 @@ const SECTIONS = [
         ]
     }
     */
+   {
+    name: t`Download`,
+    slug: "download",
+    settings: [
+      {
+        key: "enable-xlsx-export",
+        display_name: t`Enable Excel Download`,
+        type: "boolean",
+      }
+    ]
+  }
 ];
 
 export const getSettings = createSelector(

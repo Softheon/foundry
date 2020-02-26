@@ -660,16 +660,18 @@ Exception if preconditions (such as read perms) are not met before returning a c
 (api/defendpoint-async POST "/:card-id/query/:export-format"
   "Run the query associated with a Card, and return its results as a file in the specified format. Note that this
   expects the parameters as serialized JSON in the 'parameters' parameter"
-  [{{:keys [card-id export-format parameters]} :params} respond raise]
+  [{{:keys [card-id export-format parameters name]} :params} respond raise]
   {parameters    (s/maybe su/JSONString)
-   export-format dataset-api/ExportFormat}
+   export-format dataset-api/ExportFormat
+   name su/NonBlankString}
   (binding [cache/*ignore-cached-results* true]
-    (dataset-api/as-format-async export-format respond raise
-      (run-query-for-card-async (Integer/parseUnsignedInt card-id)
-        :parameters  (json/parse-string parameters keyword)
-        :constraints nil
-        :context     (dataset-api/export-format->context export-format)
-        :middleware  {:skip-results-metadata? true}))))
+    (api/check-supported-export-format export-format)
+    (dataset-api/as-format-async export-format name respond raise
+                                 (run-query-for-card-async (Integer/parseUnsignedInt card-id)
+                                                           :parameters  (json/parse-string parameters keyword)
+                                                           :constraints nil
+                                                           :context     (dataset-api/export-format->context export-format)
+                                                           :middleware  {:skip-results-metadata? true}))))
 
 
 ;;; ----------------------------------------------- Sharing is Caring ------------------------------------------------

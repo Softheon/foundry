@@ -100,14 +100,15 @@
 (defn- as-format-response
   "Return a response containing the `results` of a query in the specified format."
   {:style/indent 1, :arglists '([export-format results])}
-  [export-format {{:keys [columns rows cols]} :data, :keys [status], :as response}]
+  [export-format name {{:keys [columns rows cols]} :data, :keys [status], :as response}]
   (api/let-404 [export-conf (ex/export-formats export-format)]
     (if (= status :completed)
       ;; successful query, send file
       {:status  200
        :body    ((:export-fn export-conf) columns (maybe-modify-date-values cols rows))
        :headers {"Content-Type"        (str (:content-type export-conf) "; charset=utf-8")
-                 "Content-Disposition" (str "attachment; filename=\"query_result_" (du/date->iso-8601) "." (:ext export-conf) "\"")}}
+                ;;  "Content-Disposition" (str "attachment; filename=\"query_result_" (du/date->iso-8601) "." (:ext export-conf) "\"")}}
+                 "Content-Disposition" (str "attachment; filename=\"" name "." (:ext export-conf) "\"")}}
       ;; failed query, send error message
       {:status 500
        :body   (:error response)})))
@@ -116,13 +117,13 @@
   "Write the results of an async query to API `respond` or `raise` functions in `export-format`. `in-chan` should be a
   core.async channel that can be used to fetch the results of the query."
   {:style/indent 3}
-  [export-format :- ExportFormat, respond :- (s/pred fn?), raise :- (s/pred fn?), in-chan :- ManyToManyChannel]
+  [export-format :- ExportFormat, name, respond :- (s/pred fn?), raise :- (s/pred fn?), in-chan :- ManyToManyChannel]
   (a/go
     (try
       (let [results (a/<! in-chan)]
         (if (instance? Throwable results)
           (raise results)
-          (respond (as-format-response export-format results))))
+          (respond (as-format-response export-format name results))))
       (catch Throwable e
         (raise e))
       (finally
@@ -138,13 +139,15 @@
 
  (api/defendpoint-async POST ["/:export-format", :export-format export-format-regex]
 ;   "Execute a query and download the result data as a file in the specified format."
-   [{{:keys [export-format query]} :params} respond raise]
+   [{{:keys [export-format query name]} :params} respond raise]
    {query         su/JSONString
-    export-format ExportFormat}
+    export-format ExportFormat
+    name su/NonBlankString}
    (let [{:keys [database] :as query} (json/parse-string query keyword)]
+     (api/check-supported-export-format export-format)
      (when-not (= database database/virtual-id)
        (api/read-check Database database))
-     (as-format-async export-format respond raise
+     (as-format-async export-format name respond raise
                       (qp.async/process-query-and-save-execution!
                        (-> query
                            (dissoc :constraints)
@@ -175,15 +178,15 @@
   {:style/indent 1, :arglists '([export-format results])}
   [name export-format {{:keys [columns rows cols]} :data, :keys [status], :as response}]
   (api/let-404 [export-conf (ex/export-formats export-format)]
-    (if (not (nil? response))
+               (if (not (nil? response))
       ;; successful query, send file
-      {:status  200
-       :body    response
-       :headers {"Content-Type"        (str (:content-type export-conf) "; charset=utf-8")
-                 "Content-Disposition" (str "attachment; filename=\"" name "." (:ext export-conf) "\"")}}
+                 {:status  200
+                  :body    response
+                  :headers {"Content-Type"        (str (:content-type export-conf) "; charset=utf-8")
+                            "Content-Disposition" (str "attachment; filename=\"" name "." (:ext export-conf) "\"")}}
       ;; failed query, send error message
-      {:status 500
-       :body   (:error "Somthing went wrong!")})))
+                 {:status 500
+                  :body   (:error "Somthing went wrong!")})))
 
 (s/defn as-format-async-file
   "Write the results of an async query to API `respond` or `raise` functions in `export-format`. `in-chan` should be a

@@ -123,12 +123,12 @@
       :link        "/admin/settings/email"
       :completed   (email/email-configured?)
       :triggered   :always}
-     {:title       (tru "Set Slack credentials")
-      :group       (tru "Get connected")
-      :description (tru "Does your team use Slack? If so, you can send automated updates via pulses and ask questions with MetaBot.")
-      :link        "/admin/settings/slack"
-      :completed   (slack/slack-configured?)
-      :triggered   :always}
+    ;;  {:title       (tru "Set Slack credentials")
+    ;;   :group       (tru "Get connected")
+    ;;   :description (tru "Does your team use Slack? If so, you can send automated updates via pulses and ask questions with MetaBot.")
+    ;;   :link        "/admin/settings/slack"
+    ;;   :completed   (slack/slack-configured?)
+    ;;   :triggered   :always}
      {:title       (tru "Invite team members")
       :group       (tru "Get connected")
       :description (tru "Share answers and data with the rest of your team.")

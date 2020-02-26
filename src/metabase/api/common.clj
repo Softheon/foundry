@@ -515,3 +515,12 @@
      ~@more
      (catch Throwable e#
        (~raise e#))))
+
+
+(defn check-supported-export-format
+  "check if the specified export format is suppored"
+  [export-format]
+  (check-400 (case export-format
+               "csv" true
+               "xlsx" (public-settings/enable-xlsx-export)
+               false)))

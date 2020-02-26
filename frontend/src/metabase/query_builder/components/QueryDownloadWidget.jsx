@@ -15,10 +15,107 @@ import * as Urls from "metabase/lib/urls";
 
 import _ from "underscore";
 import cx from "classnames";
+import {getSettingValues} from "../../admin/settings/selectors"
+import { connect } from  "react-redux"
+// const EXPORT_FORMATS = ["csv", "xlsx"];
 
-const EXPORT_FORMATS = ["csv", "xlsx"];
+const mapStateToProps = (state, props) => {
+  return {
+    settingValues : getSettingValues(state, props)
+  }
+}
+@connect(mapStateToProps, null)
+class QueryDownloadWidget extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+  render() {
+    const {
+      className,
+      classNameClose,
+      card,
+      result,
+      uuid,
+      token,
+      dashcardId,
+      icon,
+      params,
+      settingValues
+    } = this.props;
 
-const QueryDownloadWidget = ({
+    const exportFormats = ["csv"];
+    console.log(settingValues);
+    if (settingValues["enable-xlsx-export"]) {
+      exportFormats.push("xlsx");
+    }
+    return (
+      <PopoverWithTrigger
+        triggerElement={
+          <Tooltip tooltip={t`Download full results`}>
+            <Icon title={t`Download this data`} name={icon} size={16} />
+          </Tooltip>
+        }
+        triggerClasses={cx(className, "text-brand-hover")}
+        triggerClassesClose={classNameClose}
+      >
+        <Box
+          p={2}
+          w={result.data && result.data.rows_truncated != null ? 300 : 260}
+        >
+          <Box p={1}>
+            <h4>{t`Download full results`}</h4>
+          </Box>
+          {result.data != null && result.data.rows_truncated != null && (
+            <Box>
+              <p>{t`Your answer has a large number of rows so it could take a while to download.`}</p>
+              <p>{t`The maximum download size is 1 million rows.`}</p>
+            </Box>
+          )}
+          <Box>
+            {exportFormats.map(type => (
+              <Box w={"100%"}>
+                {dashcardId && token ? (
+                  <DashboardEmbedQueryButton
+                    key={type}
+                    type={type}
+                    dashcardId={dashcardId}
+                    token={token}
+                    card={card}
+                    params={params}
+                  />
+                ) : uuid ? (
+                  <PublicQueryButton
+                    key={type}
+                    type={type}
+                    uuid={uuid}
+                    result={result}
+                  />
+                ) : token ? (
+                  <EmbedQueryButton key={type} type={type} token={token} />
+                ) : card && card.id ? (
+                  <SavedQueryButton
+                    key={type}
+                    type={type}
+                    card={card}
+                    result={result}
+                  />
+                ) : card && !card.id ? (
+                  <UnsavedQueryButton
+                    key={type}
+                    type={type}
+                    card={card}
+                    result={result}
+                  />
+                ) : null}
+              </Box>
+            ))}
+          </Box>
+        </Box>
+      </PopoverWithTrigger>
+    );
+  }
+}
+const QueryDownloadWidget_old = ({
   className,
   classNameClose,
   card,
@@ -54,7 +151,7 @@ const QueryDownloadWidget = ({
           </Box>
         )}
       <Box>
-        {EXPORT_FORMATS.map(type => (
+        {getExportFormats().map(type => (
           <Box w={"100%"}>
             {dashcardId && token ? (
               <DashboardEmbedQueryButton
