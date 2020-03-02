@@ -209,3 +209,16 @@
 .Button--withIcon {
   line-height: 1;
 }
+
+.Button--blue, .Button--blue:hover {
+  background-color: #0079C7;
+  border-color: #0079C7;
+}
+
+.Button--blue:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--color-bg-light);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-dark);
+}

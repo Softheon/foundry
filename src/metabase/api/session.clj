@@ -88,7 +88,7 @@
     (throttle/check throttler throttle-key)))
 
 (s/defn ^:private admin-email-login :- (s/maybe UUID)
-  "Find a matching admin `User` if one exists and return a new Session for them, or `nil` if they 
+  "Find a matching admin `User` if one exists and return a new Session for them, or `nil` if they
 couldn't be autenticated."
   [username password]
   (when-let [user (db/select-one [User :id :password_salt :password :last_login]
@@ -298,11 +298,13 @@ couldn't be autenticated."
     (when-not (= status 200)
       (throw (ui18n/ex-info (tru "Invalid Iam Access token.") {:status-code 400
                                                                :message (tru "Invalid Iam Access token")})))
-    (u/prog1 (json/parse-string body keyword)
-             (when-not (= (:email_verified <>) true)
-               (throw (ui18n/ex-info (tru "Email is not verified.")
-                                     {:status-code 428
-                                      :message (tru "Email is not verified. You will need to verify your email before you can use Iam to log in.")}))))))
+    (json/parse-string body keyword)
+    ;; (u/prog1 (json/parse-string body keyword)
+    ;;          (when-not (= (:email_verified <>) true)
+    ;;            (throw (ui18n/ex-info (tru "Email is not verified.")
+    ;;                                  {:status-code 428
+    ;;                                   :message (tru "Email is not verified. You will need to verify your email before you can use Iam to log in.")}))))
+    ))
 
 
 (s/defn ^:private iam-auth-create-new-user!

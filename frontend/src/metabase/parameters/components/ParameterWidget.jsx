@@ -53,7 +53,7 @@ export default class ParameterWidget extends Component {
     this.setState({ isFocused });
   };
 
-  
+
   renderCrossfilterPopver(value, setValue, placeholder, isFullscreen) {
     const { parameter, editingParameter, commitImmediately }= this.props;
     const isEditingParameter = !!(

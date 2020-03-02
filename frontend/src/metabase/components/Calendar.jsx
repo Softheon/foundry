@@ -100,15 +100,8 @@ export default class Calendar extends Component {
           </div>
         )}
         <span className="flex-full" />
-        <h4
-          className="cursor-pointer rounded p1"
-          onClick={() =>
-            this.props.onHeaderClick && this.props.onHeaderClick(current)
-          }
-        >
-          {this.props.onHeaderClick
-            ? current.format("MMM D, YYYY")
-            : current.format("MMMM YYYY")}
+        <h4 className="cursor-pointer rounded p1">
+          {current.format("MMMM YYYY")}
         </h4>
         <span className="flex-full" />
         {side !== "left" && this.props.enablePrevAndNextMonthSelection && (

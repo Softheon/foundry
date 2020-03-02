@@ -19,7 +19,6 @@ import ParameterFieldWidget from "./widgets/ParameterFieldWidget";
 import CrossfilterWidget from "./widgets/CrossfilterWidget";
 import DateDayMonthYearWidget from "./widgets/DateDayMonthYearWidget.jsx";
 
-
 import { fetchField, fetchFieldValues } from "metabase/redux/metadata";
 import {
   getMetadata,
@@ -33,6 +32,7 @@ import S from "./ParameterWidget.css";
 
 import cx from "classnames";
 import _ from "underscore";
+import moment from "moment";
 
 const DATE_WIDGETS = {
   "date/single": DateSingleWidget,
@@ -233,6 +233,51 @@ export default class ParameterValueWidget extends Component {
       }
     };
 
+    const getPopoverTriggeredElement = ({
+      parameter,
+      value,
+      values,
+      setValue,
+      resetCrossfilter,
+      isEditing,
+      placeholder,
+      isFullscreen,
+      noReset,
+      commitImmediately,
+      className,
+      focusChanged: parentFocusChanged,
+    }) => {
+      let placeholderText = isEditing
+        ? t`Select a default value…`
+        : placeholder || t`Select…`;
+
+      const onDateChange = value => {
+        const date = moment(value, "YYYY-MM-DD",true);
+        if (date.isValid()) {
+          setValue(value);
+        }
+      }
+
+      if (parameter.type && parameter.type === "date/day-month-year") {
+        return (
+          <TextWidget
+            placeholder={placeholder}
+            value={value}
+            values={values}
+            setValue={onDateChange}
+            isEditing={isEditing}
+            commitImmediately={commitImmediately}
+            focusChanged={focusChanged}
+          />
+        );
+      }
+      return (
+        <div className="mr1 text-nowrap">
+          {hasValue ? Widget.format(value, values) : placeholderText}
+        </div>
+      );
+    };
+
     if (Widget.noPopover) {
       return (
         <div
@@ -260,19 +305,24 @@ export default class ParameterValueWidget extends Component {
       let placeholderText = isEditing
         ? t`Select a default value…`
         : placeholder || t`Select…`;
-      
+
+      const isDayMonthYearDatePicker = parameter.type === "date/day-month-year";
       return (
         <PopoverWithTrigger
           ref="valuePopover"
           triggerElement={
             <div
               ref="trigger"
-              className={cx(S.parameter, className, { [S.selected]: hasValue })}
+              className={cx(S.parameter, className, {
+                [S.selected]: hasValue,
+                [S.noPopover]: isDayMonthYearDatePicker,
+              })}
             >
               {getParameterTypeIcon()}
-              <div className="mr1 text-nowrap">
+              {/* <div className="mr1 text-nowrap">
                 {hasValue ? Widget.format(value, values) : placeholderText}
-              </div>
+              </div> */}
+              {getPopoverTriggeredElement(this.props)}
               {getWidgetStatusIcon()}
             </div>
           }

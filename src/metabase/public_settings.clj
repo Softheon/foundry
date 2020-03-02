@@ -241,4 +241,5 @@
    :iam_auth_redirect     (config/config-str :iam-auth-redirect)
    :enable_email_login    (config/config-bool :enable-email-login)
    :enable_iam_auth (config/config-bool :enable-iam-auth)
-   :enable_xlsx_download (enable-xlsx-export)})
+   :enable_xlsx_download (enable-xlsx-export)
+   :lighthouse_url (config/config-str :lighthouse-url)})

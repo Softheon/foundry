@@ -132,7 +132,10 @@ export default class OAuthLogin extends Component {
     if (Settings.emailLoginEnabled()) {
       return (
         <div className="full bg-white flex flex-column flex-full md-layout-centered">
-          <div className="Login-wrapper wrapper Grid Grid--full md-Grid--1of2 relative z2">
+          <div
+            className="Login-wrapper wrapper Grid Grid--full md-Grid--1of2 md-layout-centered relative z2
+          max-w-70"
+          >
             <div className="Grid-cell flex layout-centered text-brand">
               <LogoIcon className="Logo my4 sm-my0" width={66} height={85} />
             </div>
@@ -145,8 +148,8 @@ export default class OAuthLogin extends Component {
                 <h3 className="Login-header Form-offset">{t`Sign in to Foundry`}</h3>
 
                 {Settings.iamEnabled() && (
-                  <div className="mx4 mb4 py3 border-bottom relative">
-                    <SSOLoginButton provider="iam" ref="ssoLoginButton" />
+                  <div className="mx4 mb4 py3 border-bottom relative flex layout-centered">
+                    <SSOLoginButton provider="Softheon" ref="ssoLoginButton" />
                     {/*<div className="g-signin2 ml1 relative z2" id="g-signin2"></div>*/}
                     <div
                       className="mx1 absolute text-centered left right"
@@ -217,10 +220,11 @@ export default class OAuthLogin extends Component {
                   </div>
                 </div>
 
-                <div className="Form-actions p4">
+                <div className="p4 flex flex-column">
                   <Button
                     primary={this.state.valid}
                     disabled={!this.state.valid}
+                    className={"Button--blue"}
                   >
                     {t`Sign in`}
                   </Button>
@@ -231,11 +235,18 @@ export default class OAuthLogin extends Component {
                         ? "?email=" + this.state.credentials.username
                         : "")
                     }
-                    className="Grid-cell py2 sm-py0 md-text-center text-centered flex-full link"
+                    className="Grid-cell py1 sm-py0 md-text-center text-centered flex-full link"
                     onClick={e => {
                       window.OSX ? window.OSX.resetPassword() : null;
                     }}
                   >{t`Forgot password`}</Link>
+                  {Settings.ligthouseUrl() && (
+                    <a
+                      className="sm-py0 text-centered  link"
+                      target="_blank"
+                      href={Settings.ligthouseUrl()}
+                    >{t`Request Access`}</a>
+                  )}
                 </div>
               </form>
             </div>
@@ -265,7 +276,8 @@ export default class OAuthLogin extends Component {
     }
     return (
       <div className="full bg-white flex flex-column flex-full md-layout-centered">
-        <div className="Login-wrapper wrapper Grid Grid--full  relative z2 flex-flow">
+        <div className="Login-wrapper wrapper Grid Grid--full  md-layout-centered relative z2
+        flex-flow max-w-70">
           <div className="Grid-cell flex layout-centered text-brand">
             <LogoIcon className="Logo my4 sm-my0" width={66} height={85} />
           </div>
@@ -274,8 +286,8 @@ export default class OAuthLogin extends Component {
               <div>
                 <h3 className="Login-header">{t`Welcome to Foundry`}</h3>
                 {Settings.iamEnabled() && (
-                  <div className="mx4 mb4 py3  relative">
-                    <SSOLoginButton provider="iam" ref="ssoLoginButton" />
+                  <div className="mx4 mb4 py3  relative flex layout-centered">
+                    <SSOLoginButton provider="Softheon" ref="ssoLoginButton" />
                     {/*<div className="g-signin2 ml1 relative z2" id="g-signin2"></div>*/}
                     <div
                       className="mx1 absolute left right"

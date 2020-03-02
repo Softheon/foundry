@@ -366,7 +366,7 @@ export const ICON_PATHS = {
   slack: {
     img: "app/assets/img/slack.png",
   },
-  iam: {
+  Softheon: {
     img: "app/assets/img/favicon.ico",
     attrs: {
       style: {
