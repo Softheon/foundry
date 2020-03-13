@@ -44,7 +44,6 @@ class QueryDownloadWidget extends React.Component {
     } = this.props;
 
     const exportFormats = ["csv"];
-    console.log(settingValues);
     if (settingValues["enable-xlsx-export"]) {
       exportFormats.push("xlsx");
     }
