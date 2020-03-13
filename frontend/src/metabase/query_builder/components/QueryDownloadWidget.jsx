@@ -44,10 +44,10 @@ class QueryDownloadWidget extends React.Component {
     } = this.props;
 
     const exportFormats = ["csv"];
-    console.log(settingValues);
     if (settingValues["enable-xlsx-export"]) {
       exportFormats.push("xlsx");
     }
+    const rowLimit = settingValues["absolute-max-results"];
     return (
       <PopoverWithTrigger
         triggerElement={
@@ -68,7 +68,7 @@ class QueryDownloadWidget extends React.Component {
           {result.data != null && result.data.rows_truncated != null && (
             <Box>
               <p>{t`Your answer has a large number of rows so it could take a while to download.`}</p>
-              <p>{t`The maximum download size is 1 million rows.`}</p>
+              <p>{t`The maximum download size is ${rowLimit} rows.`}</p>
             </Box>
           )}
           <Box>

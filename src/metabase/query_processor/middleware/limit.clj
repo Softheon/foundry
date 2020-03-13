@@ -10,10 +10,10 @@
   "Add an implicit `limit` clause to MBQL queries without any aggregations, and limit the maximum number of rows that
   can be returned in post-processing."
   [qp]
-  
+
   (fn [{query-type :type, :as query}]
     (let [max-rows (or (mbql.u/query->max-rows-limit query)
-                       i/absolute-max-results)
+                       ((resolve 'metabase.models.setting/get) :absolute-max-results))
           query    (cond-> query
                      (and (= query-type :query)
                           (qputil/query-without-aggregations-or-limits? query))
