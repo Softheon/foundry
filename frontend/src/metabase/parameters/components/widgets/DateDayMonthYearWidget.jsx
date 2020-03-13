@@ -3,10 +3,14 @@ import Calendar from "metabase/components/Calendar.jsx";
 import moment from "moment";
 import _ from "underscore";
 import cx from "classnames";
+import DateMonthYearWidget from "./DateMonthYearWidget.jsx";
 
-export default class DateMonthYearWidget extends Component {
+export default class DateDayMonthYearWidget extends Component {
   constructor(props, context) {
     super(props, context);
+    this.state = {
+      showCalendar: true,
+    };
   }
 
   static propTypes = {};
@@ -19,41 +23,49 @@ export default class DateMonthYearWidget extends Component {
 
   onClose = selected => {
     const { onClose, setValue } = this.props;
-    if (this.props.value !== selected) {
-      setValue(selected);
-    }
+    setValue(selected);
     onClose();
   };
 
   render() {
-    const { value } = this.props;
-    const initialDate = moment(value);
+    const { value, setValue } = this.props;
+    const initialDate = moment(this.props.value);
     if (!initialDate.isValid) {
       return null;
     }
+    let CalendarDateSelector = (
+      <Calendar
+        initial={value ? moment(value) : null}
+        selected={value ? moment(value) : null}
+        onChange={(clicked, selected) => {
+          this.onClose(clicked);
+        }}
+        onHeaderClick={() => {
+          this.setState({
+            showCalendar: false,
+          });
+        }}
+      />
+    );
+    let dateMonthYearWidget = (
+      <DateMonthYearWidget
+        initial={value ? moment(value) : null}
+        setValue={value => {
+          setValue(moment(value, "YYYY-MM-DD").format("YYYY-MM-DD"));
+        }}
+        onClose={() => {
+          this.setState({
+            showCalendar: true,
+          });
+        }}
+      />
+    );
+
+    const { showCalendar } = this.state;
     return (
       <div className="p1">
-        <Calendar
-          initial={value ? moment(value) : null}
-          selected={value ? moment(value) : null}
-          onChange={ (_, selected) => {
-            this.onClose(selected);
-          }}
-        />
+        {showCalendar ? CalendarDateSelector : dateMonthYearWidget}
       </div>
     );
   }
 }
-
-const Month = ({ month, selected, onClick }) => (
-  <li
-    className={cx("cursor-pointer px3 py1 text-bold text-brand-hover", {
-      "text-brand": selected,
-    })}
-    onClick={onClick}
-  >
-    {moment()
-      .month(month)
-      .format("MMMM")}
-  </li>
-);

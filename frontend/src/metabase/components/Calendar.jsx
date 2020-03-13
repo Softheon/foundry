@@ -54,7 +54,11 @@ export default class Calendar extends Component {
         resetCurrent =
           nextProps.selected.isAfter(this.state.current, "month") ||
           nextProps.selected.isBefore(this.state.current, "month");
+          resetCurrent =
+          nextProps.selected.isAfter(this.state.current, "day") ||
+          nextProps.selected.isBefore(this.state.current, "day");
       }
+
       if (resetCurrent) {
         this.setState({ current: nextProps.selected });
       }
@@ -63,7 +67,7 @@ export default class Calendar extends Component {
 
   onClickDay = date => {
     let { selected, selectedEnd, isRangePicker } = this.props;
-    if (!isRangePicker || !selected || selectedEnd) {
+    if (!isRangePicker || !selected || selectedEnd || (selected && !selectedEnd)) {
       this.props.onChange(date.format("YYYY-MM-DD"), null);
     } else if (!selectedEnd) {
       if (date.isAfter(selected)) {
@@ -100,7 +104,7 @@ export default class Calendar extends Component {
           </div>
         )}
         <span className="flex-full" />
-        <h4 className="cursor-pointer rounded p1">
+        <h4 className="cursor-pointer rounded p1" onClick={this.props.onHeaderClick}>
           {current.format("MMMM YYYY")}
         </h4>
         <span className="flex-full" />
