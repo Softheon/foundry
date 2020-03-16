@@ -162,6 +162,21 @@
   :type :integer
   :default 8)
 
+(defsetting absolute-max-results
+  (tru "The maximum number of rows a downloaded report will have")
+  :type :integer
+  :setter (fn [new-value]
+            (when (and new-value
+                       (< (cond-> new-value
+                            (string? new-value) Integer/parseInt)
+                          0))
+              (throw (IllegalArgumentException.
+                      (str
+                       (tru "Failed setting `absolute-max-results` to {0}." new-value)
+                       (tru "Values less than {1} are not allowed." 0)))))
+            (setting/set-integer! :absolute-max-results new-value))
+  :default 1048576)
+
 (defsetting breakout-bin-width
   (tru "When using the default binning strategy for a field of type Coordinate (such as Latitude and Longitude), this number will be used as the default bin width (in degrees).")
   :type :double
@@ -242,4 +257,5 @@
    :enable_email_login    (config/config-bool :enable-email-login)
    :enable_iam_auth (config/config-bool :enable-iam-auth)
    :enable_xlsx_download (enable-xlsx-export)
-   :lighthouse_url (config/config-str :lighthouse-url)})
+   :lighthouse_url (config/config-str :lighthouse-url)
+   :absolute-max-results (absolute-max-results)})

@@ -455,9 +455,16 @@ const SECTIONS = [
         key: "enable-xlsx-export",
         display_name: t`Enable Excel Download`,
         type: "boolean",
-      }
+      },
+      {
+        key: "absolute-max-results",
+        display_name: t`Maximum Downloaded Results`,
+        type: "number",
+        allowValueCollection: false,
+      },
     ]
-  }
+  },
+
 ];
 
 export const getSettings = createSelector(

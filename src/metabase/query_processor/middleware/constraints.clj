@@ -8,7 +8,7 @@ that specify the `:add-default-userland-constraints?` `:middleware` options.")
 
 (def ^:private max-results
   "General maximum number of rows to return from an API query."
-  2000)
+  10000)
 
 (def default-query-constraints
   "Default map of constraints that we apply on dataset queries executed by the api."

@@ -259,9 +259,9 @@
   {:style/indent 1}
   [query, options :- mbql.s/Info]
   (process-query
-    (-> query
-        (update :info merge options)
-        (assoc-in [:middleware :userland-query?] true))))
+   (-> query
+       (update :info merge options)
+       (assoc-in [:middleware :userland-query?] true))))
 
 (s/defn process-query-and-save-with-max-results-constraints!
   "Same as `process-query-and-save-execution!` but will include the default max rows returned as a constraint. (This
@@ -353,7 +353,7 @@
   {:style/indent 0}
   [query]
   (default-stream-pipeline query))
-    
+
 (s/defn process-query-and-stream-file!
   "Process and run a 'userland' MBQL query (e.g. one ran as the result of an API call, scheduled Pulse, MetaBot query,
   etc.). Returns results in a format appropriate for consumption by FE client. Saves QueryExecution row in application
