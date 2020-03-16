@@ -12,7 +12,11 @@ import { extractQueryParams } from "metabase/lib/urls";
 export default class DownloadQuestionModal extends Component {
   constructor(props, context) {
     super(props, context);
-    const defaultName ="query_result";
+    const defaultName =
+      this.props.card && this.props.card.name
+        ? this.props.card.name + "_" + moment().format("YYYY_MM_DD_THH_mm_SZZ")
+        : "New Question";
+
     this.state = {
       error: null,
       valid: false,
