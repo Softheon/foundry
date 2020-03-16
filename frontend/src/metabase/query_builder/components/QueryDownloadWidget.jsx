@@ -68,7 +68,7 @@ class QueryDownloadWidget extends React.Component {
           {result.data != null && result.data.rows_truncated != null && (
             <Box>
               <p>{t`Your answer has a large number of rows so it could take a while to download.`}</p>
-              <p>{t`The maximum download size is ${rowLimit} rows.`}</p>
+              <p>{t`The maximum download size is limited.`}</p>
             </Box>
           )}
           <Box>

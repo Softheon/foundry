@@ -55,9 +55,9 @@ export default class TimeoutModal extends React.Component {
 
   componentDidMount() {
     this.timer = setInterval(() => {
-      this.setState({
-        counter: this.state.counter - 1,
-      });
+      this.setState((state, props) => ({
+        counter: state.counter - 1
+      }));
     }, 1000 * 60);
   }
 
@@ -79,7 +79,10 @@ export default class TimeoutModal extends React.Component {
   };
 
   render() {
-    if (this.state.counter >= 0 && this.state.counter <= TIMEOUT_MODAL_COUNTER ) {
+    if (
+      this.state.counter >= 0 &&
+      this.state.counter <= TIMEOUT_MODAL_COUNTER
+    ) {
       return (
         <Modal full={false} isOpen={true}>
           <div className="TutorialModalContent p2">
