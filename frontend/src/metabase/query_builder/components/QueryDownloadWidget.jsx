@@ -8,22 +8,24 @@ import querystring from "querystring";
 
 import PopoverWithTrigger from "metabase/components/PopoverWithTrigger.jsx";
 import Icon from "metabase/components/Icon.jsx";
-import DownloadButton, { DownloadModalButton } from "metabase/components/DownloadButton.jsx";
+import DownloadButton, {
+  DownloadModalButton,
+} from "metabase/components/DownloadButton.jsx";
 import Tooltip from "metabase/components/Tooltip.jsx";
 
 import * as Urls from "metabase/lib/urls";
 
 import _ from "underscore";
 import cx from "classnames";
-import {getSettingValues} from "../../admin/settings/selectors"
-import { connect } from  "react-redux"
+import { getSettingValues } from "../../admin/settings/selectors";
+import { connect } from "react-redux";
 const EXPORT_FORMATS = ["csv", "xlsx"];
 
 const mapStateToProps = (state, props) => {
   return {
-    settingValues : getSettingValues(state, props)
-  }
-}
+    settingValues: getSettingValues(state, props),
+  };
+};
 @connect(mapStateToProps, null)
 class QueryDownloadWidget extends React.Component {
   constructor(props) {
@@ -40,7 +42,7 @@ class QueryDownloadWidget extends React.Component {
       dashcardId,
       icon,
       params,
-      settingValues
+      settingValues,
     } = this.props;
 
     const exportFormats = ["csv"];
@@ -48,6 +50,12 @@ class QueryDownloadWidget extends React.Component {
       exportFormats.push("xlsx");
     }
     const rowLimit = settingValues["absolute-max-results"];
+    const isSaved = card["id"] ? true : false;
+    const downloadSizeMessage = rowLimit ? (
+      <p>{t`The maximum download size is ${rowLimit} rows.`}</p>
+    ) : (
+      <p>{t`The maximum download size is limited.`}</p>
+    );
     return (
       <PopoverWithTrigger
         triggerElement={
@@ -68,7 +76,12 @@ class QueryDownloadWidget extends React.Component {
           {result.data != null && result.data.rows_truncated != null && (
             <Box>
               <p>{t`Your answer has a large number of rows so it could take a while to download.`}</p>
-              <p>{t`The maximum download size is limited.`}</p>
+              {!isSaved ? (
+                <p className="text-error">{t`The question is not saved, so the maximum download size will be limited to first
+                ${result.data.rows_truncated} rows.`}</p>
+              ) : (
+                downloadSizeMessage
+              )}
             </Box>
           )}
           <Box>
@@ -142,14 +155,12 @@ const QueryDownloadWidget_old = ({
       <Box p={1}>
         <h4>{t`Download full results`}</h4>
       </Box>
-      {result.data != null &&
-        result.data.rows_truncated != null && (
-          <Box>
-            <p
-            >{t`Your answer has a large number of rows so it could take a while to download.`}</p>
-            <p>{t`The maximum download size is 1 million rows.`}</p>
-          </Box>
-        )}
+      {result.data != null && result.data.rows_truncated != null && (
+        <Box>
+          <p>{t`Your answer has a large number of rows so it could take a while to download.`}</p>
+          <p>{t`The maximum download size is 1 million rows.`}</p>
+        </Box>
+      )}
       <Box>
         {EXPORT_FORMATS.map(type => (
           <Box w={"100%"}>
@@ -255,9 +266,7 @@ const DashboardEmbedQueryButton = ({
 }) => (
   <DownloadButton
     method="GET"
-    url={`api/embed/dashboard/${token}/dashcard/${dashcardId}/card/${
-      card.id
-    }/${type}`}
+    url={`api/embed/dashboard/${token}/dashcard/${dashcardId}/card/${card.id}/${type}`}
     extensions={[type]}
     params={params}
   >
