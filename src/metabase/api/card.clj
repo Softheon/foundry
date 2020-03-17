@@ -657,6 +657,41 @@ Exception if preconditions (such as read perms) are not met before returning a c
   (binding [cache/*ignore-cached-results* ignore_cache]
     (run-full-query-for-card-async card-id, :parameters parameters)))
 
+;;; ----------------------------------------------- Streaming a Card ------------------------------------------------
+
+(defn run-query-for-card-async-file
+  "Run the query for Card with `parameters` and `constraints`, and return results in a core.async channel. Will throw an
+  Exception if preconditions (such as read perms) are not met before returning a channel."
+  {:style/indent 1}
+  [card-id & {:keys [parameters constraints context dashboard-id middleware]
+              :or   {constraints constraints/default-query-constraints
+                     context     :question}}]
+  {:pre [(u/maybe? sequential? parameters)]}
+  (let [card    (api/read-check (Card card-id))
+        query   (query-for-card card parameters constraints middleware)
+        options {:executed-by  api/*current-user-id*
+                 :context      context
+                 :card-id      card-id
+                 :dashboard-id dashboard-id}]
+    (api/check-not-archived card)
+
+    (qp.async/process-query-and-stream-file! query options)))
+
+(api/defendpoint-async POST "/:card-id/query/:export-format"
+  "Run the query associated with a Card, and return its results as a file in the specified format. Note that this
+  expects the parameters as serialized JSON in the 'parameters' parameter"
+  [{{:keys [card-id export-format parameters name]} :params} respond raise]
+  {parameters    (s/maybe su/JSONString)
+   export-format dataset-api/ExportFormat
+   name su/NonBlankString}
+  (binding [cache/*ignore-cached-results* true]
+    (dataset-api/as-format-async-file name export-format respond raise
+      (run-query-for-card-async-file (Integer/parseUnsignedInt card-id)
+        :parameters  (json/parse-string parameters keyword)
+        :constraints nil
+        :context     (dataset-api/export-format->context export-format)
+        :middleware  {:skip-results-metadata? true}))))
+
 (api/defendpoint-async POST "/:card-id/query/:export-format"
   "Run the query associated with a Card, and return its results as a file in the specified format. Note that this
   expects the parameters as serialized JSON in the 'parameters' parameter"
@@ -666,12 +701,20 @@ Exception if preconditions (such as read perms) are not met before returning a c
    name su/NonBlankString}
   (binding [cache/*ignore-cached-results* true]
     (api/check-supported-export-format export-format)
-    (dataset-api/as-format-async export-format name respond raise
-                                 (run-query-for-card-async (Integer/parseUnsignedInt card-id)
-                                                           :parameters  (json/parse-string parameters keyword)
-                                                           :constraints nil
-                                                           :context     (dataset-api/export-format->context export-format)
-                                                           :middleware  {:skip-results-metadata? true}))))
+    (if (= export-format "csv")
+
+      (dataset-api/as-format-async-file name export-format respond raise
+                                        (run-query-for-card-async-file (Integer/parseUnsignedInt card-id)
+                                                                       :parameters  (json/parse-string parameters keyword)
+                                                                       :constraints nil
+                                                                       :context     (dataset-api/export-format->context export-format)
+                                                                       :middleware  {:skip-results-metadata? true}))
+      (dataset-api/as-format-async export-format name respond raise
+                                   (run-query-for-card-async (Integer/parseUnsignedInt card-id)
+                                                             :parameters  (json/parse-string parameters keyword)
+                                                             :constraints nil
+                                                             :context     (dataset-api/export-format->context export-format)
+                                                             :middleware  {:skip-results-metadata? true})))))
 
 
 ;;; ----------------------------------------------- Sharing is Caring ------------------------------------------------
@@ -851,39 +894,5 @@ Exception if preconditions (such as read perms) are not met before returning a c
                     :body (str "something went wrong")}))))
 
 
-;;; ----------------------------------------------- Streaming a Card ------------------------------------------------
-
-(defn run-query-for-card-async-file
-  "Run the query for Card with `parameters` and `constraints`, and return results in a core.async channel. Will throw an
-  Exception if preconditions (such as read perms) are not met before returning a channel."
-  {:style/indent 1}
-  [card-id & {:keys [parameters constraints context dashboard-id middleware]
-              :or   {constraints constraints/default-query-constraints
-                     context     :question}}]
-  {:pre [(u/maybe? sequential? parameters)]}
-  (let [card    (api/read-check (Card card-id))
-        query   (query-for-card card parameters constraints middleware)
-        options {:executed-by  api/*current-user-id*
-                 :context      context
-                 :card-id      card-id
-                 :dashboard-id dashboard-id}]
-    (api/check-not-archived card)
-
-    (qp.async/process-query-and-stream-file! query options)))
-
-;; (api/defendpoint-async POST "/:card-id/query/:export-format"
-;;   "Run the query associated with a Card, and return its results as a file in the specified format. Note that this
-;;   expects the parameters as serialized JSON in the 'parameters' parameter"
-;;   [{{:keys [card-id export-format parameters name]} :params} respond raise]
-;;   {parameters    (s/maybe su/JSONString)
-;;    export-format dataset-api/ExportFormat
-;;    name su/NonBlankString}
-;;   (binding [cache/*ignore-cached-results* true]
-;;     (dataset-api/as-format-async-file name export-format respond raise
-;;       (run-query-for-card-async-file (Integer/parseUnsignedInt card-id)
-;;         :parameters  (json/parse-string parameters keyword)
-;;         :constraints nil
-;;         :context     (dataset-api/export-format->context export-format)
-;;         :middleware  {:skip-results-metadata? true}))))
 
 (api/define-routes)
