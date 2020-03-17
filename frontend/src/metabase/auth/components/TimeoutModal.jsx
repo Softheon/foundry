@@ -5,7 +5,6 @@ import { t } from "c-3po";
 
 import Modal from "metabase/components/Modal.jsx";
 import { logout, idleSessionTimeout } from "metabase/auth/auth.js";
-import Icon from "metabase/components/Icon.jsx";
 
 const defaultEvents = [
   "mousemove",
@@ -21,7 +20,7 @@ const mapDispatchToProps = {
   idleSessionTimeout,
 };
 
-const TIMEOUT_MODAL_COUNTER = 30;
+const TIMEOUT_MODAL_COUNTER = 5;
 const SESSION_TIMEOUT = 60;
 
 @connect(mapStateToProps, mapDispatchToProps)
@@ -32,13 +31,16 @@ export default class TimeoutModal extends React.Component {
       counter: SESSION_TIMEOUT,
     };
     this.timer = null;
-    this.debouncedOnUserActivity = _.debounce(this.onUserActivity, 1000);
+    this.debouncedOnUserActivity = _.throttle(this.onUserActivity, 1000);
   }
 
   onUserActivity = () => {
-    this.setState({
-      counter: SESSION_TIMEOUT,
-    });
+    this.setState(
+      {
+        counter: SESSION_TIMEOUT,
+      },
+      this.ResetTimer,
+    );
   };
 
   registerUserActivityListeners = () => {
@@ -53,29 +55,45 @@ export default class TimeoutModal extends React.Component {
     });
   };
 
-  componentDidMount() {
+  ResetTimer = () => {
+    clearInterval(this.timer);
     this.timer = setInterval(() => {
       this.setState((state, props) => ({
-        counter: state.counter - 1
+        counter: state.counter - 1,
       }));
     }, 1000 * 60);
+  };
+
+  componentDidMount() {
+    this.unregisterUserActivityListeners();
+    this.registerUserActivityListeners();
+    this.ResetTimer();
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.timer);
+    this.unregisterUserActivityListeners();
   }
 
   componentDidUpdate() {
     if (this.state.counter === TIMEOUT_MODAL_COUNTER) {
       this.unregisterUserActivityListeners();
     } else if (this.state.counter <= 0) {
-      clearTimeout(this.timer);
-      this.unregisterUserActivityListeners();
+      clearInterval(this.timer);
       this.props.idleSessionTimeout();
     }
   }
 
   onClose = () => {
-    this.registerUserActivityListeners();
-    this.setState({
-      counter: SESSION_TIMEOUT,
-    });
+    this.setState(
+      {
+        counter: SESSION_TIMEOUT,
+      },
+      () => {
+        this.registerUserActivityListeners();
+        this.ResetTimer();
+      },
+    );
   };
 
   render() {
@@ -94,10 +112,12 @@ export default class TimeoutModal extends React.Component {
                 } ${
                   this.state.counter > 1 ? "minutes" : "minute"
                 }, you will be logged out.`}</p>
-                <button
-                  className="Button Button--primary z6"
-                  onClick={this.onClose}
-                >{t`Stay signed in`}</button>
+                {this.state.counter != 0 && (
+                  <button
+                    className="Button Button--primary z6"
+                    onClick={this.onClose}
+                  >{t`Stay signed in`}</button>
+                )}
               </div>
             </div>
           </div>
