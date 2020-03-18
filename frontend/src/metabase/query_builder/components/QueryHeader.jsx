@@ -608,7 +608,7 @@ export default class QueryHeader extends Component {
         </Modal>
 
         <Modal
-          full
+         // full
           isOpen={this.state.modal === "view-question-description"}
           onClose={this.onCloseModal}
         >
