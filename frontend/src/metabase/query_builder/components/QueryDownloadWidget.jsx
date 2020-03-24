@@ -50,7 +50,12 @@ class QueryDownloadWidget extends React.Component {
       exportFormats.push("xlsx");
     }
     const rowLimit = settingValues["absolute-max-results"];
+    const unsavedRowLimit = settingValues["unsaved-question-max-results"];
     const isSaved = card["id"] ? true : false;
+    // remove xlsx download option
+    if (!isSaved && settingValues["enable-xlsx-export"]) {
+      exportFormats.splice(-1, 1);
+    }
     const downloadSizeMessage = rowLimit ? (
       <p>{t`The maximum download size is ${rowLimit} rows.`}</p>
     ) : (
@@ -78,7 +83,7 @@ class QueryDownloadWidget extends React.Component {
               <p>{t`Your answer has a large number of rows so it could take a while to download.`}</p>
               {!isSaved ? (
                 <p className="text-error">{t`The question is not saved, so the maximum download size will be limited to first
-                ${result.data.rows_truncated} rows.`}</p>
+                ${unsavedRowLimit} rows.`}</p>
               ) : (
                 downloadSizeMessage
               )}

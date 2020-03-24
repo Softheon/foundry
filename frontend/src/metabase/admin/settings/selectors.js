@@ -462,6 +462,12 @@ const SECTIONS = [
         type: "number",
         allowValueCollection: false,
       },
+      {
+        key: "unsaved-question-max-results",
+        display_name: t`Maximum Download size for unsaved reports.`,
+        type: "number",
+        allowValueCollection: false
+      },
     ]
   },
 

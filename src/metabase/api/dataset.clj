@@ -20,7 +20,8 @@
              [export :as ex]
              [i18n :refer [trs tru]]
              [schema :as su]]
-            [schema.core :as s])
+            [schema.core :as s]
+            [metabase.public-settings :as public-settings])
   (:import clojure.core.async.impl.channels.ManyToManyChannel))
 
 ;;; -------------------------------------------- Running a Query Normally --------------------------------------------
@@ -130,6 +131,12 @@
         (a/close! in-chan))))
   nil)
 
+(defn- add-row-constraint
+  [query export-format]
+  (if (= export-format "csv")
+    (assoc-in query [:constraints] {:max-results (public-settings/unsaved-question-max-results)})
+    (assoc-in query [:constraints] {:max-results 0})))
+
 (def export-format-regex
   "Regex for matching valid export formats (e.g., `json`) for queries.
    Inteneded for use in an endpoint definition:
@@ -151,6 +158,7 @@
                       (qp.async/process-query-and-save-execution!
                        (-> query
                            (dissoc :constraints)
+                           (add-row-constraint export-format)
                            (assoc-in [:middleware :skip-results-metadata?] true))
                        {:executed-by api/*current-user-id*, :context (export-format->context export-format)}))))
 
