@@ -176,7 +176,6 @@ export const idleSessionTimeout = createThunkAction(
   IDLE_TIMEOUT,
   message => async (dispatch, getState) => {
     await SessionApi.delete();
-    await dispatch(push("/auth/login"));
     return {
       data: {
         errors: {
