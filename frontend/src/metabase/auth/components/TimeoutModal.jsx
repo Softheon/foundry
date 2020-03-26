@@ -4,7 +4,11 @@ import { connect } from "react-redux";
 import { t } from "c-3po";
 
 import Modal from "metabase/components/Modal.jsx";
-import { logout, idleSessionTimeout } from "metabase/auth/auth.js";
+import {
+  logout,
+  idleSessionTimeout,
+  sessionTimeout,
+} from "metabase/auth/auth.js";
 
 const defaultEvents = [
   "mousemove",
@@ -18,6 +22,7 @@ const mapStateToProps = null;
 const mapDispatchToProps = {
   logout,
   idleSessionTimeout,
+  sessionTimeout,
 };
 
 const TIMEOUT_MODAL_COUNTER = 5;
@@ -81,6 +86,7 @@ export default class TimeoutModal extends React.Component {
     } else if (this.state.counter <= 0) {
       clearInterval(this.timer);
       this.props.idleSessionTimeout();
+      this.props.sessionTimeout();
     }
   }
 
@@ -97,10 +103,21 @@ export default class TimeoutModal extends React.Component {
   };
 
   render() {
-    if (
-      this.state.counter >= 0 &&
-      this.state.counter <= TIMEOUT_MODAL_COUNTER
-    ) {
+    const { counter } = this.state;
+    if (counter >= 0 && counter <= TIMEOUT_MODAL_COUNTER) {
+      if (counter == 0) {
+        return (
+          <Modal full={false} isOpen={true}>
+            <div className="TutorialModalContent p2">
+              <div className="px4">
+                <div className="text-centered">
+                  <h2>{t`Your Session expired`}</h2>
+                </div>
+              </div>
+            </div>
+          </Modal>
+        );
+      }
       return (
         <Modal full={false} isOpen={true}>
           <div className="TutorialModalContent p2">

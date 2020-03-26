@@ -186,6 +186,13 @@ export const idleSessionTimeout = createThunkAction(
   },
 );
 
+export const SESSION_TIMEOUT = "foundry/auth/SESSION_TIMEOUT";
+export const sessionTimeout = createThunkAction(
+  SESSION_TIMEOUT,
+  () => async (dispatch, getState) => {
+    dispatch(push("/auth/login"));
+  },
+);
 // reducers
 
 const loginError = handleActions(
