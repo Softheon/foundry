@@ -190,7 +190,7 @@
                        (tru "Failed setting `absolute-max-results` to {0}." new-value)
                        (tru "Values less than {1} are not allowed." 0)))))
             (setting/set-integer! :unsaved-question-max-results new-value))
-  :default 10)
+  :default 2000)
 
 (defsetting breakout-bin-width
   (tru "When using the default binning strategy for a field of type Coordinate (such as Latitude and Longitude), this number will be used as the default bin width (in degrees).")

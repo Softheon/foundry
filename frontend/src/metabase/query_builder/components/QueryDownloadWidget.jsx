@@ -50,7 +50,7 @@ class QueryDownloadWidget extends React.Component {
       exportFormats.push("xlsx");
     }
     const rowLimit = settingValues["absolute-max-results"];
-    const unsavedRowLimit = settingValues["unsaved-question-max-results"];
+    const unsavedRowLimit = settingValues["unsaved-question-max-results"] || 2000;
     const isSaved = card["id"] ? true : false;
     // remove xlsx download option
     if (!isSaved && settingValues["enable-xlsx-export"]) {
