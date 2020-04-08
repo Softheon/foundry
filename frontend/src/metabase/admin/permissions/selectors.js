@@ -667,7 +667,6 @@ export const getDatabasesPermissionsGrid = createSelector(
 );
 
 import Collections from "metabase/entities/collections";
-import { isIdsGroup } from "../../lib/groups";
 
 const getCollectionId = (state, props) => props && props.collectionId;
 
