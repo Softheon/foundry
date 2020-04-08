@@ -4,6 +4,7 @@ const SPECIAL_GROUP_NAMES = new Map([
   ["All Users", t`All Users`],
   ["Administrators", t`Administrators`],
   ["MetaBot", t`MetaBot`],
+  ["IDS Users", t`IDS Users`]
 ]);
 
 export function isDefaultGroup(group) {
@@ -16,6 +17,10 @@ export function isAdminGroup(group) {
 
 export function isMetaBotGroup(group) {
   return group.name === "MetaBot";
+}
+
+export function isIdsGroup(group) {
+  return group.name === "IDS Users";
 }
 
 export function canEditPermissions(group) {

@@ -14,6 +14,7 @@ import {
   isDefaultGroup,
   isAdminGroup,
   isMetaBotGroup,
+  isIdsGroup,
 } from "metabase/lib/groups";
 
 import _ from "underscore";
@@ -52,6 +53,7 @@ const SPECIAL_GROUP_FILTERS = [
   isAdminGroup,
   isDefaultGroup,
   isMetaBotGroup,
+  isIdsGroup
 ].reverse();
 
 function getTooltipForGroup(group) {
@@ -61,6 +63,8 @@ function getTooltipForGroup(group) {
     return t`Every Foundry user belongs to the All Users group. If you want to limit or restrict a group's access to something, make sure the All Users group has an equal or lower level of access.`;
   } else if (isMetaBotGroup(group)) {
     return t`MetaBot is Foundry's Slack bot. You can choose what it has access to here.`;
+  } else if (isIdsGroup(group)) {
+    return t`Every IDS authenticated user initially belongs to the group. The group members don't have access to anything in Foundry.`;
   }
   return null;
 }
@@ -663,6 +667,7 @@ export const getDatabasesPermissionsGrid = createSelector(
 );
 
 import Collections from "metabase/entities/collections";
+import { isIdsGroup } from "../../lib/groups";
 
 const getCollectionId = (state, props) => props && props.collectionId;
 

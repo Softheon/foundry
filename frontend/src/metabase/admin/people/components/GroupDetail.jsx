@@ -6,6 +6,7 @@ import cx from "classnames";
 import {
   isAdminGroup,
   isDefaultGroup,
+  isIdsGroup,
   canEditMembership,
   getGroupNameLocalized,
 } from "metabase/lib/groups";
@@ -33,6 +34,14 @@ const GroupDescription = ({ group }) =>
           group,
         )} group and can't be removed from it. Setting permissions for this group is a great way to
                 make sure you know what new Foundry users will be able to see.`}
+      </p>
+    </div>
+  ) : isIdsGroup(group) ? (
+    <div className="px2 text-measure">
+      <p>
+        {t`All users authenticated by IDS belong to the ${getGroupNameLocalized(
+          group,
+        )}. Setting permissions for this group is a great way to make sure you know what new Foundry users will be able to see.`}
       </p>
     </div>
   ) : isAdminGroup(group) ? (

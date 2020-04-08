@@ -8,6 +8,7 @@ import MetabaseAnalytics from "metabase/lib/analytics";
 import {
   isDefaultGroup,
   isAdminGroup,
+  isIdsGroup,
   getGroupNameLocalized,
 } from "metabase/lib/groups";
 import { KEYCODE_ENTER } from "metabase/lib/keyboard";
@@ -160,7 +161,7 @@ function GroupRow({
   onEditGroupDoneClicked,
 }) {
   const color = COLORS[index % COLORS.length];
-  const showActionsButton = !isDefaultGroup(group) && !isAdminGroup(group);
+  const showActionsButton = !isDefaultGroup(group) && !isAdminGroup(group) && !isIdsGroup(group);
   const editing = groupBeingEdited && groupBeingEdited.id === group.id;
 
   return editing ? (
@@ -187,7 +188,7 @@ function GroupRow({
           <span className="ml2 text-bold">{getGroupNameLocalized(group)}</span>
         </Link>
       </td>
-      <td>{group.members || 0}</td>
+      <td>{group.member_count || 0}</td>
       <td className="text-right">
         {showActionsButton ? (
           <ActionsPopover

@@ -44,6 +44,10 @@
   "Fetch the `MetaBot` permissions group, creating it if needed."
   (group-fetch-fn "MetaBot"))
 
+(def ^{:arglists '([])} ^metabase.models.permissions_group.PermissionsGroupInstance
+  ids-users
+  "Fetch the `IDS users` permissions group, creating it if needed."
+  (group-fetch-fn "IDS Users"))
 
 ;;; --------------------------------------------------- Validation ---------------------------------------------------
 
@@ -65,7 +69,8 @@
   {:pre [(integer? id)]}
   (doseq [magic-group [(all-users)
                        (admin)
-                       (metabot)]]
+                       (metabot)
+                       (ids-users)]]
     (when (= id (:id magic-group))
       (throw (ui18n/ex-info (tru "You cannot edit or delete the ''{0}'' permissions group!" (:name magic-group))
                {:status-code 400})))))

@@ -28,6 +28,19 @@
       (throw (ui18n/ex-info (tru "You cannot add or remove users to/from the ''All Users'' group.")
                {:status-code 400})))))
 
+(defonce ^:dynamic ^{:doc "Should we allow people to be added to or removed from the IDS users permissions group? By
+default, this is `false`, but enable it when adding or deleting users"}
+  *allow-changing-ids-users-group-members*
+  false)
+
+(defn- check-not-ids-users-group
+  "Throw an Exception if we're trying to add or remove a user to the IDS users group."
+  [group-id]
+  (when (= group-id (:id group/ids-users))
+    (when-not *allow-changing-ids-users-group-members*
+      (throw (ui18n/ex-info (tru "You cannot add or remove users to/from the ''IDS users'' group.")
+                            {:status-code 400})))))
+
 (defn- check-not-last-admin []
   (when (<= (db/count PermissionsGroupMembership
               :group_id (:id (group/admin)))
@@ -38,18 +51,21 @@
 (defn- pre-delete [{:keys [group_id user_id]}]
   (check-not-metabot-group group_id)
   (check-not-all-users-group group_id)
+ ;; (check-not-ids-users-group group_id)
   ;; Otherwise if this is the Admin group...
   (when (= group_id (:id (group/admin)))
     ;; ...and this is the last membership throw an exception
     (check-not-last-admin)
     ;; ...otherwise we're ok. Unset the `:is_superuser` flag for the user whose membership was revoked
     (db/update! 'User user_id
-      :is_superuser false)))
+                :is_superuser false)))
 
 (defn- pre-insert [{:keys [group_id], :as membership}]
   (u/prog1 membership
-    (check-not-metabot-group group_id)
-    (check-not-all-users-group group_id)))
+           (check-not-metabot-group group_id)
+           (check-not-all-users-group group_id)
+           ;;(check-not-ids-users-group group_id)
+           ))
 
 (defn- post-insert [{:keys [group_id user_id], :as membership}]
   (u/prog1 membership

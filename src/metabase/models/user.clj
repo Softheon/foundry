@@ -48,19 +48,24 @@
            (when reset_token
              {:reset_token (creds/hash-bcrypt reset_token)}))))
 
-(defn- post-insert [{user-id :id, superuser? :is_superuser, :as user}]
+(defn- post-insert [{user-id :id, superuser? :is_superuser, iam? :iam_auth, :as user}]
   (u/prog1 user
+           
     ;; add the newly created user to the magic perms groups
-    (binding [perm-membership/*allow-changing-all-users-group-members* true]
-      (log/info (trs "Adding User {0} to All Users permissions group..." user-id))
-      (db/insert! PermissionsGroupMembership
-        :user_id  user-id
-        :group_id (:id (group/all-users))))
-    (when superuser?
-      (log/info (trs "Adding User {0} to Admin permissions group..." user-id))
-      (db/insert! PermissionsGroupMembership
-        :user_id  user-id
-        :group_id (:id (group/admin))))))
+           (binding [perm-membership/*allow-changing-all-users-group-members* true
+                     perm-membership/*allow-changing-ids-users-group-members* true]
+             (log/info (trs "Adding User {0} to All Users permissions group..." user-id))
+             (log/info "iam_auth---------------------------------------------------------------" user)
+             (db/insert! PermissionsGroupMembership
+                         :user_id  user-id
+                         :group_id (:id (if iam?
+                                          (group/ids-users)
+                                          (group/all-users)))))
+           (when superuser?
+             (log/info (trs "Adding User {0} to Admin permissions group..." user-id))
+             (db/insert! PermissionsGroupMembership
+                         :user_id  user-id
+                         :group_id (:id (group/admin))))))
 
 (defn- pre-update [{:keys [email reset_token is_superuser id] :as user}]
   ;; when `:is_superuser` is toggled add or remove the user from the 'Admin' group as appropriate
@@ -97,6 +102,7 @@
 ;; deleting them. In other words the following code is only ever called by tests
 (defn- pre-delete [{:keys [id]}]
   (binding [perm-membership/*allow-changing-all-users-group-members* true
+            perm-membership/*allow-changing-ids-users-group-members* true
             collection/*allow-deleting-personal-collections*         true]
     (doseq [[model k] [['Activity                   :user_id]
                        ['Card                       :creator_id]
@@ -117,7 +123,7 @@
 
 (def ^:private default-user-columns
   "Sequence of columns that are normally returned when fetching a User from the DB."
-  [:id :email :date_joined :first_name :last_name :last_login :is_superuser :is_qbnewb])
+  [:id :email :date_joined :first_name :last_name :last_login :is_superuser :is_qbnewb :iam_auth])
 
 (def admin-or-self-visible-columns
   "Sequence of columns that we can/should return for admins fetching a list of all Users, or for the current user
