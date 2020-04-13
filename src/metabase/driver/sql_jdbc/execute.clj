@@ -285,14 +285,14 @@ before finishing)."
   "Process and run a native (raw SQL) QUERY."
   [driver {settings :settings, query :native, :as outer-query}]
   (let [query (assoc query
-                :remark   (qputil/query->remark outer-query)
-                :max-rows (or (mbql.u/query->max-rows-limit outer-query) qp.i/absolute-max-results))]
+                     :remark   (qputil/query->remark outer-query)
+                     :max-rows (or (mbql.u/query->max-rows-limit outer-query) qp.i/absolute-max-results))]
     (do-with-try-catch
-      (fn []
-        (let [db-connection (sql-jdbc.conn/db->pooled-connection-spec (qp.store/database))]
-          ((if (seq (:report-timezone settings))
-             run-query-with-timezone
-             run-query-without-timezone) driver settings db-connection query))))))
+     (fn []
+       (let [db-connection (sql-jdbc.conn/db->pooled-connection-spec (qp.store/database))]
+         ((if (seq (:report-timezone settings))
+            run-query-with-timezone
+            run-query-without-timezone) driver settings db-connection query))))))
 
 ;;; ------------------------------------------------- stream-query --------------------------------------------------
 (defn- do-without-auto-close-ensured-connection [db f]
@@ -316,7 +316,7 @@ before finishing)."
     (let [^PreparedStatement stmt (jdbc/prepare-statement conn sql opts)]
       ;; Need to run the query in another thread so that this thread can cancel it if need be
       (try
-        (let [query-future (future (f-jdbc/inputstream-for-downloable-query conn (into [stmt] params) opts))]
+        (let [query-future (future (f-jdbc/query conn (into [stmt] params) opts))]
           ;; This thread is interruptable because it's awaiting the other thread (the one actually running the
           ;; query). Interrupting this thread means that the client has disconnected (or we're shutting down) and so
           ;; we can give up on the query running in the future
@@ -337,7 +337,7 @@ before finishing)."
       ;; specifiy that we'd like this statement to close once its dependent result sets are closed
       ;; (Not all drivers support this so ignore Exceptions if they don't)
       (u/ignore-exceptions
-        (.closeOnCompletion stmt))
+       (.closeOnCompletion stmt))
       ;; Need to run the query in another thread so that this thread can cancel it if need be
       (try
         (let [query-future (future (jdbc/query conn (into [stmt] params) opts))]
@@ -351,34 +351,34 @@ before finishing)."
           ;; `query-future` but this will cause an exception to be thrown, saying the query has been cancelled.
           (.cancel stmt)
           (throw e))))))
-                  
+
 (defn- query-stream
   "Run the query itself."
-  [driver {sql :query, :keys [params remark max-rows]}, ^TimeZone timezone, connection]
+  [driver {sql :query, :keys [params remark max-rows]}, ^TimeZone timezone, export-fn, connection]
   (let [sql              (str "-- " remark "\n" (hx/unescape-dots sql))
         stream (cancellable-run-query-for-download
-                          connection sql params
-                          {:identifiers    identity
-                           :as-arrays?     true
-                           :read-columns   (read-columns driver (some-> timezone Calendar/getInstance))
-                           :set-parameters (set-parameters-with-timezone timezone)
-                           :result-set-fn export/csv-stream-writer
+                connection sql params
+                {:identifiers    identity
+                 :as-arrays?     true
+                 :read-columns   (read-columns driver (some-> timezone Calendar/getInstance))
+                 :set-parameters (set-parameters-with-timezone timezone)
+                 :result-set-fn (export-fn connection)
                            ;:concurrency :read-only
-                           :keywordize? false})]
+                 :keywordize? false})]
     stream))
 
 (defn- do-in-transaction-stream [connection f]
-      (f-jdbc/with-db-transaction-without-auto-close [transaction-connection connection]
-        (do-with-auto-commit-disabled transaction-connection (partial f transaction-connection))))
+  (f-jdbc/with-db-transaction-without-auto-close [transaction-connection connection]
+    (do-with-auto-commit-disabled transaction-connection (partial f transaction-connection))))
 
-(defn- run-query-without-timezone-stream [driver _ connection query]
-  (do-in-transaction-stream connection (partial query-stream driver query nil)))
+(defn- run-query-without-timezone-stream [driver _ connection query export-fn]
+  (do-in-transaction-stream connection (partial query-stream driver query nil export-fn)))
 
 (defn stream-query
   "Process and run a native (raw SQL) QUERY,and returns a result stream."
-  [driver {settings :settings, query :native, :as outer-query}]
+  [driver {settings :settings, query :native, {:keys[export-fn]} :middleware, :as outer-query}]
   (let [query query]
     (do-with-try-catch
-      (fn []
-        (let [db-connection (sql-jdbc.conn/db->pooled-connection-spec (qp.store/database))]
-          (run-query-without-timezone-stream driver settings db-connection query))))))
+     (fn []
+       (let [db-connection (sql-jdbc.conn/db->pooled-connection-spec (qp.store/database))]
+         (run-query-without-timezone-stream driver settings db-connection query export-fn))))))

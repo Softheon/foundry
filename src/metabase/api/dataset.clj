@@ -46,7 +46,7 @@
     (api/read-check Database database))
   ;; add sensible constraints for results limits on our query
   (let [source-card-id (query->source-card-id query)
-        options        {:executed-by api/*current-user-id*, :context :ad-hoc,
+        options        {:executed-by api/*current-user-id*, :context :ad-hoc
                         :card-id     source-card-id,        :nested? (boolean source-card-id)}]
     (qp.async/process-query-and-save-with-max-results-constraints! query options)))
 
@@ -103,16 +103,16 @@
   {:style/indent 1, :arglists '([export-format results])}
   [export-format name {{:keys [columns rows cols]} :data, :keys [status], :as response}]
   (api/let-404 [export-conf (ex/export-formats export-format)]
-    (if (= status :completed)
+               (if (= status :completed)
       ;; successful query, send file
-      {:status  200
-       :body    ((:export-fn export-conf) columns (maybe-modify-date-values cols rows))
-       :headers {"Content-Type"        (str (:content-type export-conf) "; charset=utf-8")
+                 {:status  200
+                  :body    ((:export-fn export-conf) columns (maybe-modify-date-values cols rows))
+                  :headers {"Content-Type"        (str (:content-type export-conf) "; charset=utf-8")
                 ;;  "Content-Disposition" (str "attachment; filename=\"query_result_" (du/date->iso-8601) "." (:ext export-conf) "\"")}}
-                 "Content-Disposition" (str "attachment; filename=\"" name "." (:ext export-conf) "\"")}}
+                            "Content-Disposition" (str "attachment; filename=\"" name "." (:ext export-conf) "\"")}}
       ;; failed query, send error message
-      {:status 500
-       :body   (:error response)})))
+                 {:status 500
+                  :body   (:error response)})))
 
 (s/defn as-format-async
   "Write the results of an async query to API `respond` or `raise` functions in `export-format`. `in-chan` should be a
@@ -144,23 +144,23 @@
      (api/defendpoint POST [\"/:export-format\", :export-format export-format-regex]"
   (re-pattern (str "(" (str/join "|" (keys ex/export-formats)) ")")))
 
- (api/defendpoint-async POST ["/:export-format", :export-format export-format-regex]
+(api/defendpoint-async POST ["/:export-format", :export-format export-format-regex]
 ;   "Execute a query and download the result data as a file in the specified format."
-   [{{:keys [export-format query name]} :params} respond raise]
-   {query         su/JSONString
-    export-format ExportFormat
-    name su/NonBlankString}
-   (let [{:keys [database] :as query} (json/parse-string query keyword)]
-     (api/check-supported-export-format export-format)
-     (when-not (= database database/virtual-id)
-       (api/read-check Database database))
-     (as-format-async export-format name respond raise
-                      (qp.async/process-query-and-save-execution!
-                       (-> query
-                           (dissoc :constraints)
-                           (add-row-constraint export-format)
-                           (assoc-in [:middleware :skip-results-metadata?] true))
-                       {:executed-by api/*current-user-id*, :context (export-format->context export-format)}))))
+  [{{:keys [export-format query name]} :params} respond raise]
+  {query         su/JSONString
+   export-format ExportFormat
+   name su/NonBlankString}
+  (let [{:keys [database] :as query} (json/parse-string query keyword)]
+    (api/check-supported-export-format export-format)
+    (when-not (= database database/virtual-id)
+      (api/read-check Database database))
+    (as-format-async export-format name respond raise
+                     (qp.async/process-query-and-save-execution!
+                      (-> query
+                          (dissoc :constraints)
+                          (add-row-constraint export-format)
+                          (assoc-in [:middleware :skip-results-metadata?] true))
+                      {:executed-by api/*current-user-id*, :context (export-format->context export-format)}))))
 
 
 ;;; ------------------------------------------------ Other Endpoints -------------------------------------------------
@@ -213,22 +213,24 @@
         (a/close! in-chan))))
   nil)
 
+;; ----------------- stream data set --------------------------------------------
 
-;; (api/defendpoint-async POST ["/:export-format", :export-format export-format-regex]
-;;     "Execute a query and download the result data as a file in the specified format."
-;;     [{{:keys [export-format query name]} :params} respond raise]
-;;     {query         su/JSONString
-;;      export-format ExportFormat
-;;      name su/NonBlankString}
-;;     (let [{:keys [database] :as query} (json/parse-string query keyword)]
-;;       (when-not (= database database/virtual-id)
-;;         (api/read-check Database database))
-;;       (as-format-async-file name export-format respond raise
-;;         (qp.async/process-query-and-stream-file!
-;;          (-> query
-;;              (dissoc :constraints)
-;;              (m/dissoc-in [:middleware :add-default-userland-constraints?])
-;;              (assoc-in [:middleware :skip-results-metadata?] true))
-;;          {:executed-by api/*current-user-id*, :context (export-format->context export-format)}))))
+(api/defendpoint-async POST ["/:export-format", :export-format export-format-regex]
+  "Execute a query and download the result data as a file in the specified format."
+  [{{:keys [export-format query name]} :params} respond raise]
+  {query         su/JSONString
+   export-format ExportFormat
+   name su/NonBlankString}
+  (let [{:keys [database] :as query} (json/parse-string query keyword)]
+    (when-not (= database database/virtual-id)
+      (api/read-check Database database))
+    (as-format-async-file name export-format respond raise
+                          (qp.async/process-query-and-stream-file!
+                           (-> query
+                               (dissoc :constraints)
+                               (m/dissoc-in [:middleware :add-default-userland-constraints?])
+                               (assoc-in [:middleware :skip-results-metadata?] true)
+                               (assoc-in [:middleware :export-fn] (:export-fn (ex/export-formats export-format))))
+                           {:executed-by api/*current-user-id*, :context (export-format->context export-format)}))))
 
 (api/define-routes)

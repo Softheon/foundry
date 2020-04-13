@@ -1027,7 +1027,7 @@ metabase.java.jdbc
  apply the processing function."
  [^PreparedStatement stmt params set-parameters func]
  (set-parameters stmt params)
- (with-open [rset (.executeQuery stmt)]
+ (let [rset (.executeQuery stmt)]
    (func rset)))
 
 (defn- db-query-with-resultset*
@@ -1815,7 +1815,7 @@ metabase.java.jdbc
          output (PipedOutputStream.)
          set-paramters ((:set-parameters opts dft-set-parameters) stmt params)
          ;need to close rset
-         rset (.executeQuery stmt)] 
+         rset (.executeQuery stmt)]
      (.connect input output)
      (future
        (try
@@ -1906,4 +1906,3 @@ metabase.java.jdbc
                                     (^:once fn* [writer rset]
                                                 (write-to-output writer rset opts))
                                     opts))))
-    

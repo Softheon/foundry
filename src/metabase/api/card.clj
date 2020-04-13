@@ -56,8 +56,8 @@
   [cards]
   (when (seq cards)
     (let [favorite-card-ids (db/select-field :card_id CardFavorite
-                              :owner_id api/*current-user-id*
-                              :card_id  [:in (map :id cards)])]
+                                             :owner_id api/*current-user-id*
+                                             :card_id  [:in (map :id cards)])]
       (for [card cards]
         (assoc card :favorite (contains? favorite-card-ids (:id card)))))))
 
@@ -105,11 +105,11 @@
   "Return the 10 `Cards` most recently viewed by the current user, sorted by how recently they were viewed."
   []
   (cards-with-ids (map :model_id (db/select [ViewLog :model_id [:%max.timestamp :max]]
-                                   :model   "card"
-                                   :user_id api/*current-user-id*
-                                   {:group-by [:model_id]
-                                    :order-by [[:max :desc]]
-                                    :limit    10}))))
+                                            :model   "card"
+                                            :user_id api/*current-user-id*
+                                            {:group-by [:model_id]
+                                             :order-by [[:max :desc]]
+                                             :limit    10}))))
 
 (defn- cards:popular
   "All `Cards`, sorted by popularity (the total number of times they are viewed in `ViewLogs`).
@@ -117,9 +117,9 @@
   options for the time being)."
   []
   (cards-with-ids (map :model_id (db/select [ViewLog :model_id [:%count.* :count]]
-                                   :model "card"
-                                   {:group-by [:model_id]
-                                    :order-by [[:count :desc]]}))))
+                                            :model "card"
+                                            {:group-by [:model_id]
+                                             :order-by [[:count :desc]]}))))
 
 (defn- cards:archived
   "`Cards` that have been archived."
@@ -176,7 +176,7 @@
   (u/prog1 (-> (Card id)
                (hydrate :creator :dashboard_count :can_write :collection)
                api/read-check)
-    (events/publish-event! :card-read (assoc <> :actor_id api/*current-user-id*))))
+           (events/publish-event! :card-read (assoc <> :actor_id api/*current-user-id*))))
 
 
 ;;; -------------------------------------------------- Saving Cards --------------------------------------------------
@@ -220,8 +220,8 @@
      (let [card (db/transaction
                   ;; Adding a new card at `collection_position` could cause other cards in this
                   ;; collection to change position, check that and fix it if needed
-                  (api/maybe-reconcile-collection-position! card-data)
-                  (db/insert! Card card-data))]
+                 (api/maybe-reconcile-collection-position! card-data)
+                 (db/insert! Card card-data))]
        (events/publish-event! :card-create card)
        ;; include same information returned by GET /api/card/:id since frontend replaces the Card it
        ;; currently has with returned one -- See #4283
@@ -236,7 +236,7 @@
   (let [data-keys            [:dataset_query :description :display :name
                               :visualization_settings :collection_id :collection_position]
         card-data            (assoc (zipmap data-keys (map card-data data-keys))
-                               :creator_id api/*current-user-id*)
+                                    :creator_id api/*current-user-id*)
         result-metadata-chan (result-metadata-async dataset_query result_metadata metadata_checksum)
         out-chan             (a/chan 1)]
     (a/go
@@ -307,10 +307,10 @@
   Either way, results are returned asynchronously on a channel."
   [card query metadata checksum]
   (if (and query
-             (not= query (:dataset_query card)))
+           (not= query (:dataset_query card)))
     (result-metadata-async query metadata checksum)
     (u/prog1 (a/chan)
-      (a/close! <>))))
+             (a/close! <>))))
 
 (defn- publish-card-update!
   "Publish an event appropriate for the update(s) done to this CARD (`:card-update`, or archiving/unarchiving
@@ -412,16 +412,16 @@
    (fn []
      ;; Setting up a transaction here so that we don't get a partially reconciled/updated card.
      (db/transaction
-       (api/maybe-reconcile-collection-position! card-before-update card-updates)
+      (api/maybe-reconcile-collection-position! card-before-update card-updates)
 
        ;; ok, now save the Card
-       (db/update! Card id
+      (db/update! Card id
          ;; `collection_id` and `description` can be `nil` (in order to unset them). Other values should only be
          ;; modified if they're passed in as non-nil
-         (u/select-keys-when card-updates
-           :present #{:collection_id :collection_position :description}
-           :non-nil #{:dataset_query :display :name :visualization_settings :archived :enable_embedding
-                      :embedding_params :result_metadata})))
+                  (u/select-keys-when card-updates
+                                      :present #{:collection_id :collection_position :description}
+                                      :non-nil #{:dataset_query :display :name :visualization_settings :archived :enable_embedding
+                                                 :embedding_params :result_metadata})))
      ;; Fetch the updated Card from the DB
      (let [card (Card id)]
        (delete-alerts-if-needed! card-before-update card)
@@ -501,7 +501,7 @@
   [card-id]
   (api/read-check Card card-id)
   (api/let-404 [id (db/select-one-id CardFavorite :card_id card-id, :owner_id api/*current-user-id*)]
-    (db/delete! CardFavorite, :id id))
+               (db/delete! CardFavorite, :id id))
   api/generic-204-no-content)
 
 
@@ -516,7 +516,7 @@
   ;; Sorting by `:collection_position` to ensure lower position cards are appended first
   (let [sorted-cards        (sort-by :collection_position cards)
         max-position-result (db/select-one [Card [:%max.collection_position :max_position]]
-                              :collection_id new-collection-id-or-nil)
+                                           :collection_id new-collection-id-or-nil)
         ;; collection_position for the next card in the collection
         starting-position   (inc (get max-position-result :max_position 0))]
 
@@ -530,8 +530,8 @@
             ;; Now we can update the card with the new collection and a new calculated position
             ;; that appended to the end
             (db/update! Card (u/get-id card)
-              :collection_position idx
-              :collection_id       new-collection-id-or-nil))
+                        :collection_position idx
+                        :collection_id       new-collection-id-or-nil))
           ;; These are reversed because of the classic issue when removing an item from array. If we remove an
           ;; item at index 1, everthing above index 1 will get decremented. By reversing our processing order we
           ;; can avoid changing the index of cards we haven't yet updated
@@ -545,10 +545,10 @@
   ;; for each affected card...
   (when (seq card-ids)
     (let [cards (db/select [Card :id :collection_id :collection_position :dataset_query]
-                  {:where [:and [:in :id (set card-ids)]
-                                [:or [:not= :collection_id new-collection-id-or-nil]
-                                  (when new-collection-id-or-nil
-                                    [:= :collection_id nil])]]})] ; poisioned NULLs = ick
+                           {:where [:and [:in :id (set card-ids)]
+                                    [:or [:not= :collection_id new-collection-id-or-nil]
+                                     (when new-collection-id-or-nil
+                                       [:= :collection_id nil])]]})] ; poisioned NULLs = ick
       ;; ...check that we have write permissions for it...
       (doseq [card cards]
         (api/write-check card))
@@ -563,15 +563,15 @@
       (db/transaction
         ;; If any of the cards have a `:collection_position`, we'll need to fixup the old collection now that the cards
         ;; are gone and update the position in the new collection
-        (when-let [cards-with-position (seq (filter :collection_position cards))]
-          (update-collection-positions! new-collection-id-or-nil cards-with-position))
+       (when-let [cards-with-position (seq (filter :collection_position cards))]
+         (update-collection-positions! new-collection-id-or-nil cards-with-position))
 
         ;; ok, everything checks out. Set the new `collection_id` for all the Cards that haven't been updated already
-        (when-let [cards-without-position (seq (for [card cards
-                                                     :when (not (:collection_position card))]
-                                                 (u/get-id card)))]
-          (db/update-where! Card {:id [:in (set cards-without-position)]}
-            :collection_id new-collection-id-or-nil))))))
+       (when-let [cards-without-position (seq (for [card cards
+                                                    :when (not (:collection_position card))]
+                                                (u/get-id card)))]
+         (db/update-where! Card {:id [:in (set cards-without-position)]}
+                           :collection_id new-collection-id-or-nil))))))
 
 (api/defendpoint POST "/collections"
   "Bulk update endpoint for Card Collections. Move a set of `Cards` with CARD_IDS into a `Collection` with
@@ -677,20 +677,21 @@ Exception if preconditions (such as read perms) are not met before returning a c
 
     (qp.async/process-query-and-stream-file! query options)))
 
-(api/defendpoint-async POST "/:card-id/query/:export-format"
-  "Run the query associated with a Card, and return its results as a file in the specified format. Note that this
-  expects the parameters as serialized JSON in the 'parameters' parameter"
-  [{{:keys [card-id export-format parameters name]} :params} respond raise]
-  {parameters    (s/maybe su/JSONString)
-   export-format dataset-api/ExportFormat
-   name su/NonBlankString}
-  (binding [cache/*ignore-cached-results* true]
-    (dataset-api/as-format-async-file name export-format respond raise
-      (run-query-for-card-async-file (Integer/parseUnsignedInt card-id)
-        :parameters  (json/parse-string parameters keyword)
-        :constraints nil
-        :context     (dataset-api/export-format->context export-format)
-        :middleware  {:skip-results-metadata? true}))))
+;; (api/defendpoint-async POST "/:card-id/query/:export-format"
+;;   "Run the query associated with a Card, and return its results as a file in the specified format. Note that this
+;;   expects the parameters as serialized JSON in the 'parameters' parameter"
+;;   [{{:keys [card-id export-format parameters name]} :params} respond raise]
+;;   {parameters    (s/maybe su/JSONString)
+;;    export-format dataset-api/ExportFormat
+;;    name su/NonBlankString}
+;;   (binding [cache/*ignore-cached-results* true]
+;;     (dataset-api/as-format-async-file name export-format respond raise
+;;                                       (run-query-for-card-async-file (Integer/parseUnsignedInt card-id)
+;;                                                                      :parameters  (json/parse-string parameters keyword)
+;;                                                                      :constraints nil
+;;                                                                      :context     (dataset-api/export-format->context export-format)
+;;                                                                      :middleware  {:skip-results-metadata? true
+;;                                                                                    :export-fn (:export-fn (ex/export-formats export-format))}))))
 
 (api/defendpoint-async POST "/:card-id/query/:export-format"
   "Run the query associated with a Card, and return its results as a file in the specified format. Note that this
@@ -701,20 +702,28 @@ Exception if preconditions (such as read perms) are not met before returning a c
    name su/NonBlankString}
   (binding [cache/*ignore-cached-results* true]
     (api/check-supported-export-format export-format)
-    (if (= export-format "csv")
+    (dataset-api/as-format-async-file name export-format respond raise
+                                      (run-query-for-card-async-file (Integer/parseUnsignedInt card-id)
+                                                                     :parameters  (json/parse-string parameters keyword)
+                                                                     :constraints nil
+                                                                     :context     (dataset-api/export-format->context export-format)
+                                                                     :middleware  {:skip-results-metadata? true
+                                                                                   :export-fn (:export-fn (ex/export-formats export-format))}))
+    ;; (if (= export-format "csv")
 
-      (dataset-api/as-format-async-file name export-format respond raise
-                                        (run-query-for-card-async-file (Integer/parseUnsignedInt card-id)
-                                                                       :parameters  (json/parse-string parameters keyword)
-                                                                       :constraints nil
-                                                                       :context     (dataset-api/export-format->context export-format)
-                                                                       :middleware  {:skip-results-metadata? true}))
-      (dataset-api/as-format-async export-format name respond raise
-                                   (run-query-for-card-async (Integer/parseUnsignedInt card-id)
-                                                             :parameters  (json/parse-string parameters keyword)
-                                                             :constraints nil
-                                                             :context     (dataset-api/export-format->context export-format)
-                                                             :middleware  {:skip-results-metadata? true})))))
+    ;;   (dataset-api/as-format-async-file name export-format respond raise
+    ;;                                     (run-query-for-card-async-file (Integer/parseUnsignedInt card-id)
+    ;;                                                                    :parameters  (json/parse-string parameters keyword)
+    ;;                                                                    :constraints nil
+    ;;                                                                    :context     (dataset-api/export-format->context export-format)
+    ;;                                                                    :middleware  {:skip-results-metadata? true}))
+    ;;   (dataset-api/as-format-async export-format name respond raise
+    ;;                                (run-query-for-card-async (Integer/parseUnsignedInt card-id)
+    ;;                                                          :parameters  (json/parse-string parameters keyword)
+    ;;                                                          :constraints nil
+    ;;                                                          :context     (dataset-api/export-format->context export-format)
+    ;;                                                          :middleware  {:skip-results-metadata? true})))
+    ))
 
 
 ;;; ----------------------------------------------- Sharing is Caring ------------------------------------------------
@@ -729,9 +738,9 @@ Exception if preconditions (such as read perms) are not met before returning a c
   (api/check-not-archived (api/read-check Card card-id))
   {:uuid (or (db/select-one-field :public_uuid Card :id card-id)
              (u/prog1 (str (UUID/randomUUID))
-               (db/update! Card card-id
-                 :public_uuid       <>
-                 :made_public_by_id api/*current-user-id*)))})
+                      (db/update! Card card-id
+                                  :public_uuid       <>
+                                  :made_public_by_id api/*current-user-id*)))})
 
 (api/defendpoint DELETE "/:card-id/public_link"
   "Delete the publicly-accessible link to this Card."
@@ -740,8 +749,8 @@ Exception if preconditions (such as read perms) are not met before returning a c
   (api/check-public-sharing-enabled)
   (api/check-exists? Card :id card-id, :public_uuid [:not= nil])
   (db/update! Card card-id
-    :public_uuid       nil
-    :made_public_by_id nil)
+              :public_uuid       nil
+              :made_public_by_id nil)
   {:status 204, :body nil})
 
 (api/defendpoint GET "/public"
@@ -802,34 +811,34 @@ Exception if preconditions (such as read perms) are not met before returning a c
     (into {} result)))
 
 (defn- parse-field-id
-"Recursively finds 'field-id' clauses and updetes their values to the foramt
+  "Recursively finds 'field-id' clauses and updetes their values to the foramt
 [field-table, field-name]."
-[mbql]
-(if (not (vector? mbql))
-  mbql
-  (let [count (count mbql)]
-    (loop [i 0
-           size count
-           result []]
-      (if (< i size)
-        (let [current-element (get mbql i)]
-          (if (vector? current-element)
-            (recur (+ i 1) size (conj result (parse-field-id current-element)))
-            (let [first-element (get mbql 0 nil)
-                  second-element (get mbql 1 nil)
-                  third-element (get mbql 2 nil)]
-              (cond
-                (= (name first-element) "field-id") (recur size
-                                                           size (conj
-                                                                 (conj result (keyword "field-id"))
-                                                                 (field-detail second-element)))
-                (= (name first-element) "fk->") (recur size
-                                                       size (conj
-                                                             (conj result (keyword "fk->"))
-                                                             ["field-id" (field-detail (second-element 1))]
-                                                             ["field-id" (field-detail (third-element 1))]))
-                :else (recur (inc i) size (conj result current-element))))))
-        result)))))
+  [mbql]
+  (if (not (vector? mbql))
+    mbql
+    (let [count (count mbql)]
+      (loop [i 0
+             size count
+             result []]
+        (if (< i size)
+          (let [current-element (get mbql i)]
+            (if (vector? current-element)
+              (recur (+ i 1) size (conj result (parse-field-id current-element)))
+              (let [first-element (get mbql 0 nil)
+                    second-element (get mbql 1 nil)
+                    third-element (get mbql 2 nil)]
+                (cond
+                  (= (name first-element) "field-id") (recur size
+                                                             size (conj
+                                                                   (conj result (keyword "field-id"))
+                                                                   (field-detail second-element)))
+                  (= (name first-element) "fk->") (recur size
+                                                         size (conj
+                                                               (conj result (keyword "fk->"))
+                                                               ["field-id" (field-detail (second-element 1))]
+                                                               ["field-id" (field-detail (third-element 1))]))
+                  :else (recur (inc i) size (conj result current-element))))))
+          result)))))
 
 (defn- card-name
   [value]

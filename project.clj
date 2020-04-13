@@ -85,7 +85,7 @@
                  commons-logging]]
    [compojure "1.6.1" :exclusions [ring/ring-codec]]                  ; HTTP Routing library built on Ring
    [crypto-random "1.2.0"]                                            ; library for generating cryptographically secure random bytes and strings
-   [dk.ative/docjure "1.13.0"]                                        ; Excel export
+ ;;  [dk.ative/docjure "1.13.0"]                                        ; Excel export
    [environ "1.1.0"]                                                  ; easy environment management
    [hiccup "1.0.5"]                                                   ; HTML templating
    [honeysql "0.9.4" :exclusions [org.clojure/clojurescript]]         ; Transform Clojure data structures to SQL
@@ -103,6 +103,7 @@
    [metabase/throttle "1.0.1"]                                        ; Tools for throttling access to API endpoints and other code pathways
    [javax.xml.bind/jaxb-api "2.4.0-b180830.0359"]                     ; add the `javax.xml.bind` classes which we're still using but were removed in Java 11
    [net.sf.cssbox/cssbox "4.12" :exclusions [org.slf4j/slf4j-api]]    ; HTML / CSS rendering
+   [org.apache.commons/commons-lang3 "3.9"]                           ; helper methods for working with java.lang stuff
    [org.clojars.pntblnk/clj-ldap "0.0.16"]                            ; LDAP client
    [org.flatland/ordered "1.5.7"]                                     ; ordered maps & sets
    [org.liquibase/liquibase-core "3.6.3"                              ; migration management (Java lib)
@@ -120,7 +121,9 @@
    [org.eclipse.jetty/jetty-server "9.4.15.v20190215"]                ; We require JDK 8 which allows us to run Jetty 9.4, ring-jetty-adapter runs on 1.7 which forces an older version
    [ring/ring-json "0.4.0"]                                           ; Ring middleware for reading/writing JSON automatically
    [stencil "0.5.0"]                                                  ; Mustache templates for Clojure
-   [toucan "1.11.0" :exclusions [org.clojure/java.jdbc honeysql]]]    ; Model layer, hydration, and DB utilities
+   [toucan "1.11.0" :exclusions [org.clojure/java.jdbc honeysql]] ; Model layer, hydration, and DB utilities
+   [org.apache.poi/poi "4.1.2"]
+   [org.apache.poi/poi-ooxml "4.1.2"]]
 
   :main ^:skip-aot metabase.core
 
