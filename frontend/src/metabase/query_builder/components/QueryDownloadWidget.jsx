@@ -50,7 +50,8 @@ class QueryDownloadWidget extends React.Component {
       exportFormats.push("xlsx");
     }
     const rowLimit = settingValues["absolute-max-results"];
-    const unsavedRowLimit = settingValues["unsaved-question-max-results"] || 2000;
+    const unsavedRowLimit =
+      settingValues["unsaved-question-max-results"] || 2000;
     const isSaved = card["id"] ? true : false;
     // remove xlsx download option
     if (!isSaved && settingValues["enable-xlsx-export"]) {
@@ -81,16 +82,17 @@ class QueryDownloadWidget extends React.Component {
           {result.data != null && result.data.rows_truncated != null && (
             <Box>
               <p>{t`Your answer has a large number of rows so it could take a while to download.`}</p>
-              {!isSaved ? (
+              {/* {!isSaved ? (
                 <p className="text-error">{t`The question is not saved, so the maximum download size will be limited to first
                 ${unsavedRowLimit} rows.`}</p>
               ) : (
                 downloadSizeMessage
-              )}
+              )} */}
+              <p>{t`The maximum download size is 1 million rows.`}</p>
             </Box>
           )}
           <Box>
-            {exportFormats.map(type => (
+            {exportFormats.map((type) => (
               <Box w={"100%"}>
                 {dashcardId && token ? (
                   <DashboardEmbedQueryButton
@@ -167,7 +169,7 @@ const QueryDownloadWidget_old = ({
         </Box>
       )}
       <Box>
-        {EXPORT_FORMATS.map(type => (
+        {EXPORT_FORMATS.map((type) => (
           <Box w={"100%"}>
             {dashcardId && token ? (
               <DashboardEmbedQueryButton
