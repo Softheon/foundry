@@ -123,7 +123,8 @@
    [stencil "0.5.0"]                                                  ; Mustache templates for Clojure
    [toucan "1.11.0" :exclusions [org.clojure/java.jdbc honeysql]] ; Model layer, hydration, and DB utilities
    [org.apache.poi/poi "4.1.2"]
-   [org.apache.poi/poi-ooxml "4.1.2"]]
+   [org.apache.poi/poi-ooxml "4.1.2"]
+   [net.logstash.log4j/jsonevent-layout "1.7"]]
 
   :main ^:skip-aot metabase.core
 

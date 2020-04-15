@@ -326,6 +326,7 @@ before finishing)."
           ;; This is what does the real work of cancelling the query. We aren't checking the result of
           ;; `query-future` but this will cause an exception to be thrown, saying the query has been cancelled.
           (.cancel stmt)
+          (.close conn)
           (throw e))))))
 
 (defn- cancelable-run-query
