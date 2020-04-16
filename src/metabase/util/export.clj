@@ -1,5 +1,6 @@
 (ns metabase.util.export
-  (:require [cheshire.core :as json]
+  (:require [clojure.core.async :as a]
+            [cheshire.core :as json]
             [metabase.csv.csv :as csv]
            ;; [dk.ative.docjure.spreadsheet :as spreadsheet]
             [clojure.java.io :as io]
@@ -109,7 +110,7 @@
 
 (defn export-to-csv-stream
   [connection]
-  (fn [data]
+  (fn [stmt rset data]
     (let [input (PipedInputStream.)
           output (PipedOutputStream.)
           task (bound-fn []
@@ -122,6 +123,8 @@
                    (finally
                      (.flush output)
                      (.close output)
+                     (.close rset)
+                     (.close stmt)
                      (.close connection))))]
       (.connect input output)
       (.submit (thread-pool) ^Runnable task)
@@ -129,17 +132,18 @@
 
 (defn export-to-xlsx-stream
   [connection]
-  (fn [data]
-    (log/info "connection is")
-    (log/info connection)
+  (fn [stmt rset data]
     (let [input (PipedInputStream.)
           output (PipedOutputStream.)
+          transfering-chan (a/promise-chan)
           task (bound-fn []
                  (try
                    (let [workbook (excel/create-workbook "Query Result" data)]
                      (try
+                       (a/>!! transfering-chan :start)
                        (excel/save-workbook! output workbook)
                        (finally
+                         (a/close! transfering-chan)
                          (excel/dispose-workbook workbook))))
                    (catch Throwable e
                      (log/error e)
@@ -147,9 +151,12 @@
                    (finally
                      (.flush output)
                      (.close output)
+                     (.close rset)
+                     (.close stmt)
                      (.close connection))))]
       (.connect input output)
       (.submit (thread-pool) ^Runnable task)
+      (a/<!! transfering-chan)
       input)))
 
 (def export-formats

@@ -180,11 +180,13 @@ before finishing)."
       (try
         (jdbc/query conn (into [stmt] params) opts)
         (catch InterruptedException e
-          (log/warn (tru "Client closed connection, canceling query"))
+          (try
+            (log/warn (tru "Client closed connection, canceling query"))
           ;; This is what does the real work of canceling the query. We aren't checking the result of
           ;; `query-future` but this will cause an exception to be thrown, saying the query has been cancelled.
-          (.cancel stmt)
-          (throw e))))))
+            (.cancel stmt)
+            (finally
+              (throw e))))))))
 
 (defn- run-query
   "Run the query itself."
@@ -308,6 +310,31 @@ before finishing)."
   [[conn-binding db] & body]
   `(do-without-auto-close-ensured-connection ~db (fn [~conn-binding] ~@body)))
 
+;; (defn- cancelable-run-query
+;;   "Runs `sql` in such a way that it can be interrupted via a `future-cancel`"
+;;   [db sql params opts]
+;;   (with-ensured-connection [conn db]
+;;     ;; This is normally done for us by java.jdbc as a result of our `jdbc/query` call
+;;     (with-open [^PreparedStatement stmt (jdbc/prepare-statement conn sql opts)]
+;;       ;; specifiy that we'd like this statement to close once its dependent result sets are closed
+;;       ;; (Not all drivers support this so ignore Exceptions if they don't)
+;;       (u/ignore-exceptions
+;;        (.closeOnCompletion stmt))
+;;       ;; Need to run the query in another thread so that this thread can cancel it if need be
+;;       (try
+;;         (let [query-future (future (jdbc/query conn (into [stmt] params) opts))]
+;;           ;; This thread is interruptable because it's awaiting the other thread (the one actually running the
+;;           ;; query). Interrupting this thread means that the client has disconnected (or we're shutting down) and so
+;;           ;; we can give up on the query running in the future
+;;           @query-future)
+;;         (catch InterruptedException e
+;;           (log/warn (tru "Client closed connection, canceling query"))
+;;           ;; This is what does the real work of canceling the query. We aren't checking the result of
+;;           ;; `query-future` but this will cause an exception to be thrown, saying the query has been cancelled.
+;;           (.cancel stmt)
+;;           (throw e))))))
+
+
 (defn- cancellable-run-query-for-download
   "Runs `sql` in such a way that it can be interrupted via a `future-cancel`"
   [db sql params opts]
@@ -315,43 +342,25 @@ before finishing)."
     ;; This is normally done for us by java.jdbc as a result of our `jdbc/query` call
     (let [^PreparedStatement stmt (jdbc/prepare-statement conn sql opts)]
       ;; Need to run the query in another thread so that this thread can cancel it if need be
-      (try
-        (let [query-future (future (f-jdbc/query conn (into [stmt] params) opts))]
-          ;; This thread is interruptable because it's awaiting the other thread (the one actually running the
-          ;; query). Interrupting this thread means that the client has disconnected (or we're shutting down) and so
-          ;; we can give up on the query running in the future
-          @query-future)
-        (catch InterruptedException e
-          (log/warn e "Client closed connection, cancelling query")
-          ;; This is what does the real work of cancelling the query. We aren't checking the result of
-          ;; `query-future` but this will cause an exception to be thrown, saying the query has been cancelled.
-          (.cancel stmt)
-          (.close conn)
-          (throw e))))))
-
-(defn- cancelable-run-query
-  "Runs `sql` in such a way that it can be interrupted via a `future-cancel`"
-  [db sql params opts]
-  (with-ensured-connection [conn db]
-    ;; This is normally done for us by java.jdbc as a result of our `jdbc/query` call
-    (with-open [^PreparedStatement stmt (jdbc/prepare-statement conn sql opts)]
-      ;; specifiy that we'd like this statement to close once its dependent result sets are closed
-      ;; (Not all drivers support this so ignore Exceptions if they don't)
       (u/ignore-exceptions
        (.closeOnCompletion stmt))
-      ;; Need to run the query in another thread so that this thread can cancel it if need be
       (try
-        (let [query-future (future (jdbc/query conn (into [stmt] params) opts))]
-          ;; This thread is interruptable because it's awaiting the other thread (the one actually running the
-          ;; query). Interrupting this thread means that the client has disconnected (or we're shutting down) and so
-          ;; we can give up on the query running in the future
-          @query-future)
+        ;; (let [query-future (future (f-jdbc/steaming-download-query conn (into [stmt] params) opts))]
+        ;;   ;; This thread is interruptable because it's awaiting the other thread (the one actually running the
+        ;;   ;; query). Interrupting this thread means that the client has disconnected (or we're shutting down) and so
+        ;;   ;; we can give up on the query running in the future
+        ;;   @query-future)
+        (f-jdbc/steaming-download-query conn (into [stmt] params) opts)
         (catch InterruptedException e
-          (log/warn (tru "Client closed connection, canceling query"))
-          ;; This is what does the real work of canceling the query. We aren't checking the result of
+          (try
+            (log/warn e "Client closed connection, cancelling query")
+          ;; This is what does the real work of cancelling the query. We aren't checking the result of
           ;; `query-future` but this will cause an exception to be thrown, saying the query has been cancelled.
-          (.cancel stmt)
-          (throw e))))))
+            (.cancel stmt)
+            (finally
+              (.close stmt)
+              (.close conn)
+              (throw e))))))))
 
 (defn- query-stream
   "Run the query itself."

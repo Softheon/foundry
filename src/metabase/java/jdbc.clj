@@ -1027,7 +1027,7 @@ metabase.java.jdbc
  apply the processing function."
  [^PreparedStatement stmt params set-parameters func]
  (set-parameters stmt params)
- (let [rset (.executeQuery stmt)]
+ (with-open [rset (.executeQuery stmt)]
    (func rset)))
 
 (defn- db-query-with-resultset*
@@ -1906,3 +1906,67 @@ metabase.java.jdbc
                                     (^:once fn* [writer rset]
                                                 (write-to-output writer rset opts))
                                     opts))))
+
+
+
+
+(defn- execute-streaming-query-with-params
+ "Given a prepared statement, a set of parameters, a parameter setting
+ function, and a function to process the result set, execute the query and
+ apply the processing function."
+ [^PreparedStatement stmt params set-parameters func]
+ (set-parameters stmt params)
+ (let [rset (.executeQuery stmt)]
+   (func stmt rset)))
+
+(defn- db-streaming-query-with-resultset*
+  [db sql params func opts]
+  #_(println "\nquery" sql params)
+  (if (instance? PreparedStatement sql)
+    (let [^PreparedStatement stmt sql]
+      (execute-streaming-query-with-params
+       stmt
+       params
+       (:set-parameters opts dft-set-parameters)
+       func))
+    (throw (IllegalArgumentException. "Invalid prepare statment"))))
+
+(defn- process-stream-result-set
+ [stmt rset opts]
+ (let [{:keys [as-arrays? result-set-fn row-fn]}
+       (merge {:row-fn identity} opts)
+       result-set-fn (or result-set-fn (if as-arrays? vec doall))]
+   (if as-arrays?
+     ((^:once fn* [rs]
+        (result-set-fn stmt rset (cons (first rs)
+                             (map row-fn (rest rs)))))
+      (result-set-seq rset opts))
+     (result-set-fn stmt rset (map row-fn (result-set-seq rset opts))))))
+
+(defn steaming-download-query
+  ([db sql-params] (query db sql-params {}))
+  ([db sql-params opts]
+   (let [{:keys [explain? explain-fn] :as opts}
+         (merge {:explain-fn println} (when (map? db) db) opts)
+         [sql & params] (if (sql-stmt? sql-params) (vector sql-params) (vec sql-params))]
+     (when-not (sql-stmt? sql)
+       (let [^Class sql-class (class sql)
+             ^String msg (format "\"%s\" expected %s %s, found %s %s"
+                                 "sql-params"
+                                 "vector"
+                                 "[sql param*]"
+                                 (.getName sql-class)
+                                 (pr-str sql))]
+         (throw (IllegalArgumentException. msg))))
+     (when (and explain? (string? sql))
+       (query db (into [(str (if (string? explain?) explain? "EXPLAIN")
+                             " "
+                             sql)]
+                       params)
+              (-> opts
+                  (dissoc :explain? :result-set-fn :row-fn)
+                  (assoc :result-set-fn explain-fn))))
+     (db-streaming-query-with-resultset* db sql params
+                               (^:once fn* [stmt rset]
+                                           (process-stream-result-set stmt rset opts))
+                               opts))))
