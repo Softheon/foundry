@@ -125,7 +125,8 @@
                      (.close output)
                      (.close rset)
                      (.close stmt)
-                     (.close connection))))]
+                     (.close (:connection connection))
+                     (log/info "all resources are closed"))))]
       (.connect input output)
       (.submit (thread-pool) ^Runnable task)
       input)))
@@ -153,7 +154,8 @@
                      (.close output)
                      (.close rset)
                      (.close stmt)
-                     (.close connection))))]
+                     (.close (:connection connection))
+                     (log/info "all resources are closed"))))]
       (.connect input output)
       (.submit (thread-pool) ^Runnable task)
       (a/<!! transfering-chan)
