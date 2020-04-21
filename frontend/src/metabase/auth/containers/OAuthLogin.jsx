@@ -59,7 +59,8 @@ export default class OAuthLogin extends Component {
     }
   }
 
-  onSSOButtonClick = e => {
+  onSSOButtonClick = (e) => {
+    e.preventDefault();
     let url = Settings.get("iam_authorization_endpoint");
     const data = {
       client_id: Settings.get("iam_auth_client_id"),
@@ -80,8 +81,6 @@ export default class OAuthLogin extends Component {
       return;
     }
     const { location, loginIAM } = this.props;
-    let ssoLoginButton = findDOMNode(this.refs.ssoLoginButton);
-    ssoLoginButton.addEventListener("click", this.onSSOButtonClick);
     const currentUrl = window.location.href;
     const matches = currentUrl.match(
       /\#(?:id_token)\=([\S\s]*?)\&(?:access_token)\=([\S\s]*?)\&/,
@@ -143,13 +142,16 @@ export default class OAuthLogin extends Component {
               <form
                 className="Form-new bg-white bordered rounded shadowed"
                 name="form"
-                onSubmit={e => this.formSubmitted(e)}
+                onSubmit={(e) => this.formSubmitted(e)}
               >
                 <h3 className="Login-header Form-offset">{t`Sign in to Foundry`}</h3>
 
                 {Settings.iamEnabled() && (
                   <div className="mx4 mb4 py3 border-bottom relative flex layout-centered">
-                    <SSOLoginButton provider="Softheon" ref="ssoLoginButton" />
+                    <SSOLoginButton
+                      provider="Softheon"
+                      onClick={this.onSSOButtonClick}
+                    />
                     {/*<div className="g-signin2 ml1 relative z2" id="g-signin2"></div>*/}
                     <div
                       className="mx1 absolute text-centered left right"
@@ -181,7 +183,7 @@ export default class OAuthLogin extends Component {
                     name="username"
                     placeholder="foundry@email.com"
                     type={"text"}
-                    onChange={e => this.onChange("username", e.target.value)}
+                    onChange={(e) => this.onChange("username", e.target.value)}
                     autoFocus
                   />
                   <span className="Form-charm" />
@@ -202,7 +204,7 @@ export default class OAuthLogin extends Component {
                     name="password"
                     placeholder="Shh..."
                     type="password"
-                    onChange={e => this.onChange("password", e.target.value)}
+                    onChange={(e) => this.onChange("password", e.target.value)}
                   />
                   <span className="Form-charm" />
                 </FormField>
@@ -236,7 +238,7 @@ export default class OAuthLogin extends Component {
                         : "")
                     }
                     className="Grid-cell py1 sm-py0 md-text-center text-centered flex-full link"
-                    onClick={e => {
+                    onClick={(e) => {
                       window.OSX ? window.OSX.resetPassword() : null;
                     }}
                   >{t`Forgot password`}</Link>
@@ -276,8 +278,10 @@ export default class OAuthLogin extends Component {
     }
     return (
       <div className="full bg-white flex flex-column flex-full md-layout-centered">
-        <div className="Login-wrapper wrapper Grid Grid--full  md-layout-centered relative z2
-        flex-flow max-w-70">
+        <div
+          className="Login-wrapper wrapper Grid Grid--full  md-layout-centered relative z2
+        flex-flow max-w-70"
+        >
           <div className="Grid-cell flex layout-centered text-brand">
             <LogoIcon className="Logo my4 sm-my0" width={66} height={85} />
           </div>
@@ -287,7 +291,10 @@ export default class OAuthLogin extends Component {
                 <h3 className="Login-header">{t`Welcome to Foundry`}</h3>
                 {Settings.iamEnabled() && (
                   <div className="mx4 mb4 py3  relative flex layout-centered">
-                    <SSOLoginButton provider="Softheon" ref="ssoLoginButton" />
+                    <SSOLoginButton
+                      provider="Softheon"
+                      onClick={this.onSSOButtonClick}
+                    />
                     {/*<div className="g-signin2 ml1 relative z2" id="g-signin2"></div>*/}
                     <div
                       className="mx1 absolute left right"

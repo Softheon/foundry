@@ -19,11 +19,11 @@ import { SessionApi } from "metabase/services";
 
 // login
 export const LOGIN = "metabase/auth/LOGIN";
-export const login = createThunkAction(LOGIN, function(
+export const login = createThunkAction(LOGIN, function (
   credentials,
   redirectUrl,
 ) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     // if (
     //   !MetabaseSettings.ldapEnabled()
     //   !MetabaseUtils.validEmail(credentials.username)
@@ -53,11 +53,11 @@ export const login = createThunkAction(LOGIN, function(
 
 // login Google
 export const LOGIN_GOOGLE = "metabase/auth/LOGIN_GOOGLE";
-export const loginGoogle = createThunkAction(LOGIN_GOOGLE, function(
+export const loginGoogle = createThunkAction(LOGIN_GOOGLE, function (
   googleUser,
   redirectUrl,
 ) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     try {
       let newSession = await SessionApi.createWithGoogleAuth({
         token: googleUser.getAuthResponse().id_token,
@@ -84,17 +84,18 @@ export const loginGoogle = createThunkAction(LOGIN_GOOGLE, function(
 });
 
 export const LOGIN_IAM = "metabase/auth/LOGIN_IAM";
-export const loginIAM = createThunkAction(LOGIN_IAM, function(
+export const loginIAM = createThunkAction(LOGIN_IAM, function (
   iam,
   redirectUrl,
 ) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     try {
       await SessionApi.createWithIamAuth({
         id_token: iam.id_token,
         access_token: iam.access_token,
       });
-      window.location.reload(true);
+      await dispatch(refreshCurrentUser());
+      dispatch(push(redirectUrl || "/"));
     } catch (error) {
       if (error.status === 428) {
         dispatch(push("/auth/iam_email_is_not_verified"));
@@ -107,8 +108,8 @@ export const loginIAM = createThunkAction(LOGIN_IAM, function(
 
 // logout
 export const LOGOUT = "metabase/auth/LOGOUT";
-export const logout = createThunkAction(LOGOUT, function() {
-  return async function(dispatch, getState) {
+export const logout = createThunkAction(LOGOUT, function () {
+  return async function (dispatch, getState) {
     // TODO: as part of a logout we want to clear out any saved state that we have about anything
     // console.log("logging out")
     // alert("logging out");
@@ -133,11 +134,11 @@ export const logout = createThunkAction(LOGOUT, function() {
 
 // passwordReset
 export const PASSWORD_RESET = "metabase/auth/PASSWORD_RESET";
-export const passwordReset = createThunkAction(PASSWORD_RESET, function(
+export const passwordReset = createThunkAction(PASSWORD_RESET, function (
   token,
   credentials,
 ) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     if (credentials.password !== credentials.password2) {
       return {
         success: false,
@@ -174,7 +175,7 @@ export const passwordReset = createThunkAction(PASSWORD_RESET, function(
 export const IDLE_TIMEOUT = "foundry/auth/IDLE_TIMEOUT";
 export const idleSessionTimeout = createThunkAction(
   IDLE_TIMEOUT,
-  message => async (dispatch, getState) => {
+  (message) => async (dispatch, getState) => {
     await SessionApi.delete();
     return {
       data: {
