@@ -20,12 +20,12 @@ import { channelIsValid, createChannel } from "metabase/lib/pulse";
 
 export const CHANNEL_ICONS = {
   email: "mail",
-  slack: "slack",
+  // slack: "slack",
 };
 
 const CHANNEL_NOUN_PLURAL = {
   email: t`Emails`,
-  slack: t`Slack messages`,
+  // slack: t`Slack messages`,
 };
 
 export default class PulseEditChannels extends Component {
@@ -138,8 +138,8 @@ export default class PulseEditChannels extends Component {
   willPulseSkip = () => {
     let cards = _.pluck(this.props.pulse.cards, "id");
     let cardPreviews = this.props.cardPreviews;
-    let previews = _.map(cards, function(id) {
-      return _.find(cardPreviews, function(card) {
+    let previews = _.map(cards, function (id) {
+      return _.find(cardPreviews, function (card) {
         return id == card.id;
       });
     });
@@ -233,7 +233,7 @@ export default class PulseEditChannels extends Component {
                 !isValid ||
                 /* require at least one email recipient to allow email testing */
                 (channelSpec.type === "email" &&
-                channel.recipients.length === 0)  
+                  channel.recipients.length === 0)
               }
               normalText={
                 channelSpec.type === "email"
@@ -286,7 +286,7 @@ export default class PulseEditChannels extends Component {
           <div className="p4 text-centered">
             <h3 className="mb2">{t`${
               channelSpec.name
-            } needs to be set up by an administrator.`}</h3>
+              } needs to be set up by an administrator.`}</h3>
             <ChannelSetupMessage user={user} channels={[channelSpec.name]} />
           </div>
         ) : null}
@@ -299,7 +299,7 @@ export default class PulseEditChannels extends Component {
     // Default to show the default channels until full formInput is loaded
     let channels = formInput.channels || {
       email: { name: t`Email`, type: "email" },
-      slack: { name: t`Slack`, type: "slack" },
+      // slack: { name: t`Slack`, type: "slack" },
     };
     return (
       <ul className="bordered rounded bg-white">

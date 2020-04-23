@@ -24,11 +24,11 @@ export const FILTERS = [
     filter: "card",
     icon: "beaker",
   },
-  // {
-  //   name: t`Pulses`,
-  //   filter: "pulse",
-  //   icon: "pulse",
-  // },
+  {
+    name: t`Pulses`,
+    filter: "pulse",
+    icon: "pulse",
+  },
 ];
 
 const ItemTypeFilterBar = props => {
@@ -60,7 +60,7 @@ const ItemTypeFilterBar = props => {
             style={{
               borderBottom: `2px solid ${
                 isActive ? colors.brand : "transparent"
-              }`,
+                }`,
             }}
           >
             <Icon name={f.icon} className="sm-hide" size={20} />

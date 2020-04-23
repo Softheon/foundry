@@ -84,9 +84,9 @@ export default class RecipientPicker extends Component {
           ~option.value.email.toLowerCase().indexOf(filterString.toLowerCase())
         }
         parseFreeformValue={inputValue => {
-          if (VALID_EMAIL_REGEX.test(inputValue)) {
-            return { email: inputValue };
-          }
+          // if (VALID_EMAIL_REGEX.test(inputValue)) {
+          //   return { email: inputValue };
+          // }
         }}
         updateOnInputBlur
       />

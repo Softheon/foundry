@@ -187,7 +187,7 @@ export const getRoutes = store => (
         <Route path="forgot_password" component={ForgotPasswordApp} />
         <Route path="reset_password/:token" component={PasswordResetApp} />
         {/* <Route path="google_no_mb_account" component={GoogleNoAccount} /> */}
-        <Route path="iam_email_is_not_verified" component={IamEmailNotVerified}/>
+        <Route path="iam_email_is_not_verified" component={IamEmailNotVerified} />
       </Route>
 
       {/* MAIN */}
@@ -321,7 +321,8 @@ export const getRoutes = store => (
       </Route>
 
       {/* PULSE */}
-      <Route path="/pulse" title={t`Pulses`}>
+      <Route path="/pulse" title={t`Pulses`}
+        component={IsAdmin}>
         {/* NOTE: legacy route, not linked to in app */}
         <IndexRedirect to="/search" query={{ type: "pulse" }} />
         <Route path="create" component={PulseEditApp} />

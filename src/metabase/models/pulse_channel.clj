@@ -84,17 +84,18 @@
   {:email {:type              "email"
            :name              "Email"
            :allows_recipients true
-           :recipients        ["user", "email"]
+           :recipients        ["user"]
            :schedules         [:daily :weekly :monthly]}
-   :slack {:type              "slack"
-           :name              "Slack"
-           :allows_recipients false
-           :schedules         [:hourly :daily :weekly :monthly]
-           :fields            [{:name "channel"
-                                :type "select"
-                                :displayName "Post to"
-                                :options ["#general"]
-                                :required true}]}})
+  ;;  :slack {:type              "slack"
+  ;;          :name              "Slack"
+  ;;          :allows_recipients false
+  ;;          :schedules         [:hourly :daily :weekly :monthly]
+  ;;          :fields            [{:name "channel"
+  ;;                               :type "select"
+  ;;                               :displayName "Post to"
+  ;;                               :options ["#general"]
+  ;;                               :required true}]}
+   })
 
 (defn channel-type?
   "Is CHANNEL-TYPE a valid value as a channel type? :tv:"

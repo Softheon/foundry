@@ -76,7 +76,7 @@
   (context "/permissions"          [] (+auth permissions/routes))
   (context "/preview_embed"        [] (+auth preview-embed/routes))
   (context "/public"               [] (+generic-exceptions public/routes))
-  ;(context "/pulse"                [] (+auth pulse/routes))
+  (context "/pulse"                [] (+auth pulse/routes))
   (context "/revision"             [] (+auth revision/routes))
   (context "/search"               [] (+auth search/routes))
   (context "/segment"              [] (+auth segment/routes))

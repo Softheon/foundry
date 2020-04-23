@@ -1,5 +1,5 @@
 import React from "react";
-
+import { connect } from "react-redux";
 import { t, jt } from "c-3po";
 import _ from "underscore";
 import Link from "metabase/components/Link";
@@ -16,11 +16,19 @@ import ItemTypeFilterBar, {
   FILTERS,
 } from "metabase/components/ItemTypeFilterBar";
 
+import { getUserIsAdmin } from "metabase/selectors/user";
+
 const PAGE_PADDING = [1, 2, 4];
 
-export default class SearchApp extends React.Component {
+const mapStateToProps = (state, props) => {
+  return {
+    isAdmin: getUserIsAdmin(state)
+  }
+}
+
+class SearchApp extends React.Component {
   render() {
-    const { location } = this.props;
+    const { location, isAdmin } = this.props;
     return (
       <Box mx={PAGE_PADDING}>
         {location.query.q && (
@@ -136,7 +144,7 @@ export default class SearchApp extends React.Component {
                       </Card>
                     </Box>
                   )}
-                  {/* {types.pulse && (
+                  {isAdmin && types.pulse && (
                     <Box mt={2} mb={3}>
                       <div className="text-uppercase text-medium text-small text-bold my1">
                         {t`Pulse`}
@@ -158,7 +166,7 @@ export default class SearchApp extends React.Component {
                         ))}
                       </Card>
                     </Box>
-                  )} */}
+                  )}
                 </Box>
               );
             }}
@@ -168,3 +176,5 @@ export default class SearchApp extends React.Component {
     );
   }
 }
+
+export default connect(mapStateToProps, null)(SearchApp);

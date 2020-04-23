@@ -30,11 +30,13 @@ import ProfileLink from "metabase/nav/components/ProfileLink.jsx";
 import { getPath, getContext, getUser } from "../selectors";
 import { entityListLoader } from "metabase/entities/containers/EntityListLoader";
 import AutoSuggestSearchBar from "metabase/nav/components/AutoSuggestSearchBar";
+import { getUserIsAdmin } from "metabase/selectors/user";
 
 const mapStateToProps = (state, props) => ({
   path: getPath(state, props),
   context: getContext(state, props),
   user: getUser(state),
+  isAdmin: getUserIsAdmin(state)
 });
 
 const mapDispatchToProps = {
@@ -63,9 +65,9 @@ const ActiveSearchColor = color(colors["bg-light-dark"])
   .string();
 
 const SearchWrapper = Flex.extend`
-  ${width} 
+  ${width}
   background-color: ${props =>
-      props.active ? ActiveSearchColor : DefaultSearchColor};
+    props.active ? ActiveSearchColor : DefaultSearchColor};
   border-radius: 6px;
   align-items: center;
   color: white;
@@ -76,8 +78,8 @@ const SearchWrapper = Flex.extend`
 `;
 
 const SearchInput = styled.input`
-  ${space} 
-  ${width} 
+  ${space}
+  ${width}
   background-color: transparent;
   border: none;
   color: white;
@@ -263,6 +265,23 @@ export default class Navbar extends Component {
   renderMainNav() {
     const hasDataAccess =
       this.props.databases && this.props.databases.length > 0;
+    const menuItems = [
+      {
+        title: t`New dashboard`,
+        icon: `dashboard`,
+        action: () => this.setModal(MODAL_NEW_DASHBOARD),
+        event: `NavBar;New Dashboard Click;`,
+      }]
+    if (this.props.isAdmin) {
+      menuItems.push(
+        {
+          title: t`New pulse`,
+          icon: `pulse`,
+          link: Urls.newPulse(),
+          event: `NavBar;New Pulse Click;`,
+        }
+      )
+    }
     return (
       <Flex
         // NOTE: DO NOT REMOVE `Nav` CLASS FOR NOW, USED BY MODALS, FULLSCREEN DASHBOARD, ETC
@@ -280,13 +299,13 @@ export default class Navbar extends Component {
           mx={1}
           hover={{ backgroundColor: DefaultSearchColor }}
         >
-            <img src="app/assets/img/Logo-navbar-01.png" width="150" height="40"/>
+          <img src="app/assets/img/Logo-navbar-01.png" width="150" height="40" />
         </Link>
         <Flex
           className="absolute top left right bottom z1"
           px={4}
           align="center"
-          style={{left:150}}
+          style={{ left: 150 }}
         >
           <Box w={2 / 3}>
             {/* <SearchBar
@@ -314,23 +333,9 @@ export default class Navbar extends Component {
             tooltip={t`Create`}
             className="hide sm-show"
             triggerIcon="add"
-            items={[
-              {
-                title: t`New dashboard`,
-                icon: `dashboard`,
-                action: () => this.setModal(MODAL_NEW_DASHBOARD),
-                event: `NavBar;New Dashboard Click;`,
-              }
-              ,
-
-            ]}
+            items={menuItems}
           />
-          {/* {
-                title: t`New pulse`,
-                icon: `pulse`,
-                link: Urls.newPulse(),
-                event: `NavBar;New Pulse Click;`,
-              }, */}
+
           {hasDataAccess && (
             <Tooltip tooltip={t`Reference`}>
               <Link to="reference" data-metabase-event={`NavBar;Reference`}>
