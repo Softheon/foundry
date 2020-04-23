@@ -92,20 +92,20 @@
 (def ^:private send-pulses-job-key     "metabase.task.send-pulses.job")
 (def ^:private send-pulses-trigger-key "metabase.task.send-pulses.trigger")
 
-; (defmethod task/init! ::SendPulses [_]
-;   (let [job     (jobs/build
-;                  (jobs/of-type SendPulses)
-;                  (jobs/with-identity (jobs/key send-pulses-job-key)))
-;         trigger (triggers/build
-;                  (triggers/with-identity (triggers/key send-pulses-trigger-key))
-;                  (triggers/start-now)
-;                  (triggers/with-schedule
-;                    (cron/schedule
-;                     ;; run at the top of every hour
-;                     (cron/cron-schedule "0 0 * * * ? *")
-;                     ;; If a trigger misfires (i.e., Quartz cannot run our job for one reason or another, such as all
-;                     ;; worker threads being busy), attempt to fire the triggers again ASAP. This article does a good
-;                     ;; job explaining what this means:
-;                     ;; https://www.nurkiewicz.com/2012/04/quartz-scheduler-misfire-instructions.html
-;                     (cron/with-misfire-handling-instruction-ignore-misfires))))]
-;     (task/schedule-task! job trigger)))
+(defmethod task/init! ::SendPulses [_]
+  (let [job     (jobs/build
+                 (jobs/of-type SendPulses)
+                 (jobs/with-identity (jobs/key send-pulses-job-key)))
+        trigger (triggers/build
+                 (triggers/with-identity (triggers/key send-pulses-trigger-key))
+                 (triggers/start-now)
+                 (triggers/with-schedule
+                   (cron/schedule
+                     ;; run at the top of every hour
+                    (cron/cron-schedule "0 0 * * * ? *")
+                     ;; If a trigger misfires (i.e., Quartz cannot run our job for one reason or another, such as all
+                     ;; worker threads being busy), attempt to fire the triggers again ASAP. This article does a good
+                     ;; job explaining what this means:
+                     ;; https://www.nurkiewicz.com/2012/04/quartz-scheduler-misfire-instructions.html
+                    (cron/with-misfire-handling-instruction-ignore-misfires))))]
+    (task/schedule-task! job trigger)))
