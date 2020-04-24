@@ -6,6 +6,7 @@
             [hiccup.core :refer [html]]
             [medley.core :as m]
             [metabase
+
              [config :as config]
              [email :as email]
              [public-settings :as public-settings]
@@ -34,8 +35,9 @@
 
 (defn- random-quote-context []
   (let [data-quote (quotation/random-quote)]
-    {:quotation       (:quote data-quote)
-     :quotationAuthor (:author data-quote)}))
+    {:quotation     "" ;; (:quote data-quote)
+     :quotationAuthor "";;(:author data-quote)
+     }))
 
 (def ^:private notification-context
   {:emailType  "notification"
@@ -120,7 +122,7 @@
                                           {:emailType        "password_reset"
                                            :hostname         hostname
                                            :sso              google-auth?
-                                           :iam              iam-auth?                                          
+                                           :iam              iam-auth?
                                            :passwordResetUrl password-reset-url
                                            :logoHeader       true})]
     (email/send-message!
@@ -218,6 +220,7 @@
         (throw (IOException. ex-msg e))))))
 
 (defn- create-result-attachment-map [export-type card-name ^File attachment-file]
+  (log/info "*******************file path" (.getAbsolutePath attachment-file))
   (let [{:keys [content-type ext]} (get export/export-formats export-type)]
     {:type         :attachment
      :content-type content-type
@@ -260,6 +263,38 @@
   "Take a pulse object and list of results, returns an array of attachment objects for an email"
   [timezone pulse results]
   (render-message-body "metabase/email/pulse" (pulse-context pulse) timezone (assoc-attachment-booleans pulse results)))
+
+
+(defn- report-context
+  [pulse]
+  (merge {:emailType    "pulse"
+          :pulseName    (:name pulse)
+          :sectionStyle (render/style (render/section-style))
+          :colorGrey4   render/color-gray-4
+          :logoFooter   true}
+         (random-quote-context)))
+
+(defn- make-report-attachment
+  [export-fn pulse]
+  (remove nil?
+          (apply concat
+                 (let [{:keys [cards]} pulse]
+                   (for [card cards
+                         :let [result (export-fn card)]]
+
+                     [(create-result-attachment-map (if (:include_xls card) "xlsx" "csv") (:name card) result)])))
+                     ))
+
+
+(defn- render-report-body
+  [message-template message-context pulse export-fn]
+  (let [message-body (assoc message-context :report "")]
+    (vec (concat [{:type "text/html;charset=utf-8" :content (stencil/render-file message-template message-body)}]
+                 (make-report-attachment export-fn pulse)))))
+
+(defn render-report-email
+  [pulse export-fn]
+  (render-report-body "metabase/email/pulse" (report-context pulse) pulse export-fn))
 
 (defn pulse->alert-condition-kwd
   "Given an `ALERT` return a keyword representing what kind of goal needs to be met."

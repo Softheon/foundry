@@ -60,18 +60,21 @@
   [^Workbook workbook name]
   (.createSheet workbook name))
 
-
-(defn create-workbook
-  [sheet-name data]
-  (let [workbook (SXSSFWorkbook. 800)
-        sheet (add-sheet! workbook sheet-name)]
-    ;(.setCompressTempFiles workbook true)
-    (add-rows! sheet data)
-    workbook))
-
 (defn dispose-workbook
   [^SXSSFWorkbook workbook]
   (.dispose workbook))
+
+(defn create-workbook
+  [sheet-name data]
+  (let [workbook (SXSSFWorkbook. 500)
+        sheet (add-sheet! workbook sheet-name)]
+    ;(.setCompressTempFiles workbook true)
+    (try
+      (add-rows! sheet data)
+      (finally
+        (dispose-workbook workbook)))
+    workbook))
+
 
 (defn save-workbook-into-stream!
   [stream workbook]

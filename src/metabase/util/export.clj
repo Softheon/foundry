@@ -13,6 +13,7 @@
   (:import [java.io ByteArrayInputStream ByteArrayOutputStream File]
            (java.io PipedInputStream PipedOutputStream)
            (java.util.concurrent Executors ThreadPoolExecutor)
+           java.util.UUID
            org.apache.commons.lang3.concurrent.BasicThreadFactory$Builder
            org.apache.poi.ss.usermodel.Cell))
 
@@ -108,6 +109,35 @@
   ^ThreadPoolExecutor []
   @thread-pool*)
 
+(defn- create-export-file
+  [card-id, suffix]
+  (let [file-name (format "foundry_report_%d_%s." card-id (str (UUID/randomUUID)))]
+    (if (config/config-str :export-directory)
+      (io/file (str file-name suffix))
+      (doto (File/createTempFile file-name suffix)
+        .deleteOnExit))))
+
+(defn export-to-csv-file
+  [card-id connection]
+  (fn [stmt rset data]
+    (let [finished-chan (a/promise-chan)
+          file (create-export-file card-id "csv")
+          task (bound-fn []
+                 (try
+                   (with-open [writer (io/writer file)]
+                     (csv/write-csv writer data))
+                   (a/>!! finished-chan file)
+                   (catch Throwable e
+                     (a/>!! finished-chan e))
+                   (finally
+                     (a/close! finished-chan)
+                     (.close rset)
+                     (.close stmt)
+                     (.close (:connection connection))
+                     (log/info "all db resources associated with exporting a report are released."))))]
+      (.submit (thread-pool) ^Runnable task)
+      (a/<!! finished-chan))))
+
 (defn export-to-csv-stream
   [connection]
   (fn [stmt rset data]
@@ -131,6 +161,29 @@
       (.submit (thread-pool) ^Runnable task)
       input)))
 
+(defn export-to-excel-file
+  [card-id connection]
+  (fn [stmt rset data]
+    (let [finished-chan (a/promise-chan)
+          file (create-export-file card-id "xlsx")
+          task (bound-fn []
+                 (try
+                   (let [workbook (excel/create-workbook "Report Result" data)]
+                     (with-open [writer (io/writer file)]
+                       (excel/save-workbook! writer workbook))
+                     (excel/dispose-workbook workbook))
+                   (a/>!! finished-chan file)
+                   (catch Throwable e
+                     (a/>!! finished-chan e))
+                   (finally
+                     (a/close! finished-chan)
+                     (.close rset)
+                     (.close stmt)
+                     (.close (:connection connection))
+                     (log/info "all db resources associated with exporting a report are released."))))]
+      (.submit (thread-pool) ^Runnable task)
+      (a/<!! finished-chan))))
+
 (defn export-to-xlsx-stream
   [connection]
   (fn [stmt rset data]
@@ -139,7 +192,7 @@
           transfering-chan (a/promise-chan)
           task (bound-fn []
                  (try
-                   (let [workbook (excel/create-workbook "Query Result" data)]
+                   (let [workbook (excel/create-workbook "Report Result" data)]
                      (try
                        (a/>!! transfering-chan :start)
                        (excel/save-workbook! output workbook)
