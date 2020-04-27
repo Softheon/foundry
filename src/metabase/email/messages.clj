@@ -270,8 +270,9 @@
           :pulseName    (:name pulse)
           :sectionStyle (render/style (render/section-style))
           :colorGrey4   render/color-gray-4
-          :logoFooter   true}
-         (random-quote-context)))
+          :logoFooter   false
+          :logoHeader true}
+         {}))
 
 (defn- make-report-attachment
   [export-fn pulse]

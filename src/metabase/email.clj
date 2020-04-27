@@ -91,18 +91,22 @@
       (throw (Exception. msg))))
   ;; Now send the email
   (send-email! (smtp-settings)
-    {:from    (email-from-address)
-     :to      recipients
-     :subject subject
-     :body    (case message-type
-                :attachments message
-                :text        message
-                :html        [{:type    "text/html; charset=utf-8"
-                               :content message}
-                              {:type :inline
-                               :content-id 12
-                               :content-type "image/png"
-                               :content (io/resource "frontend_client/app/assets/img/Softheon_Logo_Color.png")}])}))
+               {:from    (email-from-address)
+                :to      recipients
+                :subject subject
+                :body    (case message-type
+                           :attachments (conj message
+                                              {:type :inline
+                                               :content-id 12
+                                               :content-type "image/png"
+                                               :content (io/resource "frontend_client/app/assets/img/Softheon_Logo_Color.png")})
+                           :text        message
+                           :html        [{:type    "text/html; charset=utf-8"
+                                          :content message}
+                                         {:type :inline
+                                          :content-id 12
+                                          :content-type "image/png"
+                                          :content (io/resource "frontend_client/app/assets/img/Softheon_Logo_Color.png")}])}))
 
 (defn send-message!
   "Send an email to one or more RECIPIENTS.
