@@ -67,7 +67,12 @@
 (defn create-workbook
   [sheet-name data]
   (let [workbook (SXSSFWorkbook. 800)
+        xsff-wb (.getXSSFWorkbook workbook)
         sheet (add-sheet! workbook sheet-name)]
+    (-> xsff-wb
+        (.getProperties)
+        (.getCoreProperties)
+        (.setCreator "Foundry"))
     ;(.setCompressTempFiles workbook true)
     (try
       (add-rows! sheet data)
