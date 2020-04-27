@@ -77,7 +77,8 @@
     (try
       (add-rows! sheet data)
       (catch Throwable e
-        (dispose-workbook workbook)))
+        (dispose-workbook workbook)
+        (throw e)))
     workbook))
 
 

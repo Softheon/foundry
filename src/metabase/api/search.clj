@@ -4,6 +4,7 @@
             [honeysql.helpers :as h]
             [metabase.api.common :refer [*current-user-id* *current-user-permissions-set* check-403 defendpoint
                                          define-routes]]
+            [metabase.api.common :as api]
             [metabase.models
              [card :refer [Card]]
              [card-favorite :refer [CardFavorite]]
@@ -183,11 +184,16 @@
                               (not (zero? fav-value))))
     row))
 
+(def search-entities
+  [:card :collection :dashboard :pulse :segment :metric])
 (s/defn ^:private search
   "Builds a search query that includes all of the searchable entities and runs it"
   [search-ctx :- SearchContext]
+
   (map favorited->boolean
-       (db/query {:union-all (for [entity [:card :collection :dashboard :pulse :segment :metric]
+       (db/query {:union-all (for [entity (if api/*is-superuser?*
+                                            search-entities
+                                            (vec (remove (fn [entity] (= entity :pulse)) search-entities)))
                                    :let [query-map (create-search-query entity search-ctx)]
                                    :when query-map]
                                query-map)})))

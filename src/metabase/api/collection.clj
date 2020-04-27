@@ -63,23 +63,23 @@
 (defmethod fetch-collection-children :card
   [_ collection {:keys [archived?]}]
   (-> (db/select [Card :id :name :description :collection_position :display]
-        :collection_id (:id collection)
-        :archived      archived?)
+                 :collection_id (:id collection)
+                 :archived      archived?)
       (hydrate :favorite)))
 
 (defmethod fetch-collection-children :dashboard
   [_ collection {:keys [archived?]}]
   (db/select [Dashboard :id :name :description :collection_position]
-    :collection_id (:id collection)
-    :archived      archived?))
+             :collection_id (:id collection)
+             :archived      archived?))
 
 (defmethod fetch-collection-children :pulse
   [_ collection {:keys [archived?]}]
   (db/select [Pulse :id :name :collection_position]
-    :collection_id   (:id collection)
-    :archived        archived?
+             :collection_id   (:id collection)
+             :archived        archived?
     ;; exclude Alerts
-    :alert_condition nil))
+             :alert_condition nil))
 
 (defmethod fetch-collection-children :collection
   [_ collection {:keys [archived?]}]
@@ -87,14 +87,19 @@
         (assoc child-collection :model "collection"))
       (hydrate :can_write)))
 
+(def search-models
+  [:collection :card :dashboard :pulse])
+
 (s/defn ^:private collection-children
   "Fetch a sequence of 'child' objects belonging to a Collection, filtered using `options`."
   [collection                                     :- collection/CollectionWithLocationAndIDOrRoot
    {:keys [model collections-only?], :as options} :- CollectionChildrenOptions]
-  (->> (for [model-kw [:collection :card :dashboard :pulse]
+  (->> (for [model-kw (if api/*is-superuser?*
+                        search-models
+                        (vec (remove (fn [entity] (= entity :pulse)) search-models)))
             ;; only fetch models that are specified by the `model` param; or everything if it's `nil`
-            :when    (or (not model) (= model model-kw))
-            item     (fetch-collection-children model-kw collection options)]
+             :when    (or (not model) (= model model-kw))
+             item     (fetch-collection-children model-kw collection options)]
          (assoc item :model model-kw))
        ;; sorting by name should be fine for now.
        (sort-by (comp str/lower-case :name))))
@@ -126,9 +131,9 @@
   {model    (s/maybe (s/enum "card" "dashboard" "pulse" "collection"))
    archived (s/maybe su/BooleanString)}
   (collection-items
-    (api/read-check Collection id)
-    {:model     (keyword model)
-     :archived? (Boolean/parseBoolean archived)}))
+   (api/read-check Collection id)
+   {:model     (keyword model)
+    :archived? (Boolean/parseBoolean archived)}))
 
 
 ;;; -------------------------------------------- GET /api/collection/root --------------------------------------------
@@ -158,11 +163,11 @@
   ;; Return collection contents, including Collections that have an effective location of being in the Root
   ;; Collection for the Current User.
   (collection-items
-    collection/root-collection
-    {:model     (if (mi/can-read? collection/root-collection)
-                  (keyword model)
-                  :collection)
-     :archived? (Boolean/parseBoolean archived)}))
+   collection/root-collection
+   {:model     (if (mi/can-read? collection/root-collection)
+                 (keyword model)
+                 :collection)
+    :archived? (Boolean/parseBoolean archived)}))
 
 
 ;;; ----------------------------------------- Creating/Editing a Collection ------------------------------------------
@@ -186,12 +191,12 @@
   (write-check-collection-or-root-collection parent_id)
   ;; Now create the new Collection :)
   (db/insert! Collection
-    (merge
-     {:name        name
-      :color       color
-      :description description}
-     (when parent_id
-       {:location (collection/children-location (db/select-one [Collection :location :id] :id parent_id))}))))
+              (merge
+               {:name        name
+                :color       color
+                :description description}
+               (when parent_id
+                 {:location (collection/children-location (db/select-one [Collection :location :id] :id parent_id))}))))
 
 ;; TODO - I'm not 100% sure it makes sense that moving a Collection requires a special call to `move-collection!`,
 ;; while archiving is handled automatically as part of the `pre-update` logic when you change a Collection's
@@ -214,7 +219,7 @@
         ;; ok, make sure we have perms to do this operation
         (api/check-403
          (perms/set-has-full-permissions-for-set? @api/*current-user-permissions-set*
-           (collection/perms-for-moving collection-before-update new-parent)))
+                                                  (collection/perms-for-moving collection-before-update new-parent)))
         ;; ok, we're good to move!
         (collection/move-collection! collection-before-update new-location)))))
 
@@ -228,7 +233,7 @@
     ;; Check that we have approprate perms
     (api/check-403
      (perms/set-has-full-permissions-for-set? @api/*current-user-permissions-set*
-       (collection/perms-for-archiving collection-before-update)))))
+                                              (collection/perms-for-archiving collection-before-update)))))
 
 (defn- maybe-send-archived-notificaitons!
   "When a collection is archived, all of it's cards are also marked as archived, but this is down in the model layer
@@ -237,8 +242,8 @@
   [collection-before-update collection-updates]
   (when (api/column-will-change? :archived collection-before-update collection-updates)
     (when-let [alerts (seq (apply pulse/retrieve-alerts-for-cards (db/select-ids Card
-                                                                    :collection_id (u/get-id collection-before-update))))]
-        (card-api/delete-alert-and-notify-archived! alerts))))
+                                                                                 :collection_id (u/get-id collection-before-update))))]
+      (card-api/delete-alert-and-notify-archived! alerts))))
 
 
 (api/defendpoint PUT "/:id"

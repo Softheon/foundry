@@ -32,6 +32,7 @@
   "Fetch all Pulses"
   [archived]
   {archived (s/maybe su/BooleanString)}
+  (api/check-superuser)
   (as-> (pulse/retrieve-pulses {:archived? (Boolean/parseBoolean archived)}) <>
     (filter mi/can-read? <>)
     (hydrate <> :can_write)))
@@ -53,6 +54,7 @@
    skip_if_empty       (s/maybe s/Bool)
    collection_id       (s/maybe su/IntGreaterThanZero)
    collection_position (s/maybe su/IntGreaterThanZero)}
+  (api/check-superuser)
   ;; make sure we are allowed to *read* all the Cards we want to put in this Pulse
   (check-card-read-permissions cards)
   ;; if we're trying to create this Pulse inside a Collection, make sure we have write permissions for that collection
@@ -65,15 +67,16 @@
     (db/transaction
       ;; Adding a new pulse at `collection_position` could cause other pulses in this collection to change position,
       ;; check that and fix it if needed
-      (api/maybe-reconcile-collection-position! pulse-data)
+     (api/maybe-reconcile-collection-position! pulse-data)
       ;; ok, now create the Pulse
-      (api/check-500
-       (pulse/create-pulse! (map pulse/card->ref cards) channels pulse-data)))))
+     (api/check-500
+      (pulse/create-pulse! (map pulse/card->ref cards) channels pulse-data)))))
 
 
 (api/defendpoint GET "/:id"
   "Fetch `Pulse` with ID."
   [id]
+  (api/check-superuser)
   (-> (api/read-check (pulse/retrieve-pulse id))
       (hydrate :can_write)))
 
@@ -86,6 +89,7 @@
    skip_if_empty (s/maybe s/Bool)
    collection_id (s/maybe su/IntGreaterThanZero)
    archived      (s/maybe s/Bool)}
+  (api/check-superuser)
   ;; do various perms checks
   (let [pulse-before-update (api/write-check Pulse id)]
     (check-card-read-permissions cards)
@@ -94,12 +98,12 @@
     (db/transaction
       ;; If the collection or position changed with this update, we might need to fixup the old and/or new collection,
       ;; depending on what changed.
-      (api/maybe-reconcile-collection-position! pulse-before-update pulse-updates)
+     (api/maybe-reconcile-collection-position! pulse-before-update pulse-updates)
       ;; ok, now update the Pulse
-      (pulse/update-pulse!
-       (assoc (select-keys pulse-updates [:name :cards :channels :skip_if_empty :collection_id :collection_position
-                                          :archived])
-         :id id))))
+     (pulse/update-pulse!
+      (assoc (select-keys pulse-updates [:name :cards :channels :skip_if_empty :collection_id :collection_position
+                                         :archived])
+             :id id))))
   ;; return updated Pulse
   (pulse/retrieve-pulse id))
 
@@ -107,17 +111,19 @@
 (api/defendpoint DELETE "/:id"
   "Delete a Pulse. (DEPRECATED -- don't delete a Pulse anymore -- archive it instead.)"
   [id]
+  (api/check-superuser)
   (log/warn (tru "DELETE /api/pulse/:id is deprecated. Instead, change its `archived` value via PUT /api/pulse/:id."))
   (api/let-404 [pulse (Pulse id)]
-    (api/write-check Pulse id)
-    (db/delete! Pulse :id id)
-    (events/publish-event! :pulse-delete (assoc pulse :actor_id api/*current-user-id*)))
+               (api/write-check Pulse id)
+               (db/delete! Pulse :id id)
+               (events/publish-event! :pulse-delete (assoc pulse :actor_id api/*current-user-id*)))
   api/generic-204-no-content)
 
 
 (api/defendpoint GET "/form_input"
   "Provides relevant configuration information and user choices for creating/updating Pulses."
   []
+  (api/check-superuser)
   (let [chan-types (-> channel-types
                        ;(assoc-in [:slack :configured] (slack/slack-configured?))
                        (assoc-in [:email :configured] (email/email-configured?)))]
@@ -149,6 +155,7 @@
 (api/defendpoint GET "/preview_card/:id"
   "Get HTML rendering of a Card with `id`."
   [id]
+  (api/check-superuser)
   (let [card   (api/read-check Card id)
         result (pulse-card-query-results card)]
     {:status 200
@@ -162,6 +169,7 @@
 (api/defendpoint GET "/preview_card_info/:id"
   "Get JSON object containing HTML rendering of a Card with `id` and other information."
   [id]
+  (api/check-superuser)
   (let [card      (api/read-check Card id)
         result    (pulse-card-query-results card)
         data      (:data result)
@@ -179,6 +187,7 @@
 (api/defendpoint GET "/preview_card_png/:id"
   "Get PNG rendering of a Card with `id`."
   [id]
+  (api/check-superuser)
   (let [card   (api/read-check Card id)
         result (pulse-card-query-results card)
         ba     (binding [render/*include-title* true]
@@ -194,6 +203,7 @@
    skip_if_empty       (s/maybe s/Bool)
    collection_id       (s/maybe su/IntGreaterThanZero)
    collection_position (s/maybe su/IntGreaterThanZero)}
+  (api/check-superuser)
   (check-card-read-permissions cards)
   (p/send-pulse! body)
   {:ok true})

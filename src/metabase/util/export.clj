@@ -114,7 +114,7 @@
   (let [file-name (format "foundry_report_%d_%s" card-id (str (UUID/randomUUID)))]
     (if (config/config-str :export-directory)
       (io/file (str file-name suffix))
-      (doto (File/createTempFile "tsdfsfa" suffix)
+      (doto (File/createTempFile "foundry-temp-file" suffix)
         .deleteOnExit))))
 
 (defn export-to-csv-file
