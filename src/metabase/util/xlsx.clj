@@ -1,6 +1,6 @@
 (ns metabase.util.xlsx
   (:import
-   (java.io FileOutputStream OutputStream)
+   (java.io File FileOutputStream OutputStream)
    (java.util Date Calendar)
    (org.apache.poi.xssf.streaming SXSSFWorkbook)
    (org.apache.poi.ss.usermodel Workbook Sheet Cell Row)))
@@ -66,12 +66,12 @@
 
 (defn create-workbook
   [sheet-name data]
-  (let [workbook (SXSSFWorkbook. 500)
+  (let [workbook (SXSSFWorkbook. 800)
         sheet (add-sheet! workbook sheet-name)]
     ;(.setCompressTempFiles workbook true)
     (try
       (add-rows! sheet data)
-      (finally
+      (catch Throwable e
         (dispose-workbook workbook)))
     workbook))
 

@@ -63,21 +63,21 @@
   [invited invitor join-url]
   (let [company      (or (public-settings/site-name) "Unknown")
         message-body (stencil/render-file "metabase/email/new_user_invite"
-                       (merge {:emailType    "new_user_invite"
-                               :invitedName  (:first_name invited)
-                               :invitorName  (:first_name invitor)
-                               :invitorEmail (:email invitor)
-                               :company      company
-                               :joinUrl      join-url
-                               :loginEmail (:email invited)
-                               :today        (du/format-date "MMM'&nbsp;'dd,'&nbsp;'yyyy")
-                               :logoHeader   true}
-                              (random-quote-context)))]
+                                          (merge {:emailType    "new_user_invite"
+                                                  :invitedName  (:first_name invited)
+                                                  :invitorName  (:first_name invitor)
+                                                  :invitorEmail (:email invitor)
+                                                  :company      company
+                                                  :joinUrl      join-url
+                                                  :loginEmail (:email invited)
+                                                  :today        (du/format-date "MMM'&nbsp;'dd,'&nbsp;'yyyy")
+                                                  :logoHeader   true}
+                                                 (random-quote-context)))]
     (email/send-message!
-      :subject      (str "You're invited to join " company "'s Foundry")
-      :recipients   [(:email invited)]
-      :message-type :html
-      :message      message-body)))
+     :subject      (str "You're invited to join " company "'s Foundry")
+     :recipients   [(:email invited)]
+     :message-type :html
+     :message      message-body)))
 
 (defn- all-admin-recipients
   "Return a sequence of email addresses for all Admin users.
@@ -95,20 +95,20 @@
   {:pre [(map? new-user)]}
   (let [recipients (all-admin-recipients)]
     (email/send-message!
-      :subject      (str (if (or google-auth? iam_auth?)
-                           (trs "{0} created a Foundry account"     (:common_name new-user))
-                           (trs "{0} accepted their Foundry invite" (:common_name new-user))))
-      :recipients   recipients
-      :message-type :html
-      :message      (stencil/render-file "metabase/email/user_joined_notification"
-                      (merge {:logoHeader        true
-                              :joinedUserName    (:first_name new-user)
-                              :joinedViaSSO      google-auth?
-                              :joinedUserEmail   (:email new-user)
-                              :joinedDate        (du/format-date "EEEE, MMMM d") ; e.g. "Wednesday, July 13". TODO - is this what we want?
-                              :adminEmail        (first recipients)
-                              :joinedUserEditUrl (str (public-settings/site-url) "/admin/people")}
-                             (random-quote-context))))))
+     :subject      (str (if (or google-auth? iam_auth?)
+                          (trs "{0} created a Foundry account"     (:common_name new-user))
+                          (trs "{0} accepted their Foundry invite" (:common_name new-user))))
+     :recipients   recipients
+     :message-type :html
+     :message      (stencil/render-file "metabase/email/user_joined_notification"
+                                        (merge {:logoHeader        true
+                                                :joinedUserName    (:first_name new-user)
+                                                :joinedViaSSO      google-auth?
+                                                :joinedUserEmail   (:email new-user)
+                                                :joinedDate        (du/format-date "EEEE, MMMM d") ; e.g. "Wednesday, July 13". TODO - is this what we want?
+                                                :adminEmail        (first recipients)
+                                                :joinedUserEditUrl (str (public-settings/site-url) "/admin/people")}
+                                               (random-quote-context))))))
 
 
 (defn send-password-reset-email!
@@ -126,10 +126,10 @@
                                            :passwordResetUrl password-reset-url
                                            :logoHeader       true})]
     (email/send-message!
-      :subject      (str (trs "[Foundry] Password Reset Request"))
-      :recipients   [email]
-      :message-type :html
-      :message      message-body)))
+     :subject      (str (trs "[Foundry] Password Reset Request"))
+     :recipients   [email]
+     :message-type :html
+     :message      message-body)))
 
 ;; TODO - I didn't write these function and I don't know what it's for / what it's supposed to be doing. If this is
 ;; determined add appropriate documentation
@@ -165,10 +165,10 @@
                             (random-quote-context))
         message-body (stencil/render-file "metabase/email/notification" context)]
     (email/send-message!
-      :subject      (str (trs "[Foundry] Notification"))
-      :recipients   [email]
-      :message-type :html
-      :message      message-body)))
+     :subject      (str (trs "[Foundry] Notification"))
+     :recipients   [email]
+     :message-type :html
+     :message      message-body)))
 
 (defn send-follow-up-email!
   "Format and send an email to the system admin following up on the installation."
@@ -184,10 +184,10 @@
                               (follow-up-context)))
         message-body (stencil/render-file "metabase/email/follow_up_email" context)]
     (email/send-message!
-      :subject      subject
-      :recipients   [email]
-      :message-type :html
-      :message      message-body)))
+     :subject      subject
+     :recipients   [email]
+     :message-type :html
+     :message      message-body)))
 
 (defn- make-message-attachment [[content-id url]]
   {:type         :inline
@@ -220,7 +220,6 @@
         (throw (IOException. ex-msg e))))))
 
 (defn- create-result-attachment-map [export-type card-name ^File attachment-file]
-  (log/info "*******************file path" (.getAbsolutePath attachment-file))
   (let [{:keys [content-type ext]} (get export/export-formats export-type)]
     {:type         :attachment
      :content-type content-type
@@ -279,11 +278,12 @@
   (remove nil?
           (apply concat
                  (let [{:keys [cards]} pulse]
+                   (log/info "pulse cards")
+                   (log/info (identity cards))
                    (for [card cards
                          :let [result (export-fn card)]]
 
-                     [(create-result-attachment-map (if (:include_xls card) "xlsx" "csv") (:name card) result)])))
-                     ))
+                     [(create-result-attachment-map (if (:include_xls card) "xlsx" "csv") (:name card) result)])))))
 
 
 (defn- render-report-body
@@ -352,10 +352,10 @@
   (future
     (try
       (email/send-message-or-throw!
-        {:recipients   [(:email user)]
-         :message-type :html
-         :subject      subject
-         :message      (stencil/render-file template-path template-context)})
+       {:recipients   [(:email user)]
+        :message-type :html
+        :subject      subject
+        :message      (stencil/render-file template-path template-context)})
       (catch Exception e
         (log/errorf e "Failed to send message to '%s' with subject '%s'" (:email user) subject)))))
 

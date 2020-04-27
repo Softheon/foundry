@@ -250,12 +250,12 @@
 
 
 (defn execute-and-export-card
-  [card]
-  (let [card-id (:id card)]
+  [pulse-card]
+  (let [card-id (:id pulse-card)]
     (try
       (when-let [card (Card :id card-id, :archived false)]
         (let [{:keys [creator_id dataset_query]}  card
-              export-fn (if (:include_xls card)
+              export-fn (if (:include_xls pulse-card)
                           export/export-to-excel-file
                           export/export-to-csv-file)
               query (-> dataset_query

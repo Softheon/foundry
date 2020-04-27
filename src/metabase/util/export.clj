@@ -10,7 +10,7 @@
              [xlsx :as excel]
              [i18n :refer [trs]]]
             [metabase.config :as config])
-  (:import [java.io ByteArrayInputStream ByteArrayOutputStream File]
+  (:import [java.io ByteArrayInputStream ByteArrayOutputStream File FileOutputStream]
            (java.io PipedInputStream PipedOutputStream)
            (java.util.concurrent Executors ThreadPoolExecutor)
            java.util.UUID
@@ -111,17 +111,17 @@
 
 (defn- create-export-file
   [card-id, suffix]
-  (let [file-name (format "foundry_report_%d_%s." card-id (str (UUID/randomUUID)))]
+  (let [file-name (format "foundry_report_%d_%s" card-id (str (UUID/randomUUID)))]
     (if (config/config-str :export-directory)
       (io/file (str file-name suffix))
-      (doto (File/createTempFile file-name suffix)
+      (doto (File/createTempFile "tsdfsfa" suffix)
         .deleteOnExit))))
 
 (defn export-to-csv-file
   [card-id connection]
   (fn [stmt rset data]
     (let [finished-chan (a/promise-chan)
-          file (create-export-file card-id "csv")
+          file (create-export-file card-id ".csv")
           task (bound-fn []
                  (try
                    (with-open [writer (io/writer file)]
@@ -165,18 +165,22 @@
   [card-id connection]
   (fn [stmt rset data]
     (let [finished-chan (a/promise-chan)
-          file (create-export-file card-id "xlsx")
+          file (create-export-file card-id ".xlsx")
+
           task (bound-fn []
                  (try
                    (let [workbook (excel/create-workbook "Report Result" data)]
-                     (with-open [writer (io/writer file)]
-                       (excel/save-workbook! writer workbook))
-                     (excel/dispose-workbook workbook))
+                     (with-open [output-stream (FileOutputStream. file)]
+                       (try
+                         (excel/save-workbook! output-stream workbook)
+                         (finally
+                           (excel/dispose-workbook workbook)))))
                    (a/>!! finished-chan file)
                    (catch Throwable e
                      (a/>!! finished-chan e))
                    (finally
                      (a/close! finished-chan)
+
                      (.close rset)
                      (.close stmt)
                      (.close (:connection connection))
