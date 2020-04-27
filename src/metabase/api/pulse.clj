@@ -171,18 +171,20 @@
   [id]
   (api/check-superuser)
   (let [card      (api/read-check Card id)
-        result    (pulse-card-query-results card)
-        data      (:data result)
-        card-type (render/detect-pulse-card-type card data)
-        card-html (html (binding [render/*include-title* true]
-                          (render/render-pulse-card-for-display (p/defaulted-timezone card) card result)))]
+        result    nil ;(pulse-card-query-results card)
+        data      nil ;(:data result)
+        card-type nil ;(render/detect-pulse-card-type card data)
+        card-html nil ;(html (binding [render/*include-title* true]
+                         ; (render/render-pulse-card-for-display (p/defaulted-timezone card) card result)))
+        ]
     {:id              id
      :pulse_card_type card-type
      :pulse_card_html card-html
      :pulse_card_name (:name card)
      :pulse_card_url  (urls/card-url (:id card))
-     :row_count       (:row_count result)
-     :col_count       (count (:cols (:data result)))}))
+     :row_count       0 ;(:row_count result)
+     :col_count      0; (count (:cols (:data result)))
+     }))
 
 (api/defendpoint GET "/preview_card_png/:id"
   "Get PNG rendering of a Card with `id`."

@@ -86,7 +86,7 @@ export default class PulseCardPreview extends Component {
             paddingLeft: 100,
           }}
         >
-          {attachmentsEnabled &&
+          {/* {attachmentsEnabled &&
             !isAttachmentOnly && (
               <Tooltip
                 tooltip={
@@ -104,7 +104,19 @@ export default class PulseCardPreview extends Component {
                   onClick={this.toggleAttachment}
                 />
               </Tooltip>
-            )}
+            )} */}
+          {attachmentsEnabled && (
+            <Tooltip
+              tooltip={t`Select attachment format`}
+            >
+              <Icon
+                name="attachment"
+                size={18}
+                className={cx("cursor-pointer py1 pr1 text-brand-hover text-brand")}
+              // onClick={this.toggleAttachment}
+              />
+            </Tooltip>
+          )}
           <Icon
             name="close"
             size={18}
@@ -129,12 +141,13 @@ export default class PulseCardPreview extends Component {
               </RenderedPulseCardPreviewMessage>
             </RenderedPulseCardPreview>
           ) : (
-            <div
-              dangerouslySetInnerHTML={{
-                __html: cardPreview && cardPreview.pulse_card_html,
-              }}
-            />
-          )}
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: cardPreview && cardPreview.pulse_card_html,
+                }}
+              />
+            )
+          }
         </div>
         {!cardPreview && (
           <div className="flex-full flex align-center layout-centered pt1">

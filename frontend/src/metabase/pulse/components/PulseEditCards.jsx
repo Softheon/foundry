@@ -18,12 +18,13 @@ const TABLE_MAX_ROWS = 20;
 const TABLE_MAX_COLS = 10;
 
 function isAutoAttached(cardPreview) {
-  return (
-    cardPreview &&
-    cardPreview.pulse_card_type === "table" &&
-    (cardPreview.row_count > TABLE_MAX_ROWS ||
-      cardPreview.col_cound > TABLE_MAX_COLS)
-  );
+  // return (
+  //   cardPreview &&
+  //   cardPreview.pulse_card_type === "table" &&
+  //   (cardPreview.row_count > TABLE_MAX_ROWS ||
+  //     cardPreview.col_cound > TABLE_MAX_COLS)
+  // );
+  return false;
 }
 
 export default class PulseEditCards extends Component {
@@ -126,6 +127,7 @@ export default class PulseEditCards extends Component {
   renderCardNotices(card, index) {
     let cardPreview = card && this.props.cardPreviews[card.id];
     let notices = this.getNotices(card, cardPreview, index);
+    console.log("renderCardNotices", card);
     if (notices.length > 0) {
       return (
         <div className="absolute" style={{ width: 400, marginLeft: 420 }}>
@@ -190,13 +192,13 @@ export default class PulseEditCards extends Component {
                       trackPulseEvent={this.trackPulseEvent}
                     />
                   ) : (
-                    <QuestionSelect
-                      onChange={questionId => this.addCard(index, questionId)}
-                      className="flex-full"
+                      <QuestionSelect
+                        onChange={questionId => this.addCard(index, questionId)}
+                        className="flex-full"
                       // TODO: reimplement CardPicker's warnings for unsuitable cards
                       // attachmentsEnabled={this.props.attachmentsEnabled}
-                    />
-                  )}
+                      />
+                    )}
                 </div>
                 {this.renderCardNotices(card, index)}
               </div>
@@ -215,8 +217,8 @@ const AttachmentWidget = ({ card, onChange, trackPulseEvent }) => (
     {ATTACHMENT_TYPES.map(type => (
       <span
         key={type}
-        className={cx("text-brand-hover cursor-pointer mr1", {
-          "text-brand": card["include_" + type],
+        className={cx("text-brand-light cursor-pointer mr1", {
+          "text-dark": card["include_" + type],
         })}
         onClick={() => {
           const newCard = { ...card };
