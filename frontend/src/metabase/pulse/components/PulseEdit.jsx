@@ -106,14 +106,14 @@ export default class PulseEdit extends Component {
             )}`}.
           </span>
         ) : (
-          <span key={index}>
-            {jt`Channel ${(
-              <strong>{c.channel_type}</strong>
-            )} will no longer receive this pulse ${(
-              <strong>{c.schedule_type}</strong>
-            )}`}.
-          </span>
-        ),
+              <span key={index}>
+                {jt`Channel ${(
+                  <strong>{c.channel_type}</strong>
+                )} will no longer receive this pulse ${(
+                  <strong>{c.schedule_type}</strong>
+                )}`}.
+              </span>
+            ),
     );
   }
 
@@ -161,7 +161,7 @@ export default class PulseEdit extends Component {
               pulseIsValid={isValid}
             />
           </div>
-          <PulseEditSkip {...this.props} setPulse={this.setPulse} />
+          {/* <PulseEditSkip {...this.props} setPulse={this.setPulse} /> */}
         </div>
         <div className="PulseEdit-footer flex align-center border-top py3">
           {pulse.archived ? (
@@ -175,16 +175,16 @@ export default class PulseEdit extends Component {
               successText={t`Unarchived`}
             />
           ) : (
-            <ActionButton
-              key="save"
-              actionFn={this.handleSave}
-              className={cx("Button Button--primary", { disabled: !isValid })}
-              normalText={pulse.id != null ? t`Save changes` : t`Create pulse`}
-              activeText={t`Saving…`}
-              failedText={t`Save failed`}
-              successText={t`Saved`}
-            />
-          )}
+              <ActionButton
+                key="save"
+                actionFn={this.handleSave}
+                className={cx("Button Button--primary", { disabled: !isValid })}
+                normalText={pulse.id != null ? t`Save changes` : t`Create pulse`}
+                activeText={t`Saving…`}
+                failedText={t`Save failed`}
+                successText={t`Saved`}
+              />
+            )}
           <Button onClick={() => this.props.goBack()} ml={2}>
             {t`Cancel`}
           </Button>
