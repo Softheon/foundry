@@ -159,12 +159,8 @@ couldn't be autenticated."
   ;; Don't leak whether the account doesn't exist, just pretend everything is ok
     (when-let [{user-id :id, google-auth? :google_auth, iam-auth? :iam_auth} (db/select-one [User :id :google_auth :iam_auth]
                                                                                             :email email, :is_active true)]
-      (let [reset-token        (if (config/config-bool :mb-enable-iam)
-                                 nil
-                                 (user/set-password-reset-token! user-id))
-            password-reset-url (if reset-token
-                                 (str (public-settings/site-url) "/auth/reset_password/" reset-token)
-                                 (config/config-str :iam-password-reset-url))]
+      (let [reset-token        (user/set-password-reset-token! user-id)
+            password-reset-url  (str (public-settings/site-url) "/auth/reset_password/" reset-token)]
         (email/send-password-reset-email! email google-auth? iam-auth? server-name password-reset-url)
         (log/info password-reset-url)))))
 
