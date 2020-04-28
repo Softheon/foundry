@@ -23,11 +23,11 @@
 (defn- group-fetch-fn [group-name]
   (memoize (fn []
              (or (db/select-one PermissionsGroup
-                   :name group-name)
+                                :name group-name)
                  (u/prog1 (db/insert! PermissionsGroup
-                            :name group-name)
-                   (log/info (u/format-color 'green (trs "Created magic permissions group ''{0}'' (ID = {1})"
-                                                         group-name (:id <>)))))))))
+                                      :name group-name)
+                          (log/info (u/format-color 'green (trs "Created magic permissions group ''{0}'' (ID = {1})"
+                                                                group-name (:id <>)))))))))
 
 (def ^{:arglists '([])} ^metabase.models.permissions_group.PermissionsGroupInstance
   all-users
@@ -49,6 +49,10 @@
   "Fetch the `IDS users` permissions group, creating it if needed."
   (group-fetch-fn "IDS Users"))
 
+(def ^{:arglists '([])} ^metabase.models.permissions_group.PermissionsGroupInstance
+  pulse-users
+  "Fetch the `Pulse users` permissions group, creatingit if needed."
+  (group-fetch-fn "Pulse Users"))
 ;;; --------------------------------------------------- Validation ---------------------------------------------------
 
 (defn exists-with-name?
@@ -56,7 +60,7 @@
   ^Boolean [group-name]
   {:pre [((some-fn keyword? string?) group-name)]}
   (db/exists? PermissionsGroup
-    :%lower.name (str/lower-case (name group-name))))
+              :%lower.name (str/lower-case (name group-name))))
 
 (defn- check-name-not-already-taken
   [group-name]
@@ -73,14 +77,14 @@
                        (ids-users)]]
     (when (= id (:id magic-group))
       (throw (ui18n/ex-info (tru "You cannot edit or delete the ''{0}'' permissions group!" (:name magic-group))
-               {:status-code 400})))))
+                            {:status-code 400})))))
 
 
 ;;; --------------------------------------------------- Lifecycle ----------------------------------------------------
 
 (defn- pre-insert [{group-name :name, :as group}]
   (u/prog1 group
-    (check-name-not-already-taken group-name)))
+           (check-name-not-already-taken group-name)))
 
 (defn- pre-delete [{id :id, :as group}]
   (check-not-magic-group group)
@@ -88,22 +92,22 @@
   (db/delete! 'PermissionsGroupMembership  :group_id id)
   ;; Remove from LDAP mappings
   (setting/set-json! :ldap-group-mappings
-    (when-let [mappings (setting/get-json :ldap-group-mappings)]
-      (zipmap (keys mappings)
-              (for [val (vals mappings)]
-                (remove (partial = id) val))))))
+                     (when-let [mappings (setting/get-json :ldap-group-mappings)]
+                       (zipmap (keys mappings)
+                               (for [val (vals mappings)]
+                                 (remove (partial = id) val))))))
 
 (defn- pre-update [{group-name :name, :as group}]
   (u/prog1 group
-    (check-not-magic-group group)
-    (when group-name
-      (check-name-not-already-taken group-name))))
+           (check-not-magic-group group)
+           (when group-name
+             (check-name-not-already-taken group-name))))
 
 (u/strict-extend (class PermissionsGroup)
-  models/IModel (merge models/IModelDefaults
-                   {:pre-delete pre-delete
-                    :pre-insert         pre-insert
-                    :pre-update         pre-update}))
+                 models/IModel (merge models/IModelDefaults
+                                      {:pre-delete pre-delete
+                                       :pre-insert         pre-insert
+                                       :pre-update         pre-update}))
 
 
 ;;; ---------------------------------------------------- Util Fns ----------------------------------------------------
@@ -120,6 +124,6 @@
              :from      [[:core_user :user]]
              :left-join [[:permissions_group_membership :pgm] [:= :user.id :pgm.user_id]]
              :where     [:and [:= :user.is_active true]
-                              [:= :pgm.group_id (u/get-id group-or-id)]]
+                         [:= :pgm.group_id (u/get-id group-or-id)]]
              :order-by  [[:%lower.user.first_name :asc]
                          [:%lower.user.last_name :asc]]}))

@@ -38,7 +38,7 @@
   (when (and (some? is-superuser?)
              new-groups-or-ids)
     (api/checkp (= is-superuser? (contains? (set new-groups-or-ids) (u/get-id (group/admin))))
-      "is_superuser" (tru "Value of is_superuser must correspond to presence of Admin group ID in group_ids.")))
+                "is_superuser" (tru "Value of is_superuser must correspond to presence of Admin group ID in group_ids.")))
   (when (some? new-groups-or-ids)
     (when-not (= (user/group-ids user-or-id)
                  (set (map u/get-id new-groups-or-ids)))
@@ -58,13 +58,15 @@
   {include_deactivated (s/maybe su/BooleanString)}
   (when include_deactivated
     (api/check-superuser))
+  ;; create pulse for the first time.
+  (group/pulse-users)
   (cond-> (db/select (vec (cons User (if api/*is-superuser?*
                                        user/admin-or-self-visible-columns
                                        user/non-admin-or-self-visible-columns)))
-            (-> {}
-                (hh/merge-order-by [:%lower.last_name :asc] [:%lower.first_name :asc])
-                (hh/merge-where (when-not include_deactivated
-                                  [:= :is_active true]))))
+                     (-> {}
+                         (hh/merge-order-by [:%lower.last_name :asc] [:%lower.first_name :asc])
+                         (hh/merge-where (when-not include_deactivated
+                                           [:= :is_active true]))))
     ;; For admins, also include the IDs of the  Users' Personal Collections
     api/*is-superuser?* (hydrate :personal_collection_id :group_ids)))
 
@@ -96,15 +98,15 @@
    login_attributes (s/maybe user/LoginAttributes)}
   (api/check-superuser)
   (api/checkp (not (db/exists? User :email email))
-    "email" (tru "Email address already in use."))
+              "email" (tru "Email address already in use."))
   (db/transaction
-    (let [new-user-id (u/get-id (user/create-and-invite-user!
-                                 (u/select-keys-when body
-                                   :non-nil [:first_name :last_name :email :password :login_attributes])
-                                 @api/*current-user*))]
-      (maybe-set-user-permissions-groups! new-user-id group_ids)
-      (-> (fetch-user :id new-user-id)
-          (hydrate :group_ids)))))
+   (let [new-user-id (u/get-id (user/create-and-invite-user!
+                                (u/select-keys-when body
+                                                    :non-nil [:first_name :last_name :email :password :login_attributes])
+                                @api/*current-user*))]
+     (maybe-set-user-permissions-groups! new-user-id group_ids)
+     (-> (fetch-user :id new-user-id)
+         (hydrate :group_ids)))))
 
 
 ;;; +----------------------------------------------------------------------------------------------------------------+
@@ -113,7 +115,7 @@
 
 (defn- valid-email-update?
   "This predicate tests whether or not the user is allowed to update the email address associated with this account."
-  [{:keys [google_auth ldap_auth email] :as foo } maybe-new-email]
+  [{:keys [google_auth ldap_auth email] :as foo} maybe-new-email]
   (or
    ;; Admin users can update
    api/*is-superuser?*
@@ -137,20 +139,20 @@
   ;; only allow updates if the specified account is active
   (api/let-404 [user-before-update (fetch-user :id id, :is_active true)]
     ;; Google/LDAP non-admin users can't change their email to prevent account hijacking
-    (api/check-403 (valid-email-update? user-before-update email))
+               (api/check-403 (valid-email-update? user-before-update email))
     ;; can't change email if it's already taken BY ANOTHER ACCOUNT
-    (api/checkp (not (db/exists? User, :email email, :id [:not= id]))
-      "email" (tru "Email address already associated to another user.")))
+               (api/checkp (not (db/exists? User, :email email, :id [:not= id]))
+                           "email" (tru "Email address already associated to another user.")))
   (db/transaction
-    (api/check-500
-     (db/update! User id
-       (u/select-keys-when body
-         :present (when api/*is-superuser?*
-                    #{:login_attributes})
-         :non-nil (set (concat [:first_name :last_name :email]
-                               (when api/*is-superuser?*
-                                 [:is_superuser]))))))
-    (maybe-set-user-permissions-groups! id group_ids is_superuser))
+   (api/check-500
+    (db/update! User id
+                (u/select-keys-when body
+                                    :present (when api/*is-superuser?*
+                                               #{:login_attributes})
+                                    :non-nil (set (concat [:first_name :last_name :email]
+                                                          (when api/*is-superuser?*
+                                                            [:is_superuser]))))))
+   (maybe-set-user-permissions-groups! id group_ids is_superuser))
   (-> (fetch-user :id id)
       (hydrate :group_ids)))
 
@@ -161,15 +163,15 @@
 
 (defn- reactivate-user! [existing-user]
   (db/update! User (u/get-id existing-user)
-    :is_active     true
-    :is_superuser  false
+              :is_active     true
+              :is_superuser  false
     ;; if the user orignally logged in via Google Auth and it's no longer enabled, convert them into a regular user
     ;; (see Issue #3323)
-    :google_auth   (boolean (and (:google_auth existing-user)
+              :google_auth   (boolean (and (:google_auth existing-user)
                                  ;; if google-auth-client-id is set it means Google Auth is enabled
-                                 (session-api/google-auth-client-id)))
-    :ldap_auth     (boolean (and (:ldap_auth existing-user)
-                                 (ldap/ldap-configured?))))
+                                           (session-api/google-auth-client-id)))
+              :ldap_auth     (boolean (and (:ldap_auth existing-user)
+                                           (ldap/ldap-configured?))))
   ;; now return the existing user whether they were originally active or not
   (fetch-user :id (u/get-id existing-user)))
 
@@ -181,7 +183,7 @@
     (api/check-404 user)
     ;; Can only reactivate inactive users
     (api/check (not (:is_active user))
-      [400 {:message (tru "Not able to reactivate an active user")}])
+               [400 {:message (tru "Not able to reactivate an active user")}])
     (reactivate-user! user)))
 
 
@@ -197,10 +199,10 @@
   (api/let-404 [user (db/select-one [User :password_salt :password], :id id, :is_active true)]
     ;; admins are allowed to reset anyone's password (in the admin people list) so no need to check the value of
     ;; `old_password` for them regular users have to know their password, however
-    (when-not api/*is-superuser?*
-      (api/checkp (creds/bcrypt-verify (str (:password_salt user) old_password) (:password user))
-        "old_password"
-        (tru "Invalid password"))))
+               (when-not api/*is-superuser?*
+                 (api/checkp (creds/bcrypt-verify (str (:password_salt user) old_password) (:password user))
+                             "old_password"
+                             (tru "Invalid password"))))
   (user/set-password! id password)
   ;; return the updated User
   (fetch-user :id id))

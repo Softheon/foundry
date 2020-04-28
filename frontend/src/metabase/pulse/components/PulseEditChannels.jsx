@@ -184,6 +184,8 @@ export default class PulseEditChannels extends Component {
   renderChannel(channel, index, channelSpec) {
     let isValid =
       this.props.pulseIsValid && channelIsValid(channel, channelSpec);
+    const validRecipients = this.props.users.filter(user =>
+      user.is_superuser || user.is_pulse_recipient);
     return (
       <li key={index} className="py2">
         {channelSpec.error && (
@@ -199,7 +201,7 @@ export default class PulseEditChannels extends Component {
               autoFocus={!!this.props.pulse.name}
               recipients={channel.recipients}
               recipientTypes={channelSpec.recipients}
-              users={this.props.users}
+              users={validRecipients}
               onRecipientsChange={recipients =>
                 this.onChannelPropertyChange(index, "recipients", recipients)
               }

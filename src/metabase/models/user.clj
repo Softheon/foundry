@@ -29,11 +29,11 @@
 
 (defn- pre-insert [{:keys [email password reset_token] :as user}]
   (assert (u/email? email)
-    (format "Not a valid email: '%s'" email))
+          (format "Not a valid email: '%s'" email))
   (assert (and (string? password)
                (not (str/blank? password))))
   (assert (not (:password_salt user))
-    "Don't try to pass an encrypted password to (insert! User). Password encryption is handled by pre-insert.")
+          "Don't try to pass an encrypted password to (insert! User). Password encryption is handled by pre-insert.")
   (let [salt     (str (UUID/randomUUID))
         defaults {:date_joined  (du/new-sql-timestamp)
                   :last_login   nil
@@ -50,7 +50,7 @@
 
 (defn- post-insert [{user-id :id, superuser? :is_superuser, iam? :iam_auth, :as user}]
   (u/prog1 user
-           
+
     ;; add the newly created user to the magic perms groups
            (binding [perm-membership/*allow-changing-all-users-group-members* true
                      perm-membership/*allow-changing-ids-users-group-members* true]
@@ -71,14 +71,14 @@
   ;; when `:is_superuser` is toggled add or remove the user from the 'Admin' group as appropriate
   (when-not (nil? is_superuser)
     (let [membership-exists? (db/exists? PermissionsGroupMembership
-                               :group_id (:id (group/admin))
-                               :user_id  id)]
+                                         :group_id (:id (group/admin))
+                                         :user_id  id)]
       (cond
         (and is_superuser
              (not membership-exists?))
         (db/insert! PermissionsGroupMembership
-          :group_id (u/get-id (group/admin))
-          :user_id  id)
+                    :group_id (u/get-id (group/admin))
+                    :user_id  id)
 
         ;; don't use `delete!` here because that does the opposite and tries to update this user
         ;; which leads to a stack overflow of calls between the two
@@ -86,8 +86,8 @@
         (and (not is_superuser)
              membership-exists?)
         (db/simple-delete! PermissionsGroupMembership
-          :group_id (u/get-id (group/admin))
-          :user_id  id))))
+                           :group_id (u/get-id (group/admin))
+                           :user_id  id))))
   (when email
     (assert (u/email? email)))
   ;; If we're setting the reset_token then encrypt it before it goes into the DB
@@ -137,17 +137,17 @@
   [:id :email :first_name :last_name])
 
 (u/strict-extend (class User)
-  models/IModel
-  (merge models/IModelDefaults
-         {:default-fields (constantly default-user-columns)
-          :hydration-keys (constantly [:author :creator :user])
-          :properties     (constantly {:updated-at-timestamped? true})
-          :pre-insert     pre-insert
-          :post-insert    post-insert
-          :pre-update     pre-update
-          :post-select    post-select
-          :pre-delete     pre-delete
-          :types          (constantly {:login_attributes :json-no-keywordization})}))
+                 models/IModel
+                 (merge models/IModelDefaults
+                        {:default-fields (constantly default-user-columns)
+                         :hydration-keys (constantly [:author :creator :user])
+                         :properties     (constantly {:updated-at-timestamped? true})
+                         :pre-insert     pre-insert
+                         :post-insert    post-insert
+                         :pre-update     pre-update
+                         :post-select    post-select
+                         :pre-delete     pre-delete
+                         :types          (constantly {:login_attributes :json-no-keywordization})}))
 
 (defn group-ids
   "Fetch set of IDs of PermissionsGroup a User belongs to."
@@ -156,14 +156,19 @@
     (db/select-field :group_id PermissionsGroupMembership :user_id (u/get-id user-or-id))))
 
 (defn add-group-ids
-  "Efficiently add PermissionsGroup `group_ids` to a collection of `users`."
+  "Efficiently add PermissionsGroup `group_ids` and `is_pulse_recipient` to a collection of `users`."
   {:batched-hydrate :group_ids}
   [users]
   (when (seq users)
-    (let [user-id->memberships (group-by :user_id (db/select [PermissionsGroupMembership :user_id :group_id]
-                                                    :user_id [:in (set (map u/get-id users))]))]
-      (for [user users]
-        (assoc user :group_ids (set (map :group_id (user-id->memberships (u/get-id user)))))))))
+    (let [pulse-group-id (:id (group/pulse-users))
+          user-id->memberships (group-by :user_id (db/select [PermissionsGroupMembership :user_id :group_id]
+                                                             :user_id [:in (set (map u/get-id users))]))]
+      (for [user users
+            :let [group-ids (set (map :group_id (user-id->memberships (u/get-id user))))]]
+        (-> user
+            (assoc  :group_ids group-ids)
+            (assoc  :is_pulse_recipient (or (:is_superuser user)
+                                            (contains? group-ids pulse-group-id))))))))
 
 
 ;;; --------------------------------------------------- Helper Fns ---------------------------------------------------
@@ -208,7 +213,7 @@
   [new-user :- NewUser, invitor :- Invitor]
   ;; create the new user
   (u/prog1 (insert-new-user! new-user)
-    (send-welcome-email! <> invitor)))
+           (send-welcome-email! <> invitor)))
 
 (s/defn create-new-google-auth-user!
   "Convenience for creating a new user via Google Auth. This account is considered active immediately; thus all active
@@ -216,7 +221,7 @@
   [new-user :- NewUser]
   (u/prog1 (insert-new-user! (assoc new-user :google_auth true))
     ;; send an email to everyone including the site admin if that's set
-    (email/send-user-joined-admin-notification-email! <>, :google-auth? true)))
+           (email/send-user-joined-admin-notification-email! <>, :google-auth? true)))
 
 (s/defn create-new-ldap-auth-user!
   "Convenience for creating a new user via LDAP. This account is considered active immediately; thus all active admins
@@ -234,19 +239,19 @@
         password (creds/hash-bcrypt (str salt password))]
     ;; NOTE: any password change expires the password reset token
     (db/update! User user-id
-      :password_salt   salt
-      :password        password
-      :reset_token     nil
-      :reset_triggered nil)))
+                :password_salt   salt
+                :password        password
+                :reset_token     nil
+                :reset_triggered nil)))
 
 (defn set-password-reset-token!
   "Updates a given `User` and generates a password reset token for them to use. Returns the URL for password reset."
   [user-id]
   {:pre [(integer? user-id)]}
   (u/prog1 (str user-id \_ (UUID/randomUUID))
-    (db/update! User user-id
-      :reset_token     <>
-      :reset_triggered (System/currentTimeMillis))))
+           (db/update! User user-id
+                       :reset_token     <>
+                       :reset_triggered (System/currentTimeMillis))))
 
 (defn form-password-reset-url
   "Generate a properly formed password reset url given a password reset token."
@@ -264,13 +269,13 @@
         [to-remove to-add] (data/diff old-group-ids new-group-ids)]
     (when (seq (concat to-remove to-add))
       (db/transaction
-        (when (seq to-remove)
-          (db/delete! PermissionsGroupMembership :user_id user-id, :group_id [:in to-remove]))
+       (when (seq to-remove)
+         (db/delete! PermissionsGroupMembership :user_id user-id, :group_id [:in to-remove]))
         ;; a little inefficient, but we need to do a separate `insert!` for each group we're adding membership to,
         ;; because `insert-many!` does not currently trigger methods such as `pre-insert`. We rely on those methods to
         ;; do things like automatically set the `is_superuser` flag for a User
-        (doseq [group-id to-add]
-          (db/insert! PermissionsGroupMembership {:user_id user-id, :group_id group-id})))
+       (doseq [group-id to-add]
+         (db/insert! PermissionsGroupMembership {:user_id user-id, :group_id group-id})))
       true)))
 
 
