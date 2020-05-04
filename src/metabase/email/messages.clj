@@ -6,7 +6,6 @@
             [hiccup.core :refer [html]]
             [medley.core :as m]
             [metabase
-
              [config :as config]
              [email :as email]
              [public-settings :as public-settings]
@@ -282,7 +281,7 @@
                    (log/info "pulse cards")
                    (log/info (identity cards))
                    (for [card cards
-                         :let [result (export-fn card)]]
+                         :let [result (export-fn pulse card)]]
 
                      [(create-result-attachment-map (if (:include_xls card) "xlsx" "csv") (:name card) result)])))))
 
@@ -294,8 +293,10 @@
                  (make-report-attachment export-fn pulse)))))
 
 (defn render-report-email
-  [pulse export-fn]
-  (render-report-body "metabase/email/pulse" (report-context pulse) pulse export-fn))
+  [pulse results]
+  (stencil/render-file "metabase/email/pulse"
+                       (merge (report-context pulse)
+                              {:reports results})))
 
 (defn pulse->alert-condition-kwd
   "Given an `ALERT` return a keyword representing what kind of goal needs to be met."

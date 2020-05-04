@@ -5404,3 +5404,45 @@ databaseChangeLog:
                 defaultValueBoolean: false
                 constraints:
                     nullable: false
+  - changeSet:
+      id: 104
+      author: hxia
+      changes:
+      - createTable:
+          tableName: pulse_card_file
+          columns:
+          - column:
+              name: id
+              type: varchar(254)
+              constraints:
+                nullable: false
+                primaryKey: true
+          - column:
+              name: pulse_id
+              type: int
+              constraints:
+                nullable: false
+                references: pulse(id)
+                foreignKeyName: fk_pulse_card_file_ref_pulse_id
+                deferrable: false
+                initiallyDeferred: false
+          - column:
+              name: card_id
+              type: int
+              constraints:
+                nullable: false
+                references: report_card(id)
+                foreignKeyName: fk_pulse_card_file_refer_card_id
+                deferrable: false
+                initiallyDeferred: false
+          - column:
+              name: created_at
+              type: DATETIME
+              constraints:
+                nullable: false
+          - column:
+              name: location
+              type: varchar(max)
+              constraints:
+                nullable: false
+

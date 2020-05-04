@@ -4,5 +4,8 @@
       {{pulseName}}
     </h1>
   {{/pulseName}}
-  {{{report}}}
+  {{#reports}}
+    <b>{{name}}<b>
+    <a href={{download}}>Link</a>
+  {{/reports}}
 {{> metabase/email/_footer_pulse}}

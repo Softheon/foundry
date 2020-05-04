@@ -4,7 +4,9 @@
             [metabase
              [email :as email]
              [query-processor :as qp]
-             [util :as u]]
+             [util :as u]
+             [public-settings :as public-settings]]
+            [metabase.util.date :as du]
             [metabase.driver.util :as driver.u]
             [metabase.email.messages :as messages]
             [metabase.integrations.slack :as slack]
@@ -18,8 +20,10 @@
              [urls :as urls]
              [export :as export]]
             [schema.core :as s]
-            [metabase.toucan.db :as db])
+            [metabase.toucan.db :as db]
+            [metabase.models.pulse-card-file :as pulse-card-file :refer [PulseCardFile]])
   (:import java.util.TimeZone
+           java.util.UUID
            metabase.models.card.CardInstance))
 
 ;;; ------------------------------------------------- PULSE SENDING --------------------------------------------------
@@ -208,10 +212,10 @@
 (defmethod send-notification! :email
   [{:keys [subject recipients message-type message]}]
   (email/send-message!
-    :subject      subject
-    :recipients   recipients
-    :message-type message-type
-    :message      message))
+   :subject      subject
+   :recipients   recipients
+   :message-type message-type
+   :message      message))
 
 (defn- send-notifications! [notifications]
   (doseq [notification notifications]
@@ -250,8 +254,9 @@
 
 
 (defn execute-and-export-card
-  [pulse-card]
-  (let [card-id (:id pulse-card)]
+  [pulse-id pulse-card]
+  (let [card-id (:id pulse-card)
+        site-url (public-settings/site-url)]
     (try
       (when-let [card (Card :id card-id, :archived false)]
         (let [{:keys [creator_id dataset_query]}  card
@@ -270,27 +275,55 @@
               result (qp/process-query-and-stream-file! query options)]
           (if (instance? Throwable result)
             (throw result)
-            result)))
+
+            (let [_ (db/insert! PulseCardFile {:id  (str (UUID/randomUUID))
+                                               :pulse_id pulse-id
+                                               :card_id card-id
+                                               :location (.getAbsolutePath result)})
+                  latest-file (db/select-one PulseCardFile
+                                             :pulse_id pulse-id
+                                             :card_id card-id
+                                             {:order-by [[:created_at :desc]]})]
+
+              (future
+                (let [expired-date (du/->Timestamp
+                                    (- (.getTime (:created_at latest-file))  (* 7 24 60 60000)))]
+
+                  (db/delete! PulseCardFile
+                              {:where [:and
+                                       [:= :card_id card-id]
+                                       [:= :pulse_id pulse-id]
+                                       [:<= :created_at expired-date]]})))
+              (-> latest-file
+                  (assoc :name (:name card))
+                  (assoc :download
+                         (str site-url "/question/" card-id "/download/"
+                              (str (:pulse_id latest-file) "_" (:id latest-file)))))))))
       (catch Throwable e
         (log/error e (trs "Error exporting query for Card {0}" card-id))
         (throw e)))))
 
 (defn- create-email-notification
-  [{:keys [id name] :as pulse} {:keys [recipients] :as channel}]
+  [{:keys [id name] :as pulse} results {:keys [recipients] :as channel}]
   (log/debug (format "Sending Pulse (%d: %s) via Channel :email" id name))
   (let [email-subject (str "Report: " name)
         email-recipients (filterv u/email? (map :email recipients))]
     {:subject email-subject
      :recipients email-recipients
-     :message-type :attachments
-     :message (messages/render-report-email pulse execute-and-export-card)}))
+     :message-type :html
+     :message (messages/render-report-email pulse results)}))
 
 (defn- pulse->email-notifications
-  [{:keys [channel-ids] :as pulse}]
-  (let [channel-ids (or channel-ids (mapv :id (:channels pulse)))]
-    (for [channel-id channel-ids
-          :let [channel (some #(when (= channel-id (:id %)) %) (:channels pulse))]]
-      (create-email-notification pulse channel))))
+  [{:keys [cards channel-ids] :as pulse}]
+  (let [results (for [card cards
+                      :let [result (execute-and-export-card  (:id pulse) card)]
+                      :when result]
+                  result)
+        channel-ids (or channel-ids (mapv :id (:channels pulse)))]
+    (when (> (count results) 0)
+      (for [channel-id channel-ids
+            :let [channel (some #(when (= channel-id (:id %)) %) (:channels pulse))]]
+        (create-email-notification pulse results channel)))))
 
 (defn send-pulse!
   [{:keys [cards] :as pulse} & {:keys [channel-ids]}]

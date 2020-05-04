@@ -1,6 +1,15 @@
 {{> metabase/email/_header}}
-  <div style="text-align: center">
-    <p>Your reports are now available now.</p>
-    <p style="padding-top: 2em; font-size: small;">Please check attachments for more details</p>
-  </div>
+<div style="text-align: center">
+  <p>Your reports are now available now.</p>
+  <p style="padding-top: 2em; font-size: small;">Please use the following links to download</p>
+  <table>
+    {{#reports}}
+    <tr>
+      <td>
+        <a href={{download}}> {{name}}</a>
+      </td>
+    </tr>
+  {{/reports}}
+  </table>
+</div>
 {{> metabase/email/_footer_pulse}}

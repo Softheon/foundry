@@ -68,18 +68,18 @@
       (perms/perms-objects-set-for-parent-collection notification read-or-write))))
 
 (u/strict-extend (class Pulse)
-  models/IModel
-  (merge
-   models/IModelDefaults
-   {:hydration-keys (constantly [:pulse])
-    :properties     (constantly {:timestamped? true})
-    :pre-delete     pre-delete})
-  i/IObjectPermissions
-  (merge
-   i/IObjectPermissionsDefaults
-   {:can-read?         (partial i/current-user-has-full-permissions? :read)
-    :can-write?        (partial i/current-user-has-full-permissions? :write)
-    :perms-objects-set perms-objects-set}))
+                 models/IModel
+                 (merge
+                  models/IModelDefaults
+                  {:hydration-keys (constantly [:pulse])
+                   :properties     (constantly {:timestamped? true})
+                   :pre-delete     pre-delete})
+                 i/IObjectPermissions
+                 (merge
+                  i/IObjectPermissionsDefaults
+                  {:can-read?         (partial i/current-user-has-full-permissions? :read)
+                   :can-write?        (partial i/current-user-has-full-permissions? :write)
+                   :perms-objects-set perms-objects-set}))
 
 
 ;;; ---------------------------------------------------- Schemas -----------------------------------------------------
@@ -101,11 +101,11 @@
   additional information used by the UI to display it from `Card`. This is a superset of `CardRef` and is coercible to
   a `CardRef`"
   (su/with-api-error-message
-      (merge (:schema CardRef)
-             {:name          (s/maybe s/Str)
-              :description   (s/maybe s/Str)
-              :display       (s/maybe su/KeywordOrString)
-              :collection_id (s/maybe su/IntGreaterThanZero)})
+    (merge (:schema CardRef)
+           {:name          (s/maybe s/Str)
+            :description   (s/maybe s/Str)
+            :display       (s/maybe su/KeywordOrString)
+            :collection_id (s/maybe su/IntGreaterThanZero)})
     (tru "value must be a map with the following keys `({0})`"
          (str/join ", " ["collection_id" "description" "display" "id" "include_csv" "include_xls" "name"]))))
 
@@ -277,11 +277,11 @@
   ;; NOTE that we force the :id of the channel being updated to the :id we *know* from our
   ;;      existing list of PulseChannels pulled from the db to ensure we affect the right record
   (let [channel (when new-channel (assoc new-channel
-                                    :pulse_id       (u/get-id notification-or-id)
-                                    :id             (:id existing-channel)
-                                    :channel_type   (keyword (:channel_type new-channel))
-                                    :schedule_type  (keyword (:schedule_type new-channel))
-                                    :schedule_frame (keyword (:schedule_frame new-channel))))]
+                                         :pulse_id       (u/get-id notification-or-id)
+                                         :id             (:id existing-channel)
+                                         :channel_type   (keyword (:channel_type new-channel))
+                                         :schedule_type  (keyword (:schedule_type new-channel))
+                                         :schedule_frame (keyword (:schedule_frame new-channel))))]
     (cond
       ;; 1. in channels, NOT in db-channels = CREATE
       (and channel (not existing-channel))  (pulse-channel/create-pulse-channel! channel)
@@ -302,12 +302,12 @@
   [notification-or-id, channels :- [su/Map]]
   (let [new-channels   (group-by (comp keyword :channel_type) channels)
         old-channels   (group-by (comp keyword :channel_type) (db/select PulseChannel
-                                                                :pulse_id (u/get-id notification-or-id)))
+                                                                         :pulse_id (u/get-id notification-or-id)))
         handle-channel #(create-update-delete-channel! (u/get-id notification-or-id)
                                                        (first (get new-channels %))
                                                        (first (get old-channels %)))]
     (assert (zero? (count (get new-channels nil)))
-      "Cannot have channels without a :channel_type attribute")
+            "Cannot have channels without a :channel_type attribute")
     ;; for each of our possible channel types call our handler function
     (doseq [[channel-type] pulse-channel/channel-types]
       (handle-channel channel-type))))
@@ -317,13 +317,13 @@
   the Notification to `channels`. Returns the `id` of the newly created Notification."
   [notification, card-refs :- (s/maybe [CardRef]), channels]
   (db/transaction
-    (let [notification (db/insert! Pulse notification)]
+   (let [notification (db/insert! Pulse notification)]
       ;; add card-ids to the Pulse
-      (update-notification-cards! notification card-refs)
+     (update-notification-cards! notification card-refs)
       ;; add channels to the Pulse
-      (update-notification-channels! notification channels)
+     (update-notification-channels! notification channels)
       ;; now return the ID
-      (u/get-id notification))))
+     (u/get-id notification))))
 
 (s/defn create-pulse!
   "Create a new Pulse by inserting it into the database along with all associated pieces of data such as:
@@ -354,8 +354,8 @@
 (s/defn ^:private notification-or-id->existing-card-refs :- [CardRef]
   [notification-or-id]
   (db/select [PulseCard [:card_id :id] :include_csv :include_xls]
-    :pulse_id (u/get-id notification-or-id)
-    {:order-by [[:position :asc]]}))
+             :pulse_id (u/get-id notification-or-id)
+             {:order-by [[:position :asc]]}))
 
 (s/defn ^:private card-refs-have-changed? :- s/Bool
   [notification-or-id, new-card-refs :- [CardRef]]
@@ -380,9 +380,9 @@
                     (s/optional-key :channels)            [su/Map]
                     (s/optional-key :archived)            s/Bool}]
   (db/update! Pulse (u/get-id notification)
-    (u/select-keys-when notification
-      :present [:collection_id :collection_position :archived]
-      :non-nil [:name :alert_condition :alert_above_goal :alert_first_only :skip_if_empty]))
+              (u/select-keys-when notification
+                                  :present [:collection_id :collection_position :archived]
+                                  :non-nil [:name :alert_condition :alert_above_goal :alert_first_only :skip_if_empty]))
   ;; update Cards if the 'refs' have changed
   (when (contains? notification :cards)
     (update-notification-cards-if-changed! notification (map card->ref (:cards notification))))
@@ -439,3 +439,20 @@
       (log/warnf "Failed to remove user-id '%s' from alert-id '%s'" user-id alert-id))
 
     result))
+
+(defn pulse-file
+  [user-id card-id pulse-id]
+  (first (map hydrate-notification
+              (query-as Pulse
+                        {:select [:p.*]
+                         :from [[Pulse :p]]
+
+                         :join [[PulseCard :pc] [:= :p.id :pc.pulse_id]
+                                [PulseChannel :pchan] [:= :pchan.pulse_id :p.id]
+                                [PulseChannelRecipient :pcr] [:= :pchan.id :pcr.pulse_channel_id]]
+                         :where [:and
+                                 [:= :p.id pulse-id]
+                                 [:= :p.archived false]
+                                 [:= :pcr.user_id user-id]
+                                 [:= :pchan.enabled true]
+                                 [:= :pc.card_id card-id]]}))))

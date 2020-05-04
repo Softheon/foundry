@@ -97,6 +97,9 @@ import ArchiveApp from "metabase/home/containers/ArchiveApp.jsx";
 import SearchApp from "metabase/home/containers/SearchApp";
 import IamEmailNotVerified from "./auth/components/IamEmailNotVerified";
 
+// Download reports
+import DownloadQuestion from "metabase/download/containers/DownloadQuestion.jsx";
+
 const MetabaseIsSetup = UserAuthWrapper({
   predicate: authData => !authData.hasSetupToken,
   failureRedirectPath: "/setup",
@@ -239,7 +242,7 @@ export const getRoutes = store => (
         </Route>
         <Route path="/question/:cardId" component={QueryBuilder} />
         <Route path="/question/:cardId/entity" component={EntityPage} />
-
+        <Route path="/question/:cardId/download/:token" component={DownloadQuestion} />
         <Route path="/ready" component={PostSetupApp} />
 
         <Route path="browse" component={BrowseApp}>

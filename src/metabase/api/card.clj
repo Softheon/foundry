@@ -2,6 +2,7 @@
   "/api/card endpoints."
   (:require [cheshire.core :as json]
             [clojure.core.async :as a]
+            [clojure.java.io :as io]
             [clojure.tools.logging :as log]
             [compojure.core :refer [DELETE GET POST PUT]]
             [medley.core :as m]
@@ -25,7 +26,8 @@
              [query :as query]
              [table :refer [Table]]
              [view-log :refer [ViewLog]]
-             [field :as field :refer [Field]]]
+             [field :as field :refer [Field]]
+             [pulse-card-file :refer [PulseCardFile]]]
             [metabase.models.query.permissions :as query-perms]
             [metabase.query-processor
              [async :as qp.async]
@@ -41,6 +43,7 @@
              [export :as ex]]
             [schema.core :as s]
             [clojure.string :as str]
+            [ring.util.io :as ring-io]
             [metabase.toucan
              [db :as db]
              [hydrate :refer [hydrate]]])
@@ -725,7 +728,53 @@ Exception if preconditions (such as read perms) are not met before returning a c
     ;;                                                          :middleware  {:skip-results-metadata? true})))
     ))
 
+(defn- pulse-file-detail
+  [card-id  token]
+  (when-let [[_ pulse-id file-token] (re-matches #"(^\d+)_(.+$)" token)]
+    (when-let [pulse-file (if api/*is-superuser?*
+                            (pulse/retrieve-notification (Integer/parseInt pulse-id))
+                            (pulse/pulse-file api/*current-user-id* card-id pulse-id))]
+      (let [card  (first
+                   (filter (fn [card] (= card-id (:id card))) (:cards pulse-file)))
+            file  (db/select-one-field :location PulseCardFile :id file-token)]
+        (if (and file
+                 (.exists (io/file file)))
+          {:card-id (:id card)
+           :name (:name card)
+           :file file
+           :ext (if (boolean (:include_csv card)) "csv" "xlsx")}
+          (do
+            (log/info (format "card %s file %s does not exist" (:name card) file))
+            nil))))))
 
+(defn- write-file-to-outputstream
+  [file, out]
+  (let [file (io/file file)]
+    (io/copy file out)))
+
+(api/defendpoint-async POST "/:card-id/download"
+  [{{:keys [card-id token]} :params} respond raise]
+  {token su/NonBlankString}
+  (api/read-check Card card-id)
+  (api/let-404 [pulse-file (pulse-file-detail (Integer/parseInt card-id) token)]
+               (a/go
+                 (try
+                   (let [{:keys [card-id name file ext]}
+                         pulse-file]
+                     (respond
+                      {:status 200
+                       :body (ring-io/piped-input-stream
+                              (partial write-file-to-outputstream file))
+                       :headers
+                       {"Content-Type" "application/octet-stream"
+                        "Content-Disposition" (str "attachment; filename=\"" name "." ext "\"")}}))
+
+                   (catch Throwable e
+                     (log/error "Unable to read file" e)
+                     (respond
+                      {:status 410
+                       :body "Resource is not available to download."}))))
+               nil))
 ;;; ----------------------------------------------- Sharing is Caring ------------------------------------------------
 
 (api/defendpoint POST "/:card-id/public_link"

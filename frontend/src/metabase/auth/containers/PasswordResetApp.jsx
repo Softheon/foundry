@@ -89,7 +89,7 @@ export default class PasswordResetApp extends Component {
 
     let { token, passwordReset } = this.props;
     let { credentials } = this.state;
-    this.setState({showSpinner: true})
+    this.setState({ showSpinner: true })
     passwordReset(token, credentials);
   }
 
@@ -98,7 +98,7 @@ export default class PasswordResetApp extends Component {
     const passwordComplexity = MetabaseSettings.passwordComplexityDescription(
       false,
     );
-    const  isLoading = !resetSuccess && this.state.showSpinner && !resetError;
+    const isLoading = !resetSuccess && this.state.showSpinner && !resetError;
 
     const requestLink = (
       <Link to="/auth/forgot_password" className="link">
@@ -130,8 +130,8 @@ export default class PasswordResetApp extends Component {
             </div>
           </div>
           {isLoading && (
-            <div className="Loading spread flex flex-column layout-centered text-brand z2" style={{zIndex: 50}}>
-              <LoadingSpinner/>
+            <div className="Loading spread flex flex-column layout-centered text-brand z2" style={{ zIndex: 50 }}>
+              <LoadingSpinner />
               <h2 className="Loading-message text-brand text-uppercase my3">
                 {t`Loading ...`}
               </h2>
@@ -218,28 +218,28 @@ export default class PasswordResetApp extends Component {
                 </form>
               </div>
             ) : (
-              <div className="Grid-cell">
-                <div className="SuccessGroup bg-white bordered rounded shadowed">
-                  <div className="SuccessMark">
-                    <Icon name="check" />
+                <div className="Grid-cell">
+                  <div className="SuccessGroup bg-white bordered rounded shadowed">
+                    <div className="SuccessMark">
+                      <Icon name="check" />
+                    </div>
+                    <p>{t`Your password has been reset.`}</p>
+                    <p>
+                      {newUserJoining ? (
+                        <Link
+                          to="/?new"
+                          className="Button Button--primary"
+                        >{t`Sign in with your new password`}</Link>
+                      ) : (
+                          <Link
+                            to="/"
+                            className="Button Button--primary"
+                          >{t`Sign in with your new password`}</Link>
+                        )}
+                    </p>
                   </div>
-                  <p>{t`Your password has been reset.`}</p>
-                  <p>
-                    {newUserJoining ? (
-                      <Link
-                        to="/?new"
-                        className="Button Button--primary"
-                      >{t`Sign in with your new password`}</Link>
-                    ) : (
-                      <Link
-                        to="/"
-                        className="Button Button--primary"
-                      >{t`Sign in with your new password`}</Link>
-                    )}
-                  </p>
                 </div>
-              </div>
-            )}
+              )}
           </div>
         </div>
       );

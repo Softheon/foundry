@@ -31,30 +31,30 @@ const DownloadButton = ({
   extensions,
   ...props
 }) => (
-  <Box>
-    <form method={method} action={url}>
-      {params && extractQueryParams(params).map(getInput)}
-      <Flex
-        is="button"
-        className="text-white-hover bg-brand-hover rounded cursor-pointer full hover-parent hover--inherit"
-        align="center"
-        px={1}
-        onClick={e => {
-          if (window.OSX) {
-            // prevent form from being submitted normally
-            e.preventDefault();
-            // download using the API provided by the OS X app
-            window.OSX.download(method, url, params, extensions);
-          }
-        }}
-        {...props}
-      >
-        <Icon name={children} size={32} mr={1} color={colorForType(children)} />
-        <Text className="text-bold">.{children}</Text>
-      </Flex>
-    </form>
-  </Box>
-);
+    <Box>
+      <form method={method} action={url}>
+        {params && extractQueryParams(params).map(getInput)}
+        <Flex
+          is="button"
+          className="text-white-hover bg-brand-hover rounded cursor-pointer full hover-parent hover--inherit"
+          align="center"
+          px={1}
+          onClick={e => {
+            if (window.OSX) {
+              // prevent form from being submitted normally
+              e.preventDefault();
+              // download using the API provided by the OS X app
+              window.OSX.download(method, url, params, extensions);
+            }
+          }}
+          {...props}
+        >
+          <Icon name={children} size={32} mr={1} color={colorForType(children)} />
+          <Text className="text-bold">{children}</Text>
+        </Flex>
+      </form>
+    </Box>
+  );
 
 export class DownloadModalButton extends Component {
   constructor(props, context) {
@@ -74,7 +74,7 @@ export class DownloadModalButton extends Component {
               className="text-white-hover bg-brand-hover rounded cursor-pointer full hover-parent hover--inherit"
               align="center"
               px={1}
-              onClick={e => {}}
+              onClick={e => { }}
             >
               <Icon
                 name={children}
