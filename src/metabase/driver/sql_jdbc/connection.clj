@@ -48,7 +48,7 @@
   (let [details-with-tunnel (ssh/include-ssh-tunnel details) ;; If the tunnel is disabled this returned unchanged
         spec                (connection-details->spec engine details-with-tunnel)]
     (assoc (connection-pool/connection-pool-spec spec data-warehouse-connection-pool-properties)
-      :ssh-tunnel (:tunnel-connection details-with-tunnel))))
+           :ssh-tunnel (:tunnel-connection details-with-tunnel))))
 
 (defn- destroy-pool! [database-id pool-spec]
   (log/debug (u/format-color 'red (tru "Closing old connection pool for database {0} ..." database-id)))
@@ -101,7 +101,7 @@
                  database-or-id
                  (db/select-one [Database :id :engine :details] :id database-or-id))]
         (u/prog1 (create-pool! db)
-          (set-pool! (u/get-id database-or-id) <>)))))))
+                 (set-pool! (u/get-id database-or-id) <>)))))))
 
 
 ;;; +----------------------------------------------------------------------------------------------------------------+
