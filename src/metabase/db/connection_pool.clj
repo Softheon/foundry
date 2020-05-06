@@ -5,7 +5,8 @@
   The aim here is to completely encapsulate the connection pool library we use -- that way we can swap it out if we
   want to at some point without having to touch any other files. (TODO - this is currently true of everything except
   for the options, which are c3p0-specific -- consider abstracting those as well?)"
-  (:require [metabase.util :as u])
+  (:require [metabase.util :as u]
+            [clojure.tools.logging :as log])
   (:import com.mchange.v2.c3p0.DataSources
            [java.sql Driver DriverManager]
            [java.util Map Properties]
@@ -23,17 +24,21 @@
   (^DataSource [^Driver driver, ^String jdbc-url, ^Properties properties]
    (reify DataSource
      (getConnection [_]
-                    (let [connectionInstance (.connect driver jdbc-url properties)]
-                      ; (.setTransactionIsolation connectionInstance (Connection/TRANSACTION_READ_UNCOMMITTED))
-                      connectionInstance))
+       (let [connectionInstance (.connect driver jdbc-url properties)]
+         (when (instance? com.microsoft.sqlserver.jdbc.SQLServerDriver driver)
+           (log/info "setting isolation to read uncommitted")
+           (.setTransactionIsolation connectionInstance (Connection/TRANSACTION_READ_UNCOMMITTED)))
+         connectionInstance))
      (getConnection [_ username password]
-                    (doseq [[k v] {"user" username, "password" password}]
-                      (if (some? k)
-                        (.setProperty properties k (name v))
-                        (.remove properties k)))
-                    (let [connectionInstance (.connect driver jdbc-url properties)] 
-                      ; (.setTransactionIsolation connectionInstance (Connection/TRANSACTION_READ_UNCOMMITTED))
-                      connectionInstance)))))
+       (doseq [[k v] {"user" username, "password" password}]
+         (if (some? k)
+           (.setProperty properties k (name v))
+           (.remove properties k)))
+       (let [connectionInstance (.connect driver jdbc-url properties)]
+         (when (instance? com.microsoft.sqlserver.jdbc.SQLServerDriver driver)
+           (log/info "setting isolation to read uncommitted")
+           (.setTransactionIsolation connectionInstance (Connection/TRANSACTION_READ_UNCOMMITTED)))
+         connectionInstance)))))
 
 
 ;;; ------------------------------------------- Creating Connection Pools --------------------------------------------
@@ -43,10 +48,10 @@
   keys and values are converted to Strings appropriately."
   ^Properties [m]
   (u/prog1 (Properties.)
-    (doseq [[k v] m]
-      (.setProperty <> (name k) (if (keyword? v)
-                                  (name v)
-                                  (str v))))))
+           (doseq [[k v] m]
+             (.setProperty <> (name k) (if (keyword? v)
+                                         (name v)
+                                         (str v))))))
 
 (defn- spec->properties ^Properties [spec]
   (map->properties (dissoc spec :classname :subprotocol :subname)))
