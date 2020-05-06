@@ -24,6 +24,7 @@
             [metabase.models.pulse-card-file :as pulse-card-file :refer [PulseCardFile]])
   (:import java.util.TimeZone
            java.util.UUID
+           (java.io File)
            metabase.models.card.CardInstance))
 
 ;;; ------------------------------------------------- PULSE SENDING --------------------------------------------------
@@ -273,8 +274,8 @@
                        :context :pulse
                        :card-id card-id}
               result (qp/process-query-and-stream-file! query options)]
-          (if (instance? Throwable result)
-            (throw result)
+          (if-not (instance? File result)
+            (throw (ex-info "Unable to export the report" {:cause result}))
 
             (let [_ (db/insert! PulseCardFile {:id  (str (UUID/randomUUID))
                                                :pulse_id pulse-id

@@ -151,11 +151,17 @@
                        (finally
                          (.flush out))))
                    (finally
-                     (.flush output)
-                     (.close output)
-                     (.close rset)
-                     (.close stmt)
-                     (.close (:connection connection))
+                     (try
+
+                       (.flush output)
+                       (.close output)
+                       (.close rset)
+                       (.close stmt)
+                       (.close (:connection connection))
+                       (catch Throwable e
+                         (log/info "failed to close reousrces properly")
+                         (log/info e)))
+
                      (log/info "all resources are closed"))))]
       (.connect input output)
       (.submit (thread-pool) ^Runnable task)
@@ -180,10 +186,13 @@
                      (a/>!! finished-chan e))
                    (finally
                      (a/close! finished-chan)
-
-                     (.close rset)
-                     (.close stmt)
-                     (.close (:connection connection))
+                     (try
+                       (.close rset)
+                       (.close stmt)
+                       (.close (:connection connection))
+                       (catch Throwable e
+                         (log/info "failed to close reousrces properly")
+                         (log/info e)))
                      (log/info "all db resources associated with exporting a report are released."))))]
       (.submit (thread-pool) ^Runnable task)
       (a/<!! finished-chan))))
