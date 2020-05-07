@@ -5445,4 +5445,13 @@ databaseChangeLog:
               type: varchar(max)
               constraints:
                 nullable: false
+  - changeSet:
+      id: 105
+      author: hxia
+      comment: 'Updated object data type to varchar(max)'
+      changes:
+        - modifyDataType:
+            tableName: revision
+            columnName: object
+            newDataType: varchar(max)
 
