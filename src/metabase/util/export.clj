@@ -122,6 +122,7 @@
   (fn [stmt rset data]
     (let [finished-chan (a/promise-chan)
           file (create-export-file card-id ".csv")
+          conn (:connection connection)
           task (bound-fn []
                  (try
                    (with-open [writer (io/writer file)]
@@ -130,10 +131,21 @@
                    (catch Throwable e
                      (a/>!! finished-chan e))
                    (finally
-                     (a/close! finished-chan)
-                     (.close rset)
-                     (.close stmt)
-                     (.close (:connection connection))
+                     (try
+                       (a/close! finished-chan)
+                       (.close rset)
+                       (.close stmt)
+                       (.rollback conn)
+                       (catch Throwable e
+                         (throw (ex-info (str "export-to-csv-file: failed to export to csv because Rollback failed handling \""
+                                              (.getMessage e)
+                                              "\"")
+                                         {:rollback e})))
+                       (finally
+                         (try
+                           (.close conn)
+                           (catch Throwable e
+                             (log/error e)))))
                      (log/info "all db resources associated with exporting a report are released."))))]
       (.submit (thread-pool) ^Runnable task)
       (a/<!! finished-chan))))
@@ -143,6 +155,7 @@
   (fn [stmt rset data]
     (let [input (PipedInputStream.)
           output (PipedOutputStream.)
+          conn (:connection connection)
           task (bound-fn []
                  (try
                    (let [out (io/make-writer output {})]
@@ -152,15 +165,23 @@
                          (.flush out))))
                    (finally
                      (try
-
                        (.flush output)
                        (.close output)
                        (.close rset)
                        (.close stmt)
-                       (.close (:connection connection))
+                       (.rollback conn)
                        (catch Throwable e
                          (log/info "failed to close reousrces properly")
-                         (log/info e)))
+                         (log/info e)
+                         (throw (ex-info (str "export-to-csv-stream: failed to export csv because rollback failed handling \""
+                                              (.getMessage e)
+                                              "\"")
+                                         {:rollback e})))
+                       (finally
+                         (try
+                           (.close conn)
+                           (catch Throwable e
+                             (log/error e)))))
 
                      (log/info "all resources are closed"))))]
       (.connect input output)
@@ -172,7 +193,7 @@
   (fn [stmt rset data]
     (let [finished-chan (a/promise-chan)
           file (create-export-file card-id ".xlsx")
-
+          conn (:connection connection)
           task (bound-fn []
                  (try
                    (let [workbook (excel/create-workbook "Report Result" data)]
@@ -185,14 +206,23 @@
                    (catch Throwable e
                      (a/>!! finished-chan e))
                    (finally
-                     (a/close! finished-chan)
                      (try
+                       (a/close! finished-chan)
                        (.close rset)
                        (.close stmt)
-                       (.close (:connection connection))
+                       (.rollback conn)
                        (catch Throwable e
-                         (log/info "failed to close reousrces properly")
-                         (log/info e)))
+                         (log/info "excel: failed to close reousrces properly")
+                         (log/info e)
+                         (throw (ex-info (str "failed to export to excel because Rollback failed handling \""
+                                              (.getMessage e)
+                                              "\"")
+                                         {:rollback e})))
+                       (finally
+                         (try
+                           (.close conn)
+                           (catch Throwable e
+                             (log/error e)))))
                      (log/info "all db resources associated with exporting a report are released."))))]
       (.submit (thread-pool) ^Runnable task)
       (a/<!! finished-chan))))
@@ -203,6 +233,7 @@
     (let [input (PipedInputStream.)
           output (PipedOutputStream.)
           transfering-chan (a/promise-chan)
+          conn (:connection connection)
           task (bound-fn []
                  (try
                    (let [workbook (excel/create-workbook "Report Result" data)]
@@ -216,11 +247,24 @@
                      (log/error e)
                      (log/error e (trs "Casught unexpected Exception during steaming response.")))
                    (finally
-                     (.flush output)
-                     (.close output)
-                     (.close rset)
-                     (.close stmt)
-                     (.close (:connection connection))
+                     (try
+                       (.flush output)
+                       (.close output)
+                       (.close rset)
+                       (.close stmt)
+                       (.rollback conn)
+                       (catch Throwable e
+                         (log/info "failed to close reousrces properly")
+                         (log/info e)
+                         (throw (ex-info (str "failed to export to excel because Rollback failed handling \""
+                                              (.getMessage e)
+                                              "\"")
+                                         {:rollback e})))
+                       (finally
+                         (try
+                           (.close conn)
+                           (catch Throwable e
+                             (log/error e)))))
                      (log/info "all resources are closed"))))]
       (.connect input output)
       (.submit (thread-pool) ^Runnable task)

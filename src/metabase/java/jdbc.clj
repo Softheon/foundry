@@ -1730,9 +1730,9 @@ metabase.java.jdbc
             (.setAutoCommit con false)
             (try
               (let [result (func nested-db)]
-                (if (db-is-rollback-only nested-db)
-                  (.rollback con)
-                  (.commit con))
+                ;; (if (db-is-rollback-only nested-db)
+                ;;   (.rollback con)
+                ;;   (.commit con))
                 result)
               (catch Throwable t
                 (try

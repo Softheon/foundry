@@ -244,6 +244,19 @@ before finishing)."
     (f)
     (finally (.rollback (jdbc/get-connection conn)))))
 
+(defn- do-with-auto-commit-disabled-for-exporting
+  "Disable auto-commit for this transaction, and make the transaction `rollback-only`, which means when the
+  transaction finishes `.rollback` will be called instead of `.commit`. Furthermore, execute F in a try-finally block;
+  in the `finally`, manually call `.rollback` just to be extra-double-sure JDBC any changes made by the transaction
+  aren't committed."
+  {:style/indent 1}
+  [conn f]
+  (jdbc/db-set-rollback-only! conn)
+  (.setAutoCommit (jdbc/get-connection conn) false)
+  ;; TODO - it would be nice if we could also `.setReadOnly` on the transaction as well, but that breaks setting the
+  ;; timezone. Is there some way we can have our cake and eat it too?
+  (f))
+
 (defn- do-in-transaction [connection f]
   (jdbc/with-db-transaction [transaction-connection connection]
     (do-with-auto-commit-disabled transaction-connection (partial f transaction-connection))))
@@ -379,7 +392,7 @@ before finishing)."
 
 (defn- do-in-transaction-stream [connection f]
   (f-jdbc/with-db-transaction-without-auto-close [transaction-connection connection]
-    (do-with-auto-commit-disabled transaction-connection (partial f transaction-connection))))
+    (do-with-auto-commit-disabled-for-exporting transaction-connection (partial f transaction-connection))))
 
 (defn- run-query-without-timezone-stream [driver _ connection query export-fn]
   (do-in-transaction-stream connection (partial query-stream driver query nil export-fn)))
