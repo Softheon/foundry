@@ -4,8 +4,25 @@ const SPECIAL_GROUP_NAMES = new Map([
   ["All Users", t`All Users`],
   ["Administrators", t`Administrators`],
   ["MetaBot", t`MetaBot`],
-  ["IDS Users", t`IDS Users`]
+  ["IDS Users", t`IDS Users`],
+  ["Pulse Users", t`Pulse Users`],
 ]);
+
+const ADMIN_ONLY_GROUP_NAMES = new Map([
+  ["Administrators", t`Administrators`],
+  ["MetaBot", t`MetaBot`],
+  ["IDS Users", t`IDS Users`],
+  ["Pulse Users", t`Pulse Users`],
+  ["Manager", t`Manager`]
+]);
+
+export function isAdminOnlyGroup(group) {
+  return ADMIN_ONLY_GROUP_NAMES.has(group.name)
+}
+
+export function isSpecialGroup(group) {
+  return SPECIAL_GROUP_NAMES.has(group.name);
+}
 
 export function isDefaultGroup(group) {
   return group.name === "All Users";

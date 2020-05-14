@@ -57,6 +57,18 @@ const AdminNavItem = ({ name, path, currentPath }) => (
   </li>
 );
 
+const NavItem = ({ name, path, currentPath }) => (
+  <li>
+    <Link
+      to={path}
+      data-metabase-event={`NavBar;${name}`}
+      className={cx("NavItem py1 px2 no-decoration", {
+        "is--selected": currentPath && currentPath.startsWith(path) || false
+      })}>
+      {name}
+    </Link>
+  </li>
+);
 const DefaultSearchColor = color(colors["dark-brand"])
   .lighten(0.07)
   .string();
@@ -189,7 +201,34 @@ export default class Navbar extends Component {
       }
     }
   }
-
+  renderManagerNav() {
+    return (
+      <nav className={"Nav AdminNav sm-py1"}>
+        <div className="sm-pl4 flex align-center pr1">
+          <div className="NavTitle flex align-center">
+            <Icon name={"gear"} className="AdminGear" size={22} />
+            <span className="NavItem-text ml1 hid sm-show text-bold">
+              {t`Foundry Manager`}
+            </span>
+          </div>
+          <ul className="sm-ml4 flex flex-full">
+            <NavItem
+              name={t`People`}
+              path="/manager/people"
+              currentPath={this.props.path}
+            />
+            <NavItem
+              name={t`Permissions`}
+              path="/manager/permissions"
+              currentPath={this.props.path}
+            />
+          </ul>
+          <ProfileLink {...this.props} />
+        </div>
+        {this.renderModal()}
+      </nav>
+    );
+  }
   renderAdminNav() {
     return (
       // NOTE: DO NOT REMOVE `Nav` CLASS FOR NOW, USED BY MODALS, FULLSCREEN DASHBOARD, ETC
@@ -393,6 +432,8 @@ export default class Navbar extends Component {
         return this.renderEmptyNav();
       case "setup":
         return null;
+      case "manager":
+        return this.renderManagerNav();
       default:
         return this.renderMainNav();
     }

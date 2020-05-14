@@ -8,7 +8,8 @@ import MetabaseAnalytics from "metabase/lib/analytics";
 import {
   isDefaultGroup,
   isAdminGroup,
-  isSpecialGroup,
+  isIdsGroup,
+  isAdminOnlyGroup,
   getGroupNameLocalized,
 } from "metabase/lib/groups";
 import { KEYCODE_ENTER } from "metabase/lib/keyboard";
@@ -27,6 +28,8 @@ import AdminContentTable from "metabase/components/AdminContentTable.jsx";
 import AdminPaneLayout from "metabase/components/AdminPaneLayout.jsx";
 
 import AddRow from "./AddRow.jsx";
+
+
 
 // ------------------------------------------------------------ Add Group ------------------------------------------------------------
 
@@ -144,8 +147,6 @@ function EditingGroupRow({
   );
 }
 
-// ------------------------------------------------------------ Groups Table: not editing ------------------------------------------------------------
-
 const COLORS = ["bg-error", "bg-purple", "bg-brand", "bg-gold", "bg-green"];
 
 function GroupRow({
@@ -161,10 +162,8 @@ function GroupRow({
   onEditGroupDoneClicked,
 }) {
   const color = COLORS[index % COLORS.length];
-  const showActionsButton = !isDefaultGroup(group) &&
-    !isAdminGroup(group) && !isSpecialGroup(group);
+  const showActionsButton = !isDefaultGroup(group) && !isAdminOnlyGroup(group);
   const editing = groupBeingEdited && groupBeingEdited.id === group.id;
-
   return editing ? (
     <EditingGroupRow
       group={groupBeingEdited}
@@ -177,7 +176,7 @@ function GroupRow({
       <tr>
         <td>
           <Link
-            to={"/admin/people/groups/" + group.id}
+            to={"/manager/people/groups/" + group.id}
             className="link no-decoration"
           >
             <span className="text-white inline-block">
@@ -251,7 +250,7 @@ function sortGroups(groups) {
   return _.sortBy(groups, group => group.name && group.name.toLowerCase());
 }
 
-export default class GroupsListing extends Component {
+export default class GroupListing extends Component {
   constructor(props, context) {
     super(props, context);
     this.state = {
@@ -259,8 +258,8 @@ export default class GroupsListing extends Component {
       showAddGroupRow: false,
       groups: null,
       groupBeingEdited: null,
-      alertMessage: null,
-    };
+      alertMessage: null
+    }
   }
 
   alert(alertMessage) {
@@ -298,7 +297,7 @@ export default class GroupsListing extends Component {
 
   onAddGroupTextChanged(newText) {
     this.setState({
-      text: newText,
+      text: newText
     });
   }
 
@@ -329,9 +328,10 @@ export default class GroupsListing extends Component {
 
   onEditGroupCancelClicked() {
     this.setState({
-      groupBeingEdited: null,
+      groupBeingEdited: null
     });
   }
+
 
   // TODO: move this to Redux
   onEditGroupDoneClicked() {
@@ -393,9 +393,7 @@ export default class GroupsListing extends Component {
 
   render() {
     const { alertMessage } = this.state;
-    let { groups } = this.props;
-    groups = this.state.groups || groups || [];
-
+    let groups = this.state.groups || this.props.groups || [];
     return (
       <AdminPaneLayout
         title={t`Groups`}

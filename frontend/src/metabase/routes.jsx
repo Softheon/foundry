@@ -82,6 +82,7 @@ import FieldListContainer from "metabase/reference/databases/FieldListContainer.
 import FieldDetailContainer from "metabase/reference/databases/FieldDetailContainer.jsx";
 
 import getAdminRoutes from "metabase/admin/routes";
+import getManagerRoutes from "metabase/manager/routes";
 
 import PublicQuestion from "metabase/public/containers/PublicQuestion.jsx";
 import PublicDashboard from "metabase/public/containers/PublicDashboard.jsx";
@@ -337,6 +338,9 @@ export const getRoutes = store => (
 
       {/* USER */}
       <Route path="/user/edit_current" component={UserSettingsApp} />
+
+      {/* MMANAGER */}
+      {getManagerRoutes(store, IsAdmin)}
 
       {/* ADMIN */}
       {getAdminRoutes(store, IsAdmin)}

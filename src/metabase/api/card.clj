@@ -454,7 +454,7 @@
     ;; Do various permissions checks
     (collection/check-allowed-to-change-collection card-before-update card-updates)
     (check-allowed-to-modify-query                 card-before-update card-updates)
-    (check-allowed-to-unarchive                    card-before-update card-updates)
+    (check-allowed-to-unarchive                   card-before-update card-updates)
     (check-allowed-to-change-embedding             card-before-update card-updates)
     ;; make sure we have the correct `result_metadata`
     (let [result-metadata-chan (result-metadata-for-updating-async

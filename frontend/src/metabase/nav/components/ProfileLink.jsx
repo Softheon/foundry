@@ -37,7 +37,9 @@ export default class ProfileLink extends Component {
   generateOptionsForUser = () => {
     const { tag } = MetabaseSettings.get("version");
     const admin = this.props.user.is_superuser;
+    const manager = this.props.user.is_manager || false;
     const adminContext = this.props.context === "admin";
+    const managerContext = this.props.context === "manager";
     return [
       {
         title: t`Account settings`,
@@ -52,7 +54,7 @@ export default class ProfileLink extends Component {
           link: adminContext ? "/" : "/admin",
           event: `Navbar;Profile Dropdown;${
             adminContext ? "Exit Admin" : "Enter Admin"
-          }`,
+            }`,
         },
       ]),
       ...(admin && [
@@ -63,6 +65,18 @@ export default class ProfileLink extends Component {
           event: `Navbar;Profile Dropdown;Debugging ${tag}`,
         },
       ]),
+      ...(manager
+        && !admin
+        && [
+          {
+            title: managerContext ? t`Exit Manager` : t`Manager`,
+            icon: null,
+            link: managerContext ? "/" : "/manager",
+            event: `Navbar: Profile Dropdown;${
+              managerContext ? "Exit Manager" : "Enter Manager"
+              }`,
+          },
+        ]),
       {
         title: t`Sign out`,
         icon: null,
@@ -113,7 +127,7 @@ export default class ProfileLink extends Component {
               style={{ borderWidth: "2px" }}
               className="p2 h5 text-centered text-medium border-top"
             >
-              
+
             </div>
           </Modal>
         ) : modalOpen === "logs" ? (

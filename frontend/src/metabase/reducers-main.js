@@ -9,6 +9,9 @@ import commonReducers from "./reducers-common";
 /* admin */
 import admin from "metabase/admin/admin";
 
+/* manager */
+import manager from "metabase/manager/manager";
+
 /* setup */
 import * as setup from "metabase/setup/reducers";
 
@@ -50,4 +53,5 @@ export default {
   setup: combineReducers(setup),
   user: combineReducers(user),
   admin,
+  manager,
 };

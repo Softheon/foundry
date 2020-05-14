@@ -9,7 +9,9 @@ export const getContext = createSelector(
   path =>
     path.startsWith("/auth/")
       ? "auth"
-      : path.startsWith("/setup/")
-        ? "setup"
-        : path.startsWith("/admin/") ? "admin" : path === "/" ? "home" : "main",
+      : path.startsWith("/manager/")
+        ? "manager"
+        : path.startsWith("/setup/")
+          ? "setup"
+          : path.startsWith("/admin/") ? "admin" : path === "/" ? "home" : "main",
 );

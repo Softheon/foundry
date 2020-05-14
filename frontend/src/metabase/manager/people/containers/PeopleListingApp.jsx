@@ -80,7 +80,6 @@ const mapDispatchToProps = {
 export default class PeopleListingApp extends Component {
   constructor(props, context) {
     super(props, context);
-
     this.state = { error: null };
   }
 
@@ -109,8 +108,8 @@ export default class PeopleListingApp extends Component {
       await Promise.all([
         this.props.fetchUsers(),
         this.props.loadGroups(),
-        this.props.loadMemberships(),
-      ]);
+        this.props.loadMemberships()
+      ])
     } catch (error) {
       this.setState({ error });
     }
@@ -146,7 +145,7 @@ export default class PeopleListingApp extends Component {
       await this.props.updateUser(user);
     }
     this.props.showModal(null);
-  };
+  }
 
   onPasswordResetConfirm(user) {
     if (MetabaseSettings.isEmailConfigured()) {
@@ -189,14 +188,14 @@ export default class PeopleListingApp extends Component {
 
   renderAddPersonModal(modalDetails) {
     return (
-      <Modal title={t`Who do you want to add?`} onClose={this.onCloseModal}>
+      <Modal title={t`Who do you want to add?`} onCloseModal={this.onCloseModal}>
         <EditUserForm
           buttonText={t`Add`}
           submitFn={this.onAddPerson}
           groups={this.props.groups}
         />
       </Modal>
-    );
+    )
   }
 
   renderEditDetailsModal(modalDetails) {
@@ -232,18 +231,9 @@ export default class PeopleListingApp extends Component {
                     so make sure to tell them to log in using ${(
               <span className="text-bold">{user.email}</span>
             )}
-                    and this password we’ve generated for them:`}</div>
-
+                    and this password we’ve generated for them:`}
+          </div>
           <PasswordReveal password={user.password} />
-
-          <div
-            style={{ paddingLeft: "5em", paddingRight: "5em" }}
-            className="pt4 text-centered"
-          >{jt`If you want to be able to send email invites, just go to the ${(
-            <Link to="/admin/settings/email" className="link text-bold">
-              Email Settings
-            </Link>
-          )} page.`}</div>
         </div>
       </Modal>
     );
@@ -286,11 +276,12 @@ export default class PeopleListingApp extends Component {
         ]}
         onClose={this.onCloseModal}
       >
-        <p className="text-paragraph pb2">{t`Any previous email invites they have will no longer work.`}</p>
+        <p className="text-paragraph pb2">
+          {t`Any previous email invites they have will no longer work.`}
+        </p>
       </Modal>
     );
   }
-
   renderDeactivateUserModal(modalDetails) {
     let { user } = modalDetails;
 
@@ -310,7 +301,6 @@ export default class PeopleListingApp extends Component {
       </Modal>
     );
   }
-
   renderReactivateUserModal(modalDetails) {
     let { user } = modalDetails;
 
@@ -331,7 +321,6 @@ export default class PeopleListingApp extends Component {
       </Modal>
     );
   }
-
   renderResetPasswordModal(modalDetails) {
     let { user } = modalDetails;
 
@@ -375,6 +364,7 @@ export default class PeopleListingApp extends Component {
     );
   }
 
+
   renderPasswordResetViaEmailModal(modalDetails) {
     let { user } = modalDetails;
 
@@ -389,6 +379,7 @@ export default class PeopleListingApp extends Component {
       </Modal>
     );
   }
+
 
   renderModal(modalType, modalDetails) {
     switch (modalType) {
@@ -452,14 +443,16 @@ export default class PeopleListingApp extends Component {
     }
 
     return (
-      <LoadingAndErrorWrapper loading={!users} error={error}>
+      <LoadingAndErrorWrapper
+        loading={!users}
+        error={error}
+      >
         {() => (
           <AdminPaneLayout
             title={title}
             buttonText={showDeactivated ? null : t`Add someone`}
             buttonAction={() =>
-              this.props.showModal({ type: MODAL_ADD_PERSON })
-            }
+              this.props.showModal({ type: MODAL_ADD_PERSON })}
           >
             <section className="pb4">
               <table className="ContentTable">
@@ -486,9 +479,7 @@ export default class PeopleListingApp extends Component {
                       <td>
                         <span className="text-white inline-block">
                           <UserAvatar
-                            background={
-                              user.is_superuser ? "bg-purple" : "bg-brand"
-                            }
+                            background="bg-brand"
                             user={user}
                           />
                         </span>{" "}
@@ -497,16 +488,6 @@ export default class PeopleListingApp extends Component {
                         </span>
                       </td>
                       <td>
-                        {user.google_auth ? (
-                          <Tooltip tooltip={t`Signed up via Google`}>
-                            <Icon name="google" />
-                          </Tooltip>
-                        ) : null}
-                        {user.ldap_auth ? (
-                          <Tooltip tooltip={t`Signed up via LDAP`}>
-                            <Icon name="ldap" />
-                          </Tooltip>
-                        ) : null}
                         {user.iam_auth ? (
                           <Tooltip tooltip={t`Signed up via Softheon`}>
                             <Icon name="Softheon" />
