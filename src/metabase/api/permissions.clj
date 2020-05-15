@@ -1,6 +1,7 @@
 (ns metabase.api.permissions
   "/api/permissions endpoints."
   (:require [compojure.core :refer [DELETE GET POST PUT]]
+            [clojure.tools.logging :as log]
             [metabase
              [metabot :as metabot]
              [util :as u]]
@@ -46,7 +47,10 @@
                              :schemas (dejsonify-schemas schemas)}})))
 
 (defn- dejsonify-groups [groups]
-  (into {} (for [[group-id dbs] groups]
+  (into {} (for [[group-id dbs] groups
+                 :when (if api/*is-superuser?*
+                         true
+                         (not (contains? (group/admin-only-group-ids-set) (->int group-id))))]
              {(->int group-id) (dejsonify-dbs dbs)})))
 
 (defn- dejsonify-graph
@@ -58,11 +62,27 @@
 
 ;;; --------------------------------------------------- Endpoints ----------------------------------------------------
 
+(defn check-group-id
+  [group-id]
+  (when-not api/*is-superuser?*
+    (api/check-403 (not (contains? (group/admin-only-group-ids-set) group-id)))))
+
+(defn- permission-graph
+  [graph]
+  (if api/*is-superuser?*
+    graph
+    (update graph :groups
+            (fn [groups]
+              (reduce (fn [groups id] (dissoc groups id))
+                      groups
+                      (group/admin-only-group-ids-set))))))
+
 (api/defendpoint GET "/graph"
   "Fetch a graph of all Permissions."
   []
-  (api/check-superuser)
-  (perms/graph))
+  ;(api/check-superuser)
+  (api/check-site-manager)
+  (permission-graph (perms/graph)))
 
 
 (api/defendpoint PUT "/graph"
@@ -76,9 +96,10 @@
   409 (Conflict) response. In this case, you should fetch the updated graph and make desired changes to that."
   [:as {body :body}]
   {body su/Map}
-  (api/check-superuser)
+  ;(api/check-superuser)
+  (api/check-site-manager)
   (perms/update-graph! (dejsonify-graph body))
-  (perms/graph))
+  (permission-graph (perms/graph)))
 
 
 ;;; +----------------------------------------------------------------------------------------------------------------+
@@ -103,10 +124,10 @@
   "Return a sequence of ordered `PermissionsGroups`, including the `MetaBot` group only if MetaBot is enabled."
   []
   (db/select PermissionsGroup
-    {:where    (if (metabot/metabot-enabled)
-                 true
-                 [:not= :id (u/get-id (group/metabot))])
-     :order-by [:%lower.name]}))
+             {:where    (if (metabot/metabot-enabled)
+                          true
+                          [:not= :id (u/get-id (group/metabot))])
+              :order-by [:%lower.name]}))
 
 (defn add-member-counts
   "Efficiently add `:member_count` to PermissionGroups."
@@ -116,17 +137,29 @@
     (for [group groups]
       (assoc group :member_count (get group-id->num-members (u/get-id group) 0)))))
 
+(defn  filter-groups-if-neeed
+  [groups]
+  (if-not api/*is-superuser?*
+    (remove
+     (fn [group] (contains? (group/admin-only-group-ids-set) (u/get-id group)))
+     groups)
+    groups))
+
 (api/defendpoint GET "/group"
   "Fetch all `PermissionsGroups`, including a count of the number of `:members` in that group."
   []
-  (api/check-superuser)
+  ;(api/check-superuser)
+  (api/check-site-manager)
   (-> (ordered-groups)
+      filter-groups-if-neeed
       (hydrate :member_count)))
 
 (api/defendpoint GET "/group/:id"
   "Fetch the details for a certain permissions group."
   [id]
-  (api/check-superuser)
+  ;(api/check-superuser)
+  (api/check-site-manager)
+  (check-group-id id)
   (-> (PermissionsGroup id)
       (hydrate :members)))
 
@@ -134,25 +167,30 @@
   "Create a new `PermissionsGroup`."
   [:as {{:keys [name]} :body}]
   {name su/NonBlankString}
-  (api/check-superuser)
+  ;(api/check-superuser)
+  (api/check-site-manager)
   (db/insert! PermissionsGroup
-    :name name))
+              :name name))
 
 (api/defendpoint PUT "/group/:group-id"
   "Update the name of a `PermissionsGroup`."
   [group-id :as {{:keys [name]} :body}]
   {name su/NonBlankString}
-  (api/check-superuser)
+  ;(api/check-superuser)
+  (api/check-site-manager)
   (api/check-404 (db/exists? PermissionsGroup :id group-id))
+  (check-group-id group-id)
   (db/update! PermissionsGroup group-id
-    :name name)
+              :name name)
   ;; return the updated group
   (PermissionsGroup group-id))
 
 (api/defendpoint DELETE "/group/:group-id"
   "Delete a specific `PermissionsGroup`."
   [group-id]
-  (api/check-superuser)
+ ; (api/check-superuser)
+  (api/check-site-manager)
+  (check-group-id group-id)
   (db/delete! PermissionsGroup :id group-id)
   api/generic-204-no-content)
 
@@ -166,18 +204,25 @@
     {<user-id> [{:membership_id <id>
                  :group_id      <id>}]}"
   []
-  (api/check-superuser)
-  (group-by :user_id (db/select [PermissionsGroupMembership [:id :membership_id] :group_id :user_id])))
+  ;;(api/check-superuser)
+  (api/check-site-manager)
+  (if api/*is-superuser?*
+    (group-by :user_id (db/select [PermissionsGroupMembership [:id :membership_id] :group_id :user_id]))
+    (group-by :user_id
+              (db/select [PermissionsGroupMembership [:id :membership_id] :group_id :user_id]
+                         :group_id [:not-in (group/admin-only-group-ids-set)]))))
 
 (api/defendpoint POST "/membership"
   "Add a `User` to a `PermissionsGroup`. Returns updated list of members belonging to the group."
   [:as {{:keys [group_id user_id]} :body}]
   {group_id su/IntGreaterThanZero
    user_id  su/IntGreaterThanZero}
-  (api/check-superuser)
+  ;;(api/check-superuser)
+  (api/check-site-manager)
+  (check-group-id group_id)
   (db/insert! PermissionsGroupMembership
-    :group_id group_id
-    :user_id  user_id)
+              :group_id group_id
+              :user_id  user_id)
   ;; TODO - it's a bit silly to return the entire list of members for the group, just return the newly created one and
   ;; let the frontend add it ass appropriate
   (group/members {:id group_id}))
@@ -185,8 +230,13 @@
 (api/defendpoint DELETE "/membership/:id"
   "Remove a User from a PermissionsGroup (delete their membership)."
   [id]
-  (api/check-superuser)
+  ;(api/check-superuser)
+  (api/check-site-manager)
   (api/check-404 (db/exists? PermissionsGroupMembership :id id))
+  ;; manager should have the ability to remove users from the admin only groups
+  (when api/*is-manager?*
+    (let [group-id (db/select-one-field :group_id PermissionsGroupMembership :id id)]
+      (check-group-id group-id)))
   (db/delete! PermissionsGroupMembership :id id)
   api/generic-204-no-content)
 

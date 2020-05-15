@@ -135,6 +135,14 @@ const UserIsAdmin = UserAuthWrapper({
   redirectAction: routerActions.replace,
 });
 
+const UserIsManager = UserAuthWrapper({
+  predicated: currentUser => currentUser && currentUser.is_manager,
+  failureRedirectPath: "/unauthorized",
+  authSelector: state => state.currentUser,
+  wrapperDisplayName: "UserIsManager",
+  redirectAction: routerActions.replace,
+});
+
 const UserIsNotAuthenticated = UserAuthWrapper({
   predicate: currentUser => !currentUser,
   failureRedirectPath: "/",
@@ -149,6 +157,10 @@ const IsAuthenticated = MetabaseIsSetup(
 );
 const IsAdmin = MetabaseIsSetup(
   UserIsAuthenticated(UserIsAdmin(({ children }) => children)),
+);
+
+const IsManager = MetabaseIsSetup(
+  UserIsAuthenticated(UserIsManager(({ children }) => children))
 );
 
 const IsNotAuthenticated = MetabaseIsSetup(
@@ -340,7 +352,7 @@ export const getRoutes = store => (
       <Route path="/user/edit_current" component={UserSettingsApp} />
 
       {/* MMANAGER */}
-      {getManagerRoutes(store, IsAdmin)}
+      {getManagerRoutes(store, IsManager)}
 
       {/* ADMIN */}
       {getAdminRoutes(store, IsAdmin)}

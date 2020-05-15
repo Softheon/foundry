@@ -8,6 +8,7 @@
             [metabase.models
              [card :refer [Card]]
              [collection :as collection :refer [Collection]]
+             [permissions-group :as group :refer [PermissionsGroup]]
              [dashboard :refer [Dashboard]]
              [interface :as mi]
              [permissions :as perms]
@@ -273,11 +274,22 @@
 
 ;;; ------------------------------------------------ GRAPH ENDPOINTS -------------------------------------------------
 
+(defn- collection-graph
+  [graph]
+  (if api/*is-superuser?*
+    graph
+    (update graph :groups
+            (fn [groups]
+              (reduce (fn [groups id] (dissoc groups id))
+                      groups
+                      (group/admin-only-group-ids-set))))))
+
 (api/defendpoint GET "/graph"
   "Fetch a graph of all Collection Permissions."
   []
-  (api/check-superuser)
-  (collection/graph))
+  ;(api/check-superuser)
+  (api/check-site-manager)
+  (collection-graph (collection/graph)))
 
 
 (defn- ->int [id] (Integer/parseInt (name id)))
@@ -290,7 +302,10 @@
               (keyword perms)])))
 
 (defn- dejsonify-groups [groups]
-  (into {} (for [[group-id collections] groups]
+  (into {} (for [[group-id collections] groups
+                 :when (if api/*is-superuser?*
+                         true
+                         (not (contains? (group/admin-only-group-ids-set) (->int group-id))))]
              {(->int group-id) (dejsonify-collections collections)})))
 
 (defn- dejsonify-graph
@@ -303,9 +318,10 @@
   "Do a batch update of Collections Permissions by passing in a modified graph."
   [:as {body :body}]
   {body su/Map}
-  (api/check-superuser)
+  ;(api/check-superuser)
+  (api/check-site-manager)
   (collection/update-graph! (dejsonify-graph body))
-  (collection/graph))
-
+  ;(collection/graph)
+  (collection-graph (collection/graph)))
 
 (api/define-routes)

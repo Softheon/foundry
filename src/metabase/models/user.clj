@@ -161,14 +161,20 @@
   [users]
   (when (seq users)
     (let [pulse-group-id (:id (group/pulse-users))
+          manager-group-id (:id (group/manager))
           user-id->memberships (group-by :user_id (db/select [PermissionsGroupMembership :user_id :group_id]
                                                              :user_id [:in (set (map u/get-id users))]))]
       (for [user users
             :let [group-ids (set (map :group_id (user-id->memberships (u/get-id user))))]]
         (-> user
-            (assoc  :group_ids group-ids)
+            (assoc  :group_ids
+                    (if (:is_superuser user)
+                      group-ids
+                      (remove (fn [id] (contains? (group/admin-only-group-ids-set) id)) group-ids)))
             (assoc  :is_pulse_recipient (or (:is_superuser user)
-                                            (contains? group-ids pulse-group-id))))))))
+                                            (contains? group-ids pulse-group-id)))
+            (assoc :is_manager (or (:is_superuser user)
+                                   (contains? group-ids manager-group-id))))))))
 
 
 ;;; --------------------------------------------------- Helper Fns ---------------------------------------------------

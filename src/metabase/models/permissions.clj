@@ -80,7 +80,7 @@
   (when (and (= group_id (:id (group/admin)))
              (not *allow-admin-permissions-changes*))
     (throw (ui18n/ex-info (tru "You cannot create or revoke permissions for the ''Admin'' group.")
-             {:status-code 400}))))
+                          {:status-code 400}))))
 
 (defn- assert-valid-object
   "Check to make sure the value of `:object` for PERMISSIONS entry is valid."
@@ -90,7 +90,7 @@
              (or (not= object "/")
                  (not *allow-root-entries*)))
     (throw (ui18n/ex-info (tru "Invalid permissions object path: ''{0}''." object)
-             {:status-code 400}))))
+                          {:status-code 400}))))
 
 (defn- assert-valid-metabot-permissions
   "MetaBot permissions can only be created for Collections, since MetaBot can only interact with objects that are always
@@ -99,7 +99,7 @@
   (when (and (= group_id (:id (group/metabot)))
              (not (str/starts-with? object "/collection/")))
     (throw (ui18n/ex-info (tru "MetaBot can only have Collection permissions.")
-             {:status-code 400}))))
+                          {:status-code 400}))))
 
 (defn- assert-valid
   "Check to make sure this PERMISSIONS entry is something that's allowed to be saved (i.e. it has a valid `:object`
@@ -125,7 +125,7 @@
   ([database-or-id :- MapOrID, schema-name :- (s/maybe s/Str)]
    (str (object-path database-or-id) "schema/" schema-name "/"))
   ([database-or-id :- MapOrID, schema-name :- (s/maybe s/Str), table-or-id :- MapOrID]
-   (str (object-path database-or-id schema-name) "table/" (u/get-id table-or-id) "/" )))
+   (str (object-path database-or-id schema-name) "table/" (u/get-id table-or-id) "/")))
 
 (s/defn adhoc-native-query-path :- ObjectPath
   "Return the native query read/write permissions path for a database.
@@ -241,8 +241,8 @@
 
 (defn- pre-insert [permissions]
   (u/prog1 permissions
-    (assert-valid permissions)
-    (log/debug (u/format-color 'green "Granting permissions for group %d: %s" (:group_id permissions) (:object permissions)))))
+           (assert-valid permissions)
+           (log/debug (u/format-color 'green "Granting permissions for group %d: %s" (:group_id permissions) (:object permissions)))))
 
 (defn- pre-update [_]
   (throw (Exception. (str (tru "You cannot update a permissions entry!")
@@ -254,10 +254,10 @@
 
 
 (u/strict-extend (class Permissions)
-  models/IModel (merge models/IModelDefaults
-                   {:pre-insert         pre-insert
-                    :pre-update         pre-update
-                    :pre-delete pre-delete}))
+                 models/IModel (merge models/IModelDefaults
+                                      {:pre-insert         pre-insert
+                                       :pre-update         pre-update
+                                       :pre-delete pre-delete}))
 
 
 ;;; +----------------------------------------------------------------------------------------------------------------+
@@ -434,8 +434,8 @@
   ([group-or-id path]
    (try
      (db/insert! Permissions
-       :group_id (u/get-id group-or-id)
-       :object   path)
+                 :group_id (u/get-id group-or-id)
+                 :object   path)
      ;; on some occasions through weirdness we might accidentally try to insert a key that's already been inserted
      (catch Throwable e
        (log/error e (u/format-color 'red (tru "Failed to grant permissions")))
@@ -461,7 +461,7 @@
   [group-or-id database-or-id]
   ;; TODO - if permissions for this DB are DB root entries like `/db/1/` won't this end up removing our native perms?
   (delete-related-permissions! group-or-id (object-path database-or-id)
-    [:not= :object (adhoc-native-query-path database-or-id)]))
+                               [:not= :object (adhoc-native-query-path database-or-id)]))
 
 (defn grant-permissions-for-all-schemas!
   "Grant full permissions for all schemas belonging to this database.
@@ -574,7 +574,7 @@
     (throw (ui18n/ex-info (str (tru "Looks like someone else edited the permissions and your data is out of date.")
                                " "
                                (tru "Please fetch new data and try again."))
-             {:status-code 409}))))
+                          {:status-code 409}))))
 
 (defn- save-perms-revision!
   "Save changes made to the permissions graph for logging/auditing purposes.
@@ -585,9 +585,9 @@
       ;; manually specify ID here so if one was somehow inserted in the meantime in the fraction of a second since we
       ;; called `check-revision-numbers` the PK constraint will fail and the transaction will abort
       ;:id     (inc current-revision)
-      :before  old
-      :after   new
-      :user_id *current-user-id*)))
+                :before  old
+                :after   new
+                :user_id *current-user-id*)))
 
 (defn log-permissions-changes
   "Log changes to the permissions graph."
@@ -610,9 +610,9 @@
        (log-permissions-changes old new)
        (check-revision-numbers old-graph new-graph)
        (db/transaction
-         (doseq [[group-id changes] new]
-           (update-group-permissions! group-id changes))
-         (save-perms-revision! (:revision old-graph) old new)))))
+        (doseq [[group-id changes] new]
+          (update-group-permissions! group-id changes))
+        (save-perms-revision! (:revision old-graph) old new)))))
   ;; The following arity is provided soley for convenience for tests/REPL usage
   ([ks :- [s/Any], new-value]
    (update-graph! (assoc-in (graph) (cons :groups ks) new-value))))

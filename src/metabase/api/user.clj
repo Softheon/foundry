@@ -29,6 +29,22 @@
     (= user-id api/*current-user-id*)
     api/*is-superuser?*)))
 
+(defn- check-self-or-site-manager
+  "Check that USER-ID is `*current-user-id*` or that `*current-user*` is a superuser or manager, or throw a 403."
+  [user-id]
+  {:pre [(integer? user-id)]}
+  (api/check-403
+   (or
+    (= user-id api/*current-user-id*)
+    api/*is-superuser?*
+    api/*is-manager?*)))
+
+(defn- filter-group-ids
+  [group_ids]
+  (if api/*is-superuser?*
+      group_ids
+      (remove (fn [id] (contains? (group/admin-only-group-ids-set) id)) group_ids)))
+
 (defn- fetch-user [& query-criteria]
   (apply db/select-one (vec (cons User user/admin-or-self-visible-columns)) query-criteria))
 
@@ -57,10 +73,11 @@
   [include_deactivated]
   {include_deactivated (s/maybe su/BooleanString)}
   (when include_deactivated
-    (api/check-superuser))
-  ;; create pulse for the first time.
-  (group/pulse-users)
-  (cond-> (db/select (vec (cons User (if api/*is-superuser?*
+  ;(api/check-superuser)
+    (api/check-site-manager))
+  (cond-> (db/select (vec (cons User (if (or api/*is-superuser?*
+                                             api/*is-manager?*)
+
                                        user/admin-or-self-visible-columns
                                        user/non-admin-or-self-visible-columns)))
                      (-> {}
@@ -73,13 +90,16 @@
 (api/defendpoint GET "/current"
   "Fetch the current `User`."
   []
+  ;; create magic groups for the first time
+  (group/manager)
+  (group/pulse-users)
   (-> (api/check-404 @api/*current-user*)
       (hydrate :personal_collection_id :group_ids)))
 
 (api/defendpoint GET "/:id"
   "Fetch a `User`. You must be fetching yourself *or* be a superuser."
   [id]
-  (check-self-or-superuser id)
+  (check-self-or-site-manager id)
   (-> (api/check-404 (fetch-user :id id, :is_active true))
       (hydrate :group_ids)))
 
@@ -96,7 +116,7 @@
    email            su/Email
    group_ids        (s/maybe [su/IntGreaterThanZero])
    login_attributes (s/maybe user/LoginAttributes)}
-  (api/check-superuser)
+  (api/check-site-manager)
   (api/checkp (not (db/exists? User :email email))
               "email" (tru "Email address already in use."))
   (db/transaction
@@ -104,7 +124,7 @@
                                 (u/select-keys-when body
                                                     :non-nil [:first_name :last_name :email :password :login_attributes])
                                 @api/*current-user*))]
-     (maybe-set-user-permissions-groups! new-user-id group_ids)
+     (maybe-set-user-permissions-groups! new-user-id (filter-group-ids group_ids))
      (-> (fetch-user :id new-user-id)
          (hydrate :group_ids)))))
 
@@ -135,7 +155,7 @@
    group_ids        (s/maybe [su/IntGreaterThanZero])
    is_superuser     (s/maybe s/Bool)
    login_attributes (s/maybe user/LoginAttributes)}
-  (check-self-or-superuser id)
+  (check-self-or-site-manager id)
   ;; only allow updates if the specified account is active
   (api/let-404 [user-before-update (fetch-user :id id, :is_active true)]
     ;; Google/LDAP non-admin users can't change their email to prevent account hijacking
@@ -152,7 +172,7 @@
                                     :non-nil (set (concat [:first_name :last_name :email]
                                                           (when api/*is-superuser?*
                                                             [:is_superuser]))))))
-   (maybe-set-user-permissions-groups! id group_ids is_superuser))
+   (maybe-set-user-permissions-groups! id (filter-group-ids group_ids) is_superuser))
   (-> (fetch-user :id id)
       (hydrate :group_ids)))
 
@@ -178,7 +198,8 @@
 (api/defendpoint PUT "/:id/reactivate"
   "Reactivate user at `:id`"
   [id]
-  (api/check-superuser)
+  ;(api/check-superuser)
+   (api/check-site-manager)
   (let [user (db/select-one [User :id :is_active :google_auth :ldap_auth] :id id)]
     (api/check-404 user)
     ;; Can only reactivate inactive users
@@ -195,7 +216,7 @@
   "Update a user's password."
   [id :as {{:keys [password old_password]} :body}]
   {password su/ComplexPassword}
-  (check-self-or-superuser id)
+  (check-self-or-site-manager id)
   (api/let-404 [user (db/select-one [User :password_salt :password], :id id, :is_active true)]
     ;; admins are allowed to reset anyone's password (in the admin people list) so no need to check the value of
     ;; `old_password` for them regular users have to know their password, however
@@ -215,7 +236,8 @@
 (api/defendpoint DELETE "/:id"
   "Disable a `User`.  This does not remove the `User` from the DB, but instead disables their account."
   [id]
-  (api/check-superuser)
+  ;(api/check-superuser)
+  (api/check-site-manager)
   (api/check-500 (db/update! User id, :is_active false))
   {:success true})
 
@@ -227,14 +249,15 @@
 (api/defendpoint PUT "/:id/qbnewb"
   "Indicate that a user has been informed about the vast intricacies of 'the' Query Builder."
   [id]
-  (check-self-or-superuser id)
+  (check-self-or-site-manager id)
   (api/check-500 (db/update! User id, :is_qbnewb false))
   {:success true})
 
 (api/defendpoint POST "/:id/send_invite"
   "Resend the user invite email for a given user."
   [id]
-  (api/check-superuser)
+  ;(api/check-superuser)
+    (api/check-site-manager)
   (when-let [user (User :id id, :is_active true)]
     (let [reset-token (user/set-password-reset-token! id)
           ;; NOTE: the new user join url is just a password reset with an indicator that this is a first time user

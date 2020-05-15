@@ -51,8 +51,27 @@
 
 (def ^{:arglists '([])} ^metabase.models.permissions_group.PermissionsGroupInstance
   pulse-users
-  "Fetch the `Pulse users` permissions group, creatingit if needed."
+  "Fetch the `Pulse users` permissions group, creating it if needed."
   (group-fetch-fn "Pulse Users"))
+
+(def ^{:arglists '([])} ^metabase.models.permissions_group.PermissionsGroupInstance
+  manager
+  "Fetch the `Managers` permissions group, creating it if needed."
+  (group-fetch-fn "Managers"))
+
+(defn- admin-only-group-ids
+  "Fetch a set of group ids that only admin has access to."
+  []
+  (memoize (fn [] (set
+                   (for [group [(admin)
+                                (metabot)
+                                (ids-users)
+                                (pulse-users)
+                                (manager)]]
+                     (:id group))))))
+
+(def admin-only-group-ids-set
+  (admin-only-group-ids))
 ;;; --------------------------------------------------- Validation ---------------------------------------------------
 
 (defn exists-with-name?
@@ -74,7 +93,9 @@
   (doseq [magic-group [(all-users)
                        (admin)
                        (metabot)
-                       (ids-users)]]
+                       (ids-users)
+                       (pulse-users)
+                       (manager)]]
     (when (= id (:id magic-group))
       (throw (ui18n/ex-info (tru "You cannot edit or delete the ''{0}'' permissions group!" (:name magic-group))
                             {:status-code 400})))))

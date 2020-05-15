@@ -13,7 +13,7 @@ const ADMIN_ONLY_GROUP_NAMES = new Map([
   ["MetaBot", t`MetaBot`],
   ["IDS Users", t`IDS Users`],
   ["Pulse Users", t`Pulse Users`],
-  ["Manager", t`Manager`]
+  ["Managers", t`Manager`]
 ]);
 
 export function isAdminOnlyGroup(group) {

@@ -34,6 +34,10 @@
   "Is the current user a superuser?"
   false)
 
+(def ^:dynamic ^Boolean *is-manager?*
+  "Is the current user a manger?"
+  false)
+
 (def ^:dynamic *current-user-permissions-set*
   "Delay to the set of permissions granted to the current user."
   (atom #{}))
@@ -88,6 +92,10 @@
   []
   (check-403 *is-superuser?*))
 
+(defn check-site-manager
+  "Check if `*current-user*` is a superuser or a site manager. If not, throw a 403."
+  []
+  (check-403 (or *is-superuser?* *is-manager?*)))
 
 ;; checkp- functions: as in "check param". These functions expect that you pass a symbol so they can throw exceptions
 ;; w/ relevant error messages.
@@ -96,8 +104,8 @@
   "Throw an `ExceptionInfo` that contains information about an invalid API params in the expected format."
   [field-name message]
   (throw (ui18n/ex-info (tru "Invalid field: {0}" field-name)
-           {:status-code 400
-            :errors      {(keyword field-name) message}})))
+                        {:status-code 400
+                         :errors      {(keyword field-name) message}})))
 
 (defn checkp
   "Assertion mechanism for use inside API functions that validates individual input params.
@@ -167,8 +175,8 @@
   [response-pair [binding test & more] & body]
   (if (seq more)
     `(api-let ~response-pair ~[binding test]
-       (api-let ~response-pair ~more
-         ~@body))
+              (api-let ~response-pair ~more
+                       ~@body))
     `(let [test# ~test] ; bind ~test so doesn't get evaluated more than once (e.g. in case it's an expensive funcall)
        (check test# ~response-pair)
        (let [~binding test#
@@ -281,9 +289,9 @@
                       :doc (route-dox method route docstr args (m/map-vals eval arg->schema) body)
                       :is-endpoint? true)
        (~method ~route ~args
-        (auto-parse ~args
-          ~@validate-param-calls
-          (wrap-response-if-needed (do ~@body)))))))
+                (auto-parse ~args
+                            ~@validate-param-calls
+                            (wrap-response-if-needed (do ~@body)))))))
 
 (defmacro defendpoint-async
   "Like `defendpoint`, but generates an endpoint that accepts the usual `[request respond raise]` params."
@@ -302,9 +310,9 @@
                       :doc (route-dox method route docstr args (m/map-vals eval arg->schema) body)
                       :is-endpoint? true)
        (~method ~route []
-        (fn ~args
-          ~@validate-param-calls
-          ~@body)))))
+                (fn ~args
+                  ~@validate-param-calls
+                  ~@body)))))
 
 (defn- namespace->api-route-fns
   "Return a sequence of all API endpoint functions defined by `defendpoint` in a namespace."
@@ -400,15 +408,15 @@
   "Is embedding of Cards or Objects (secured access via `/api/embed` endpoints with a signed JWT enabled?"
   []
   (check (public-settings/enable-embedding)
-    [400 (tru "Embedding is not enabled.")]))
+         [400 (tru "Embedding is not enabled.")]))
 
 (defn check-not-archived
   "Check that the OBJECT exists and is not `:archived`, or throw a `404`. Returns OBJECT as-is if check passes."
   [object]
   (u/prog1 object
-    (check-404 object)
-    (check (not (:archived object))
-      [404 {:message (tru "The object has been archived."), :error_code "archived"}])))
+           (check-404 object)
+           (check (not (:archived object))
+                  [404 {:message (tru "The object has been archived."), :error_code "archived"}])))
 
 (s/defn column-will-change? :- s/Bool
   "Helper for PATCH-style operations to see if a column is set to change when `object-updates` (i.e., the input to the
@@ -438,7 +446,7 @@
                      (doseq [model '[Card Dashboard Pulse]]
                        (db/update-where! model {:collection_id       collection-id
                                                 :collection_position position-update-clause}
-                         :collection_position (htypes/call plus-or-minus :collection_position 1))))]
+                                         :collection_position (htypes/call plus-or-minus :collection_position 1))))]
     (when (not= new-position old-position)
       (cond
         (and (nil? new-position)

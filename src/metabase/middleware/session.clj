@@ -4,11 +4,16 @@
             [metabase
              [config :as config]
              [db :as mdb]]
-            [metabase.api.common :refer [*current-user* *current-user-id* *current-user-permissions-set* *is-superuser?*]]
+            [metabase.api.common :refer
+             [*current-user* *current-user-id* *current-user-permissions-set*
+              *is-superuser?*
+              *is-manager?*]]
             [metabase.core.initialization-status :as init-status]
             [metabase.models
              [session :refer [Session]]
-             [user :as user :refer [User]]]
+             [user :as user :refer [User]]
+             [permissions-group :as group]
+             [permissions-group-membership :as perm-membership]]
             [ring.util.response :as resp]
             [schema.core :as s]
             [clojure.tools.logging :as log]
@@ -125,9 +130,9 @@
   "Fetch a session with SESSION-ID, and include the User ID and superuser status associated with it."
   [session-id]
   (db/select-one [Session :created_at :user_id (db/qualify User :is_superuser)]
-    (mdb/join [Session :user_id] [User :id])
-    (db/qualify User :is_active) true
-    (db/qualify Session :id) session-id))
+                 (mdb/join [Session :user_id] [User :id])
+                 (db/qualify User :is_active) true
+                 (db/qualify Session :id) session-id))
 
 (defn- session-age-ms [session]
   (- (System/currentTimeMillis) (or (when-let [created-at (:created_at session)]
@@ -171,6 +176,7 @@
     (binding [*current-user-id*              current-user-id
               *is-superuser?*                (:is-superuser? request)
               *current-user*                 (delay (find-user current-user-id))
+              *is-manager?* (perm-membership/is-manager? current-user-id)
               *current-user-permissions-set* (delay (user/permissions-set current-user-id))]
       (f))
     (f)))
