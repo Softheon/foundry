@@ -58,9 +58,12 @@
              (log/info "iam_auth---------------------------------------------------------------" user)
              (db/insert! PermissionsGroupMembership
                          :user_id  user-id
-                         :group_id (:id (if iam?
-                                          (group/ids-users)
-                                          (group/all-users)))))
+                         :group_id (:id (group/all-users)))
+             (when iam?
+               (db/insert! PermissionsGroupMembership
+                           :user_id  user-id
+                           :group_id (:id (group/ids-users)))))
+
            (when superuser?
              (log/info (trs "Adding User {0} to Admin permissions group..." user-id))
              (db/insert! PermissionsGroupMembership
