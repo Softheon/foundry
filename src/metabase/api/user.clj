@@ -42,8 +42,8 @@
 (defn- filter-group-ids
   [group_ids]
   (if api/*is-superuser?*
-      group_ids
-      (remove (fn [id] (contains? (group/admin-only-group-ids-set) id)) group_ids)))
+    group_ids
+    (remove (fn [id] (contains? (group/admin-only-group-ids-set) id)) group_ids)))
 
 (defn- fetch-user [& query-criteria]
   (apply db/select-one (vec (cons User user/admin-or-self-visible-columns)) query-criteria))
@@ -58,7 +58,8 @@
   (when (some? new-groups-or-ids)
     (when-not (= (user/group-ids user-or-id)
                  (set (map u/get-id new-groups-or-ids)))
-      (api/check-superuser)
+      ;(api/check-superuser)
+      (api/check-site-manager)
       (user/set-permissions-groups! user-or-id new-groups-or-ids))))
 
 
@@ -137,8 +138,9 @@
   "This predicate tests whether or not the user is allowed to update the email address associated with this account."
   [{:keys [google_auth ldap_auth email] :as foo} maybe-new-email]
   (or
-   ;; Admin users can update
+   ;; Admin or manager users can update
    api/*is-superuser?*
+   api/*is-manager?*
    ;; If the email address didn't change, let it through
    (= email maybe-new-email)
    ;; We should not allow a regular user to change their email address if they are a google/ldap user
@@ -199,7 +201,7 @@
   "Reactivate user at `:id`"
   [id]
   ;(api/check-superuser)
-   (api/check-site-manager)
+  (api/check-site-manager)
   (let [user (db/select-one [User :id :is_active :google_auth :ldap_auth] :id id)]
     (api/check-404 user)
     ;; Can only reactivate inactive users
@@ -257,7 +259,7 @@
   "Resend the user invite email for a given user."
   [id]
   ;(api/check-superuser)
-    (api/check-site-manager)
+  (api/check-site-manager)
   (when-let [user (User :id id, :is_active true)]
     (let [reset-token (user/set-password-reset-token! id)
           ;; NOTE: the new user join url is just a password reset with an indicator that this is a first time user

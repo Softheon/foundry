@@ -37,7 +37,7 @@ default, this is `false`, but enable it when adding or deleting users"}
 (defn- check-not-ids-users-group
   "Throw an Exception if we're trying to add or remove a user to the IDS users group."
   [group-id]
-  (when (= group-id (:id group/ids-users))
+  (when (= group-id (:id (group/ids-users)))
     (when-not *allow-changing-ids-users-group-members*
       (throw (ui18n/ex-info (tru "You cannot add or remove users to/from the ''IDS users'' group.")
                             {:status-code 400})))))
