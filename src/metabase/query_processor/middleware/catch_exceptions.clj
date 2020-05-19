@@ -1,8 +1,10 @@
 (ns metabase.query-processor.middleware.catch-exceptions
   "Middleware for catching exceptions thrown by the query processor and returning them in a friendlier format."
   (:require [metabase.util :as u]
+            [clojure.string :as s]
             schema.utils)
   (:import clojure.lang.ExceptionInfo
+           java.sql.SQLException
            [schema.utils NamedError ValidationError]))
 
 (def ^:dynamic ^:private *add-preprocessed-queries?* true)
@@ -26,6 +28,11 @@
    ;; add the fully-preprocessed and native forms to the error message for MBQL queries, since they're extremely
    ;; useful for debugging purposes. Since generating them requires us to recursively run the query processor,
    ;; make sure we can skip adding them if we end up back here so we don't recurse forever
+   (when (and
+          (instance? SQLException e)
+          (not (s/starts-with? (.getSQLState e) "S0")))
+     {:error
+      (str "Unable to run report at this time, please try again shortly.  If problem presists, please review for optimization.")})
    (when (and (= (keyword query-type) :query)
               *add-preprocessed-queries?*)
      ;; obviously we do not want to get core.async channels back for preprocessed & native, so run the preprocessing
@@ -33,9 +40,9 @@
      (let [query (dissoc query :async?)]
        (binding [*add-preprocessed-queries?* false]
          {:preprocessed (u/ignore-exceptions
-                          ((resolve 'metabase.query-processor/query->preprocessed) query))
+                         ((resolve 'metabase.query-processor/query->preprocessed) query))
           :native       (u/ignore-exceptions
-                          ((resolve 'metabase.query-processor/query->native) query))})))))
+                         ((resolve 'metabase.query-processor/query->native) query))})))))
 
 
 (defn- explain-schema-validation-error
