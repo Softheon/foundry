@@ -403,7 +403,7 @@ export default class GroupListing extends Component {
             ? null
             : this.onCreateAGroupButtonClicked.bind(this)
         }
-        description={t`You can use groups to control your users' access to your data. Put users in groups and then go to the Permissions section to control each group's access. The Administrators and All Users groups are special default groups that can't be removed.`}
+        description={t`You can use groups to control your users' access to your data. Put users in groups and then go to the Permissions section to control each group's access. All Users groups is a special default group that can't be removed.`}
       >
         <GroupsTable
           groups={groups}
