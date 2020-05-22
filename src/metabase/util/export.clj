@@ -135,7 +135,7 @@
                        (a/close! finished-chan)
                        (.close rset)
                        (.close stmt)
-                       (.rollback conn)
+                    ;   (.rollback conn)
                        (catch Throwable e
                          (throw (ex-info (str "export-to-csv-file: failed to export to csv because Rollback failed handling \""
                                               (.getMessage e)
@@ -145,7 +145,11 @@
                          (try
                            (.close conn)
                            (catch Throwable e
-                             (log/error e)))))
+                             (log/error e)
+                             (throw (ex-info (str "failed to close db connection properly \""
+                                                  (.getMessage e)
+                                                  "\"")
+                                             {:connection e}))))))
                      (log/info "all db resources associated with exporting a report are released."))))]
       (.submit (thread-pool) ^Runnable task)
       (a/<!! finished-chan))))
@@ -169,7 +173,7 @@
                        (.close output)
                        (.close rset)
                        (.close stmt)
-                       (.rollback conn)
+                     ;  (.rollback conn)
                        (catch Throwable e
                          (log/info "failed to close reousrces properly")
                          (log/info e)
@@ -181,7 +185,11 @@
                          (try
                            (.close conn)
                            (catch Throwable e
-                             (log/error e)))))
+                             (log/error e)
+                             (throw (ex-info (str "failed to close db connection properly \""
+                                                  (.getMessage e)
+                                                  "\"")
+                                             {:connection e}))))))
 
                      (log/info "all resources are closed"))))]
       (.connect input output)
@@ -210,7 +218,7 @@
                        (a/close! finished-chan)
                        (.close rset)
                        (.close stmt)
-                       (.rollback conn)
+                      ; (.rollback conn)
                        (catch Throwable e
                          (log/info "excel: failed to close reousrces properly")
                          (log/info e)
@@ -222,7 +230,11 @@
                          (try
                            (.close conn)
                            (catch Throwable e
-                             (log/error e)))))
+                             (log/error e)
+                             (throw (ex-info (str "failed to close db connection properly \""
+                                                  (.getMessage e)
+                                                  "\"")
+                                             {:connection e}))))))
                      (log/info "all db resources associated with exporting a report are released."))))]
       (.submit (thread-pool) ^Runnable task)
       (a/<!! finished-chan))))
@@ -252,7 +264,7 @@
                        (.close output)
                        (.close rset)
                        (.close stmt)
-                       (.rollback conn)
+                      ; (.rollback conn)
                        (catch Throwable e
                          (log/info "failed to close reousrces properly")
                          (log/info e)
@@ -264,7 +276,11 @@
                          (try
                            (.close conn)
                            (catch Throwable e
-                             (log/error e)))))
+                             (log/error e)
+                             (throw (ex-info (str "failed to close db connection properly \""
+                                                  (.getMessage e)
+                                                  "\"")
+                                             {:connection e}))))))
                      (log/info "all resources are closed"))))]
       (.connect input output)
       (.submit (thread-pool) ^Runnable task)
