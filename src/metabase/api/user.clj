@@ -125,7 +125,8 @@
                                 (u/select-keys-when body
                                                     :non-nil [:first_name :last_name :email :password :login_attributes])
                                 @api/*current-user*))]
-     (maybe-set-user-permissions-groups! new-user-id (filter-group-ids group_ids))
+     (maybe-set-user-permissions-groups! new-user-id (conj (filter-group-ids group_ids)
+                                                           (:id (group/all-users))))
      (-> (fetch-user :id new-user-id)
          (hydrate :group_ids)))))
 

@@ -54,8 +54,6 @@
     ;; add the newly created user to the magic perms groups
            (binding [perm-membership/*allow-changing-all-users-group-members* true
                      perm-membership/*allow-changing-ids-users-group-members* true]
-             (log/info (trs "Adding User {0} to All Users permissions group..." user-id))
-             (log/info "iam_auth---------------------------------------------------------------" user)
              (db/insert! PermissionsGroupMembership
                          :user_id  user-id
                          :group_id (:id (group/all-users)))
