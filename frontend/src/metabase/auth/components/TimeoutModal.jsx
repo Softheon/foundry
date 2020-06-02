@@ -2,13 +2,30 @@ import React from "react";
 import _ from "underscore";
 import { connect } from "react-redux";
 import { t } from "c-3po";
-
+import moment from "moment";
 import Modal from "metabase/components/Modal.jsx";
 import {
   logout,
   idleSessionTimeout,
   sessionTimeout,
 } from "metabase/auth/auth.js";
+
+import {
+  getQuestion,
+  getQuery,
+  getIsDirty,
+  getIsNew,
+  getCard,
+} from "metabase/query_builder/selectors.js"
+
+import {
+  getUser,
+  getUserPersonalCollectionId,
+} from "metabase/selectors/user";
+
+import {
+  apiCreateQuestion
+} from "metabase/query_builder/actions.js"
 
 const defaultEvents = [
   "mousemove",
@@ -17,12 +34,22 @@ const defaultEvents = [
   "touchstart",
   "scroll",
 ];
-const mapStateToProps = null;
+const mapStateToProps = (state, props) => {
+  return {
+    question: getQuestion(state),
+    query: getQuery(state),
+    isNew: getIsNew(state),
+    isDirty: getIsDirty(state),
+    currentCard: getCard(state),
+    currentUserPersonalCollectionId: getUserPersonalCollectionId(state),
+  }
+};
 
 const mapDispatchToProps = {
   logout,
   idleSessionTimeout,
   sessionTimeout,
+  apiCreateQuestion,
 };
 
 const TIMEOUT_MODAL_COUNTER = 5;
@@ -85,8 +112,13 @@ export default class TimeoutModal extends React.Component {
       this.unregisterUserActivityListeners();
     } else if (this.state.counter <= 0) {
       clearInterval(this.timer);
-      this.props.idleSessionTimeout();
-      this.props.sessionTimeout();
+      try {
+        this.saveUnsavedCard();
+        this.props.idleSessionTimeout();
+        this.props.sessionTimeout();
+      } catch (e) {
+        this.props.sessionTimeout();
+      }
     }
   }
 
@@ -101,6 +133,19 @@ export default class TimeoutModal extends React.Component {
       },
     );
   };
+
+  saveUnsavedCard = async () => {
+    const { question, apiCreateQuestion } = this.props;
+    const { isNew, isDirty, currentCard, currentUserPersonalCollectionId } = this.props;
+    if (currentCard) {
+      if (isNew || isDirty) {
+        currentCard.name = "Unsaved_Report" + moment().format();
+        currentCard.collection_id = currentUserPersonalCollectionId;
+        const questionWithUpdatedCard = question.setCard(currentCard);
+        await apiCreateQuestion(questionWithUpdatedCard);
+      }
+    }
+  }
 
   render() {
     const { counter } = this.state;
@@ -126,9 +171,9 @@ export default class TimeoutModal extends React.Component {
                 <h2>{t`Your Session is about to end`}</h2>
                 <p className="my2 text-medium">{t`If you do not have any activity in the next ${
                   this.state.counter
-                } ${
+                  } ${
                   this.state.counter > 1 ? "minutes" : "minute"
-                }, you will be logged out.`}</p>
+                  }, you will be logged out.`}</p>
                 {this.state.counter != 0 && (
                   <button
                     className="Button Button--primary z6"

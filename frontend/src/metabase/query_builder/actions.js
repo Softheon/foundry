@@ -347,7 +347,7 @@ export const initializeQB = (location, params) => {
     });
 
     // Fetch alerts for the current question if the question is saved
-   //card && card.id && dispatch(fetchAlertsForQuestion(card.id));
+    //card && card.id && dispatch(fetchAlertsForQuestion(card.id));
 
     // Fetch the question metadata
     card && dispatch(loadMetadataForCard(card));
@@ -697,10 +697,10 @@ export const setCardAndRun = (nextCard, shouldUpdateUrl = true) => {
 
     const originalCard = card.original_card_id
       ? // If the original card id is present, dynamically load its information for showing lineage
-        await loadCard(card.original_card_id)
+      await loadCard(card.original_card_id)
       : // Otherwise, use a current card as the original card if the card has been saved
-        // This is needed for checking whether the card is in dirty state or not
-        card.id ? card : null;
+      // This is needed for checking whether the card is in dirty state or not
+      card.id ? card : null;
 
     // Update the card and originalCard before running the actual query
     dispatch.action(SET_CARD_AND_RUN, { card, originalCard });
@@ -833,7 +833,7 @@ export const apiUpdateQuestion = question => {
 
     // reload the question alerts for the current question
     // (some of the old alerts might be removed during update)
-   // await dispatch(fetchAlertsForQuestion(updatedQuestion.id()));
+    // await dispatch(fetchAlertsForQuestion(updatedQuestion.id()));
 
     // remove the databases in the store that are used to populate the QB databases list.
     // This is done when saving a Card because the newly saved card will be eligible for use as a source query
@@ -1239,7 +1239,7 @@ export const runQuestionQuery = ({
     // HACK: prevent SQL editor from losing focus
     try {
       ace.edit("id_sql").focus();
-    } catch (e) {}
+    } catch (e) { }
 
     dispatch.action(RUN_QUERY, { cancelQueryDeferred });
   };
@@ -1549,17 +1549,17 @@ export const sortNativeQueryTableAndRun = sortingDetail => {
     const sortDirection = sortingDetail[1];
     const columnIndex = sortingDetail[0];
     let testValue = original_rows[0][columnIndex];
-    let isDate =moment(testValue, moment.ISO_8601, true).isValid();
+    let isDate = moment(testValue, moment.ISO_8601, true).isValid();
     let isString = typeof testValue === "string" || testValue instanceof String;
     if (sortDirection === "ascending") {
       original_rows.sort((a, b) => {
         if (isDate) {
           return Date.parse(a[columnIndex]) - Date.parse(b[columnIndex]);
-        } else if(isString) {
-          if (a[columnIndex] < b[columnIndex]) {return -1;}
-          else if( a[columnIndex] > b[columnIndex]) {return 1;}
-          else {return 0;}
-        }else {
+        } else if (isString) {
+          if (a[columnIndex] < b[columnIndex]) { return -1; }
+          else if (a[columnIndex] > b[columnIndex]) { return 1; }
+          else { return 0; }
+        } else {
           return a[columnIndex] - b[columnIndex];
         }
       });
@@ -1568,10 +1568,10 @@ export const sortNativeQueryTableAndRun = sortingDetail => {
         if (isDate) {
           return Date.parse(b[columnIndex]) - Date.parse(a[columnIndex]);
         } else if (isString) {
-          if (a[columnIndex] < b[columnIndex]) {return 1;}
-          else if (a[columnIndex] > b[columnIndex]) {return -1;}
-          else {return 0;}
-        }else {
+          if (a[columnIndex] < b[columnIndex]) { return 1; }
+          else if (a[columnIndex] > b[columnIndex]) { return -1; }
+          else { return 0; }
+        } else {
           return b[columnIndex] - a[columnIndex];
         }
       });
@@ -1586,10 +1586,10 @@ export const ADD_ORDER_BY_TO_NATIVE_QUERY_CARD = "metabase/qb/ADD_ORDER_BY_TO_NA
 export const addOrderByToNativeQueryCard = createThunkAction(
   ADD_ORDER_BY_TO_NATIVE_QUERY_CARD,
   (sortingDetail) => {
-    return async (dispatch, getState) =>{
+    return async (dispatch, getState) => {
       let card = Utils.copy(getState().qb.card);
       card.dataset_query.order_by = [[["field-id", sortingDetail[0]], sortingDetail[1]]];
-      return {card};
+      return { card };
     };
   }
 );
@@ -1599,7 +1599,7 @@ export const sortNativeQueryTable = createThunkAction(
   SORT_NATIVE_QUERY_TABLE,
   (sortingDetail) => {
     return async (dispatch, getState) => {
-      dispatch(addOrderByToNativeQueryCard (sortingDetail));
+      dispatch(addOrderByToNativeQueryCard(sortingDetail));
       dispatch(sortNativeQueryTableAndRun(sortingDetail));
     };
   },
