@@ -42,10 +42,15 @@
   "Set of possible schedule-frames allowe for a pulse channel."
   #{:first :mid :last})
 
+; (defn schedule-frame?
+;   "Is FRAME a valid schedule frame?"
+;   [frame]
+;   (contains? schedule-frames frame))
+
 (defn schedule-frame?
-  "Is FRAME a valid schedule frame?"
+  "Is FRAME a valid schedule frame ?"
   [frame]
-  (contains? schedule-frames frame))
+  (and (integer? frame) (<= 1 frame 31)))
 
 (def ^:private schedule-types
   "Set of the possible schedule-types allowed for a pulse channel."
@@ -71,11 +76,13 @@
         (day-of-week? schedule-day))
     ;; monthly schedule requires a valid `hour` and `frame`.  also a `day` if frame = first or last
    (and (= schedule-type :monthly)
-        (schedule-frame? schedule-frame)
+        (schedule-frame? (Integer/parseInt (name schedule-frame)))
         (hour-of-day? schedule-hour)
-        (or (contains? #{:first :last} schedule-frame)
-            (and (= :mid schedule-frame)
-                 (nil? schedule-day))))))
+        (nil? schedule-day)
+        ; (or (contains? #{:first :last} schedule-frame)
+        ;     (and (= :mid schedule-frame)
+        ;          (nil? schedule-day)))
+        )))
 
 (def channel-types
   "Map which contains the definitions for each type of pulse channel we allow.  Each key is a channel type with a map
@@ -152,17 +159,19 @@
      * HOURLY scheduled channels are always included.
      * DAILY scheduled channels are included if the HOUR matches.
      * WEEKLY scheduled channels are included if the WEEKDAY & HOUR match.
-     * MONTHLY scheduled channels are included if the MONTHDAY, MONTHWEEK, WEEKDAY, & HOUR all match."
+     * MONTHLY scheduled channels are included if the MONTHDAY & HOUR all match."
   [hour weekday monthday monthweek]
   {:pre [(or (integer? hour) (nil? hour))
          (or (day-of-week? weekday) (nil? weekday))
-         (contains? #{:first :last :mid :other} monthday)
+        ;  (contains? #{:first :last :mid :other} monthday)
+         (<= 1 monthday 31)
          (contains? #{:first :last :other} monthweek)]}
-  (let [schedule-frame              (cond
-                                      (= :mid monthday)    "mid"
-                                      (= :first monthweek) "first"
-                                      (= :last monthweek)  "last"
-                                      :else                "invalid")
+  (let [schedule-frame              (str  monthday)
+        ; (cond
+        ;                               (= :mid monthday)    "mid"
+        ;                               (= :first monthweek) "first"
+        ;                               (= :last monthweek)  "last"
+        ;                               :else                "invalid")
         monthly-schedule-day-or-nil (when (= :other monthday)
                                       weekday)]
     (db/select [PulseChannel :id :pulse_id :schedule_type :channel_type]
@@ -176,9 +185,10 @@
                          [:and [:= :schedule_type "monthly"]
                           [:= :schedule_hour hour]
                           [:= :schedule_frame schedule-frame]
-                          [:or [:= :schedule_day weekday]
-                                    ;; this is here specifically to allow for cases where day doesn't have to match
-                           [:= :schedule_day monthly-schedule-day-or-nil]]]]]})))
+                          ; [:or [:= :schedule_day weekday]
+                          ;           ;; this is here specifically to allow for cases where day doesn't have to match
+                          ;  [:= :schedule_day monthly-schedule-day-or-nil]]
+                          ]]]})))
 
 (defn- user-ids-with-pulse-permission
   [user-ids]

@@ -35,7 +35,8 @@
    {:pre [(integer? hour)
           (and (<= 0 hour) (>= 23 hour))
           (pulse-channel/day-of-week? weekday)
-          (contains? #{:first :last :mid :other} monthday)
+          ; (contains? #{:first :last :mid :other} monthday)
+          (<= 1 monthday 31)
           (contains? #{:first :last :other} monthweek)]}
    (log/info (trs "Sending scheduled pulses..."))
    (let [channels-by-pulse (group-by :pulse_id (pulse-channel/retrieve-scheduled-channels hour weekday monthday monthweek))]
@@ -83,7 +84,7 @@
             curr-weekday       (->> (dec (time/day-of-week now))
                                     (get pulse-channel/days-of-week)
                                     :id)
-            curr-monthday      (monthday now)
+            curr-monthday      (time/day now)
             curr-monthweek     (monthweek now)]
         (send-pulses! curr-hour curr-weekday curr-monthday curr-monthweek)))
     (catch Throwable e

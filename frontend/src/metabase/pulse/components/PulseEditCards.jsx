@@ -127,7 +127,6 @@ export default class PulseEditCards extends Component {
   renderCardNotices(card, index) {
     let cardPreview = card && this.props.cardPreviews[card.id];
     let notices = this.getNotices(card, cardPreview, index);
-    console.log("renderCardNotices", card);
     if (notices.length > 0) {
       return (
         <div className="absolute" style={{ width: 400, marginLeft: 420 }}>

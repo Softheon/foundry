@@ -29,11 +29,15 @@ export const DAY_OF_WEEK_OPTIONS = [
   { name: t`Saturday`, value: "sat" },
 ];
 
-export const MONTH_DAY_OPTIONS = [
-  { name: t`First`, value: "first" },
-  { name: t`Last`, value: "last" },
-  { name: t`15th (Midpoint)`, value: "mid" },
-];
+export const MONTH_DAY_OPTIONS = _.times(31, n => ({
+  name: t`${n + 1}`,
+  value: `${n + 1}`
+}))
+// export const MONTH_DAY_OPTIONS = [
+//   // { name: t`First`, value: "first" },
+//   // { name: t`Last`, value: "last" },
+//   // { name: t`15th (Midpoint)`, value: "mid" },
+// ];
 
 /**
  * Picker for selecting a hourly/daily/weekly/monthly schedule.
@@ -99,19 +103,24 @@ export default class SchedulePicker extends Component {
         };
       }
 
-      // default to First, Monday when user wants a monthly schedule
+      // default to First day when user wants a monthly schedule
       if (value === "monthly") {
+        // newSchedule = {
+        //   ...newSchedule,
+        //   schedule_frame: "first",
+        //   schedule_day: "mon",
+        // };
         newSchedule = {
           ...newSchedule,
-          schedule_frame: "first",
-          schedule_day: "mon",
-        };
+          schedule_frame: "1",
+          schedule_day: null,
+        }
       }
     } else if (name === "schedule_frame") {
       // when the monthly schedule frame is the 15th, clear out the schedule_day
-      if (value === "mid") {
-        newSchedule = { ...newSchedule, schedule_day: null };
-      }
+      // if (value === "mid") {
+      //   newSchedule = { ...newSchedule, schedule_day: null };
+      // }
     }
 
     const changedProp = { name, value };
@@ -121,8 +130,8 @@ export default class SchedulePicker extends Component {
   renderMonthlyPicker() {
     let { schedule } = this.props;
 
-    let DAY_OPTIONS = DAY_OF_WEEK_OPTIONS.slice(0);
-    DAY_OPTIONS.unshift({ name: t`Calendar Day`, value: null });
+    // let DAY_OPTIONS = DAY_OF_WEEK_OPTIONS.slice(0);
+    // DAY_OPTIONS.unshift({ name: t`Calendar Day`, value: null });
 
     return (
       <span className="mt1">
@@ -138,7 +147,7 @@ export default class SchedulePicker extends Component {
           optionValueFn={o => o.value}
           onChange={o => this.onPropertyChange("schedule_frame", o)}
         />
-        {schedule.schedule_frame !== "mid" && (
+        {/* {schedule.schedule_frame !== "mid" && (
           <span className="mt1 mx1">
             <Select
               value={_.find(
@@ -152,7 +161,7 @@ export default class SchedulePicker extends Component {
               onChange={o => this.onPropertyChange("schedule_day", o)}
             />
           </span>
-        )}
+        )} */}
       </span>
     );
   }
