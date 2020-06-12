@@ -4,6 +4,7 @@
   appropriate), and for properly encoding/decoding types going in and out of the database."
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.tools.logging :as log]
+            [clojure.core.async :as a]
             [metabase
              [driver :as driver]
              [util :as u]]
@@ -165,10 +166,20 @@
   [[conn-binding db] & body]
   `(do-with-ensured-connection ~db (fn [~conn-binding] ~@body)))
 
+(defn ^:private cancellable-query
+  [conn stmt params opts canceled-chan]
+  (a/go-loop []
+    (let [run-query-chan (a/go (jdbc/query conn (into [stmt] params) opts))
+          [value port] (a/alts! [run-query-chan canceled-chan])]
+      (if (= port canceled-chan)
+        (InterruptedException. "Client has canceled the request.")
+        value))))
+
+
 (defn- cancelable-run-query
   "Runs JDBC query, canceling it if an InterruptedException is caught (e.g. if there query is canceled
 before finishing)."
-  [db sql params opts]
+  [db sql params opts canceled-chan]
   (with-ensured-connection [conn db]
     ;; This is normally done for us by java.jdbc as a result of our `jdbc/query` call
     (with-open [^PreparedStatement stmt (jdbc/prepare-statement conn sql opts)]
@@ -178,7 +189,14 @@ before finishing)."
        (.closeOnCompletion stmt))
       ;; Need to run the query in another thread so that this thread can cancel it if need be
       (try
-        (jdbc/query conn (into [stmt] params) opts)
+        ;; (jdbc/query conn (into [stmt] params) opts)
+
+        (let [result-chan (cancellable-query conn stmt params opts canceled-chan)
+              result (a/<!! result-chan)]
+          (when (instance? InterruptedException (class result))
+            (log/warn "Exception class  " result)
+            (throw result))
+          result)
         (catch InterruptedException e
           (try
             (log/warn (tru "Client closed connection, canceling query"))
@@ -190,14 +208,15 @@ before finishing)."
 
 (defn- run-query
   "Run the query itself."
-  [driver {sql :query, :keys [params remark max-rows]}, ^TimeZone timezone, connection]
+  [driver {sql :query, :keys [params remark max-rows canceled-chan]}, ^TimeZone timezone, connection]
   (let [sql              (str "-- " remark "\n" (hx/unescape-dots sql))
         [columns & rows] (cancelable-run-query
                           connection sql params
                           {:identifiers    identity
                            :as-arrays?     true
                            :read-columns   (read-columns driver (some-> timezone Calendar/getInstance))
-                           :set-parameters (set-parameters-with-timezone timezone)})]
+                           :set-parameters (set-parameters-with-timezone timezone)}
+                          canceled-chan)]
     {:rows    (or (if (= max-rows 0)
                     rows
                     (take max-rows rows))
@@ -301,13 +320,14 @@ before finishing)."
   [driver {settings :settings, query :native, :as outer-query}]
   (let [query (assoc query
                      :remark   (qputil/query->remark outer-query)
-                     :max-rows (or (mbql.u/query->max-rows-limit outer-query) qp.i/absolute-max-results))]
+                     :max-rows (or (mbql.u/query->max-rows-limit outer-query) qp.i/absolute-max-results))
+        canceled-chan (:canceled-chan outer-query)]
     (do-with-try-catch
      (fn []
        (let [db-connection (sql-jdbc.conn/db->pooled-connection-spec (qp.store/database))]
          ((if (seq (:report-timezone settings))
             run-query-with-timezone
-            run-query-without-timezone) driver settings db-connection query))))))
+            run-query-without-timezone) driver settings db-connection (assoc query :canceled-chan canceled-chan)))))))
 
 ;;; ------------------------------------------------- stream-query --------------------------------------------------
 (defn- do-without-auto-close-ensured-connection [db f]
@@ -399,7 +419,7 @@ before finishing)."
 
 (defn stream-query
   "Process and run a native (raw SQL) QUERY,and returns a result stream."
-  [driver {settings :settings, query :native, {:keys[export-fn]} :middleware, :as outer-query}]
+  [driver {settings :settings, query :native, {:keys [export-fn]} :middleware, :as outer-query}]
   (let [query query]
     (do-with-try-catch
      (fn []

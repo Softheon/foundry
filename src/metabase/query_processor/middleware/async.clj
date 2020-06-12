@@ -16,7 +16,7 @@
     (if (a/poll! canceled-chan)
       (log/debug (trs "Request already canceled, will not run synchronous QP code."))
       (try
-        (some-> (qp query) respond)
+        (some-> (qp (assoc query :canceled-chan canceled-chan)) respond)
         (catch Throwable e
           (raise e))))))
 
