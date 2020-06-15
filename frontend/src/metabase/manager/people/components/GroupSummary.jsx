@@ -7,7 +7,7 @@ const GroupSummary = ({ groups, selectedGroups }) => {
     g => selectedGroups[g.id] && !isAdminGroup(g) && !isDefaultGroup(g),
   );
   if (otherGroups.length === 1) {
-    return <span className="text-brand">{groups[0].name}</span>
+    return <span className="text-brand">{otherGroups[0].name}</span>
   }
   else if (otherGroups.length > 1) {
     return (
