@@ -172,7 +172,7 @@
     (let [run-query-chan (a/go (jdbc/query conn (into [stmt] params) opts))
           [value port] (a/alts! [run-query-chan canceled-chan])]
       (if (= port canceled-chan)
-        (InterruptedException. "Client has canceled the request.")
+        (throw (InterruptedException. "Client has canceled the request."))
         value))))
 
 
@@ -193,8 +193,7 @@ before finishing)."
 
         (let [result-chan (cancellable-query conn stmt params opts canceled-chan)
               result (a/<!! result-chan)]
-          (when (instance? InterruptedException (class result))
-            (log/warn "Exception class  " result)
+          (when (instance? java.lang.InterruptedException (class result))
             (throw result))
           result)
         (catch InterruptedException e
@@ -423,5 +422,6 @@ before finishing)."
   (let [query query]
     (do-with-try-catch
      (fn []
-       (let [db-connection (sql-jdbc.conn/db->pooled-connection-spec (qp.store/database))]
-         (run-query-without-timezone-stream driver settings db-connection query export-fn))))))
+       (let [db-connection (sql-jdbc.conn/db->pooled-connection-spec (qp.store/database))
+             canceled-chan (:canceled-chan outer-query)]
+         (run-query-without-timezone-stream driver settings db-connection (assoc query :canceled-chan canceled-chan) export-fn))))))
