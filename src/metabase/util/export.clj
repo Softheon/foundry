@@ -113,7 +113,16 @@
   [card-id, suffix]
   (let [file-name (format "foundry_report_%d_%s" card-id (str (UUID/randomUUID)))]
     (if (config/config-str :export-directory)
-      (io/file (str file-name suffix))
+      (let [export-directory (config/config-str :export-directory)
+            dir (io/file export-directory)]
+        ;; create directory if does not exist
+        (when-not (.exists dir)
+          (.mkdir dir))
+        ;; if dir exists, create a file in the dir; otherwise, fallback to using template file
+        (if (.exists dir)
+          (io/file (str dir "\\" file-name suffix))
+          (doto (File/createTempFile "foundry-temp-file" suffix)
+            .deleteOnExit)))
       (doto (File/createTempFile "foundry-temp-file" suffix)
         .deleteOnExit))))
 
@@ -151,6 +160,7 @@
                                                   "\"")
                                              {:connection e}))))))
                      (log/info "all db resources associated with exporting a report are released."))))]
+      (log/info "exporting report file", (.getAbsolutePath file))
       (.submit (thread-pool) ^Runnable task)
       (a/<!! finished-chan))))
 
@@ -236,6 +246,7 @@
                                                   "\"")
                                              {:connection e}))))))
                      (log/info "all db resources associated with exporting a report are released."))))]
+      (log/info "exporting report file", (.getAbsolutePath file))
       (.submit (thread-pool) ^Runnable task)
       (a/<!! finished-chan))))
 
