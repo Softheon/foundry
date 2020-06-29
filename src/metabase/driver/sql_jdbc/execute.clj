@@ -169,11 +169,19 @@
 (defn ^:private cancellable-query
   [conn stmt params opts canceled-chan]
   (a/go-loop []
-    (let [run-query-chan (a/go (jdbc/query conn (into [stmt] params) opts))
-          [value port] (a/alts! [run-query-chan canceled-chan])]
-      (if (= port canceled-chan)
-        (throw (InterruptedException. "Client has canceled the request."))
-        value))))
+    (try
+
+      (let [run-query-chan (a/go
+                             (try
+                               (jdbc/query conn (into [stmt] params) opts)
+                               (catch Throwable e
+                                 e)))
+            [value port] (a/alts! [run-query-chan canceled-chan])]
+        (if (= port canceled-chan)
+          (throw (InterruptedException. "Client has canceled the request."))
+          value))
+      (catch Throwable e
+        e))))
 
 
 (defn- cancelable-run-query
@@ -193,12 +201,11 @@ before finishing)."
 
         (let [result-chan (cancellable-query conn stmt params opts canceled-chan)
               result (a/<!! result-chan)]
-
           (when (instance? java.lang.InterruptedException (class result))
             (throw result))
-          (when (instance? Exception (class result))
-            (throw result))
-          result)
+          (if (instance? Throwable result)
+            (throw result)
+            result))
         (catch InterruptedException e
           (try
             (log/warn (tru "Client closed connection, canceling query"))
