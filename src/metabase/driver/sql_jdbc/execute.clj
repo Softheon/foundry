@@ -193,7 +193,10 @@ before finishing)."
 
         (let [result-chan (cancellable-query conn stmt params opts canceled-chan)
               result (a/<!! result-chan)]
+
           (when (instance? java.lang.InterruptedException (class result))
+            (throw result))
+          (when (instance? Exception (class result))
             (throw result))
           result)
         (catch InterruptedException e
