@@ -62,15 +62,17 @@ export default class OAuthLogin extends Component {
   onSSOButtonClick = (e) => {
     e.preventDefault();
     let url = Settings.get("iam_authorization_endpoint");
+    const { location } = this.props;
     const data = {
       client_id: Settings.get("iam_auth_client_id"),
       scope: "openid profile email",
       response_type: "id_token token",
       redirect_uri: Settings.get("iam_auth_redirect"),
-      state: "foundry",
+      state: location.query.redirect,
       nonce: "foundry",
     };
     const params = querystring.stringify(data);
+
     url += (url.indexOf("?") >= 0 ? "&" : "?") + params;
     window.location = url;
   };
@@ -80,11 +82,12 @@ export default class OAuthLogin extends Component {
     if (!Settings.iamEnabled()) {
       return;
     }
-    const { location, loginIAM } = this.props;
+    const { loginIAM } = this.props;
     const currentUrl = window.location.href;
     const matches = currentUrl.match(
       /\#(?:id_token)\=([\S\s]*?)\&(?:access_token)\=([\S\s]*?)\&/,
     );
+
     try {
       if (matches && matches.length >= 3) {
         const id_token = matches[1];
@@ -92,7 +95,11 @@ export default class OAuthLogin extends Component {
         this.setState({
           isLoading: true,
         });
-        loginIAM({ id_token, access_token }, location.query.redirect);
+        const redirectUrl = currentUrl.match(
+          /\&(?:state)\=([\S\s]*?)\&/
+        );
+        const redirect = decodeURIComponent(redirectUrl[1]);
+        loginIAM({ id_token, access_token }, redirect);
       }
     } catch (error) {
       console.error("There was an error logging in", error);

@@ -238,13 +238,13 @@ export default class LoginApp extends Component {
           </div>
         </div>
         {isLoading && (
-            <div className="Loading spread flex flex-column layout-centered text-brand z2" style={{zIndex: 50}}>
-              <LoadingSpinner/>
-              <h2 className="Loading-message text-brand text-uppercase my3">
-                {t`Loading ...`}
-              </h2>
-            </div>
-          )}
+          <div className="Loading spread flex flex-column layout-centered text-brand z2" style={{ zIndex: 50 }}>
+            <LoadingSpinner />
+            <h2 className="Loading-message text-brand text-uppercase my3">
+              {t`Loading ...`}
+            </h2>
+          </div>
+        )}
       </div>
     );
   }
