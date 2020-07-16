@@ -15,9 +15,9 @@
   {:pre [(integer? db-id)]}
   (-> (binding [qpi/*disable-qp-logging* true]
         (qp/process-query
-          {:type     :query
-           :database db-id
-           :query    mbql-query}))
+         {:type     :query
+          :database db-id
+          :query    mbql-query}))
       :data
       :rows))
 
@@ -67,8 +67,9 @@
   ([field]
    (field-distinct-values field absolute-max-distinct-values-limit))
   ([field, max-results :- su/IntGreaterThanZero]
-   (mapv first (field-query field {:breakout [[:field-id (u/get-id field)]]
-                                   :limit    max-results}))))
+   (into [] (remove nil? (mapv first
+                               (field-query field {:breakout [[:field-id (u/get-id field)]]
+                                                   :limit    max-results}))))))
 
 (defn field-distinct-count
   "Return the distinct count of FIELD."

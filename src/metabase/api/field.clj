@@ -87,20 +87,20 @@
     ;; TODO - we should also check that the Field is within the same database as our field
     (when fk-target-field-id
       (api/checkp (db/exists? Field :id fk-target-field-id)
-        :fk_target_field_id "Invalid target field"))
+                  :fk_target_field_id "Invalid target field"))
     ;; everything checks out, now update the field
     (api/check-500
      (db/transaction
-       (and
-        (if removed-fk?
-          (clear-dimension-on-fk-change! field)
-          true)
-        (clear-dimension-on-type-change! field (:base_type field) new-special-type)
-        (db/update! Field id
-          (u/select-keys-when (assoc body :fk_target_field_id (when-not removed-fk? fk-target-field-id))
-            :present #{:caveats :description :fk_target_field_id :points_of_interest :special_type :visibility_type
-                       :has_field_values}
-            :non-nil #{:display_name :settings})))))
+      (and
+       (if removed-fk?
+         (clear-dimension-on-fk-change! field)
+         true)
+       (clear-dimension-on-type-change! field (:base_type field) new-special-type)
+       (db/update! Field id
+                   (u/select-keys-when (assoc body :fk_target_field_id (when-not removed-fk? fk-target-field-id))
+                                       :present #{:caveats :description :fk_target_field_id :points_of_interest :special_type :visibility_type
+                                                  :has_field_values}
+                                       :non-nil #{:display_name :settings})))))
     ;; return updated field
     (hydrate (Field id) :dimensions)))
 
@@ -127,17 +127,17 @@
     (api/check (or (= dimension-type "internal")
                    (and (= dimension-type "external")
                         human_readable_field_id))
-      [400 "Foreign key based remappings require a human readable field id"])
+               [400 "Foreign key based remappings require a human readable field id"])
     (if-let [dimension (Dimension :field_id id)]
       (db/update! Dimension (u/get-id dimension)
-        {:type dimension-type
-         :name dimension-name
-         :human_readable_field_id human_readable_field_id})
+                  {:type dimension-type
+                   :name dimension-name
+                   :human_readable_field_id human_readable_field_id})
       (db/insert! Dimension
-        {:field_id id
-         :type dimension-type
-         :name dimension-name
-         :human_readable_field_id human_readable_field_id}))
+                  {:field_id id
+                   :type dimension-type
+                   :name dimension-name
+                   :human_readable_field_id human_readable_field_id}))
     (Dimension :field_id id)))
 
 (api/defendpoint DELETE "/:id/dimension"
@@ -188,34 +188,34 @@
         has-human-readable-values? (not-any? human-readable-missing? value-pairs)]
     (api/check (or has-human-readable-values?
                    (every? human-readable-missing? value-pairs))
-      [400 "If remapped values are specified, they must be specified for all field values"])
+               [400 "If remapped values are specified, they must be specified for all field values"])
     has-human-readable-values?))
 
 (defn- update-field-values! [field-value-id value-pairs]
   (let [human-readable-values? (validate-human-readable-pairs value-pairs)]
     (api/check-500 (db/update! FieldValues field-value-id
-                     :values (map first value-pairs)
-                     :human_readable_values (when human-readable-values?
-                                              (map second value-pairs))))))
+                               :values (map first value-pairs)
+                               :human_readable_values (when human-readable-values?
+                                                        (map second value-pairs))))))
 
 (defn- create-field-values!
   [field-or-id value-pairs]
   (let [human-readable-values? (validate-human-readable-pairs value-pairs)]
     (db/insert! FieldValues
-      :field_id (u/get-id field-or-id)
-      :values (map first value-pairs)
-      :human_readable_values (when human-readable-values?
-                               (map second value-pairs)))))
+                :field_id (u/get-id field-or-id)
+                :values (map first value-pairs)
+                :human_readable_values (when human-readable-values?
+                                         (map second value-pairs)))))
 
 (api/defendpoint POST "/:id/values"
   "Update the fields values and human-readable values for a `Field` whose special type is
   `category`/`city`/`state`/`country` or whose base type is `type/Boolean`. The human-readable values are optional."
   [id :as {{value-pairs :values} :body}]
-  {value-pairs [[(s/one s/Num "value") (s/optional su/NonBlankString "human readable value")]]}
+  {value-pairs [[(s/one (s/conditional number? s/Num :else s/Str) "value") (s/optional su/NonBlankString "human readable value")]]}
   (let [field (api/write-check Field id)]
     (api/check (field-values/field-should-have-field-values? field)
-      [400 (str "You can only update the human readable values of a mapped values of a Field whose value of "
-                "`has_field_values` is `list` or whose 'base_type' is 'type/Boolean'.")])
+               [400 (str "You can only update the human readable values of a mapped values of a Field whose value of "
+                         "`has_field_values` is `list` or whose 'base_type' is 'type/Boolean'.")])
     (if-let [field-value-id (db/select-one-id FieldValues, :field_id id)]
       (update-field-values! field-value-id value-pairs)
       (create-field-values! field value-pairs)))
@@ -329,13 +329,13 @@
   [field remapped-field value]
   (let [field   (follow-fks field)
         results (qp/process-query
-                  {:database (db-id field)
-                   :type     :query
-                   :query    {:source-table (table-id field)
-                              :filter       [:= [:field-id (u/get-id field)] value]
-                              :fields       [[:field-id (u/get-id field)]
-                                             [:field-id (u/get-id remapped-field)]]
-                              :limit        1}})]
+                 {:database (db-id field)
+                  :type     :query
+                  :query    {:source-table (table-id field)
+                             :filter       [:= [:field-id (u/get-id field)] value]
+                             :fields       [[:field-id (u/get-id field)]
+                                            [:field-id (u/get-id remapped-field)]]
+                             :limit        1}})]
     ;; return first row if it exists
     (first (get-in results [:data :rows]))))
 
