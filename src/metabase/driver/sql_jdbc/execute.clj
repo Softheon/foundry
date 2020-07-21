@@ -198,7 +198,9 @@ before finishing)."
       ;; Need to run the query in another thread so that this thread can cancel it if need be
       (try
         ;; (jdbc/query conn (into [stmt] params) opts)
-
+        ;; (log/info "\n---- sql \n", sql)
+        ;; (log/info "\n ----prepared statment\n\n " stmt)
+        ;; (log/info "\n --- parameters \n", params)
         (let [result-chan (cancellable-query conn stmt params opts canceled-chan)
               result (a/<!! result-chan)]
           (when (instance? java.lang.InterruptedException (class result))

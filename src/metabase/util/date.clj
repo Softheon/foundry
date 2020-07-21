@@ -243,7 +243,7 @@
              (u/ignore-exceptions
                ;; Using UTC as the timezone here as it's `def`'d and the result of the parse is discarded, any
                ;; timezone is fine here
-               (->Timestamp s utc)))))
+              (->Timestamp s utc)))))
 
 (defn ->Date
   "Coerece `date` to a `java.util.Date`."
@@ -411,9 +411,9 @@
   ([message & body]
    `(let [start-time# (System/nanoTime)]
       (u/prog1 (do ~@body)
-        (println (u/format-color '~'green "%s took %s"
-                   ~message
-                   (format-nanoseconds (- (System/nanoTime) start-time#))))))))
+               (println (u/format-color '~'green "%s took %s"
+                                        ~message
+                                        (format-nanoseconds (- (System/nanoTime) start-time#))))))))
 
 (defn- str->date-time-with-formatters
   "Attempt to parse `date-str` using `formatters`. First successful parse is returned, or `nil` if it cannot be
@@ -441,6 +441,7 @@
                                         :basic-date-time :basic-date-time-no-ms
                                         :date-time :date-time-no-ms]]
     (concat (map time/formatters most-likely-default-formatters)
+            [(->DateTimeFormatter "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSZ")]
             [date-time-with-millis-no-t]
             (vals (apply dissoc time/formatters most-likely-default-formatters)))))
 

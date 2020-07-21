@@ -15,6 +15,9 @@ const SHORTCUTS = [
     operator: ["=", "<", ">"],
     values: [["relative-datetime", -1, "day"]],
   },
+  { name: t`Last hour`, operator: "time-interval", values: [-60, "minute"] },
+  { name: t`Last 8 hours`, operator: "time-interval", values: [-480, "minute"] },
+  { name: t`Last day`, operator: "time-interval", values: [-1, "day"] },
   { name: t`Past 7 days`, operator: "time-interval", values: [-7, "day"] },
   { name: t`Past 30 days`, operator: "time-interval", values: [-30, "day"] },
 ];
@@ -155,6 +158,18 @@ const FILTERS = {
   past30days: {
     name: t`Past 30 Days`,
     mapping: ["time-interval", null, -30, "day"],
+  },
+  last60minutes: {
+    name: t`Last Hour`,
+    mapping: ["time-interval", null, -60, "minute"]
+  },
+  last480minutes: {
+    name: t`Last 8 Hours`,
+    mapping: ["time-interval", null, -480, "minute"]
+  },
+  lastday: {
+    name: t`Last Day`,
+    mapping: ["time-interval", null, -1, "day"]
   },
   lastweek: {
     name: t`Last Week`,

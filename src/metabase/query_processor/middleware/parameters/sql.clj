@@ -172,8 +172,8 @@
   Filter\" in the Native Query Editor."
   [tag :- TagParam, params :- (s/maybe [DimensionValue])]
   (when-let [dimension (:dimension tag)]
-    (map->Dimension {:field (or (db/select-one [Field :name :parent_id :table_id :base_type],
-                                  :id (dimension->field-id dimension))
+    (map->Dimension {:field (or (db/select-one [Field :name :parent_id :table_id :base_type]
+                                               :id (dimension->field-id dimension))
                                 (throw (Exception. (str (tru "Can't find field with ID: {0}"
                                                              (dimension->field-id dimension))))))
                      :param (or
@@ -314,7 +314,7 @@
 (defprotocol ^:private ISQLParamSubstituion
   "Protocol for specifying what SQL should be generated for parameters of various types."
   (^:private ->replacement-snippet-info [this]
-   "Return information about how THIS should be converted to SQL, as a map with keys `:replacement-snippet` and
+    "Return information about how THIS should be converted to SQL, as a map with keys `:replacement-snippet` and
    `:prepared-statement-args`.
 
       (->replacement-snippet-info \"ABC\") -> {:replacement-snippet \"?\", :prepared-statement-args \"ABC\"}"))
@@ -369,7 +369,7 @@
   [field param-type]
   (-> (honeysql->replacement-snippet-info (let [identifier (sql.qp/field->identifier driver/*driver* field)]
                                             (if (date-params/date-type? param-type)
-                                              (sql.qp/date driver/*driver* :day identifier)
+                                              (sql.qp/date driver/*driver* :minute identifier)
                                               identifier)))
       :replacement-snippet))
 
@@ -427,7 +427,7 @@
 
       :else
       (let [params (map (comp #(sql/->prepared-substitution driver/*driver* %) du/->Timestamp) [start end])]
-        {:replacement-snippet     (apply format "BETWEEN %s AND %s" (map :sql-string params)),
+        {:replacement-snippet     (apply format "BETWEEN %s AND %s" (map :sql-string params))
          :prepared-statement-args (vec (mapcat :param-values params))})))
 
   ;; TODO - clean this up if possible!
@@ -534,7 +534,7 @@
     (if-let [{:keys [param-key]} (m/find-first no-value-param? results)]
       (throw (ui18n/ex-info (tru "Unable to substitute ''{0}'': param not specified.\nFound: {1}"
                                  (name param-key) (pr-str (map name (keys param-key->value))))
-               {:status-code 400}))
+                            {:status-code 400}))
       results)))
 
 (def ^:private ParseTemplateResponse

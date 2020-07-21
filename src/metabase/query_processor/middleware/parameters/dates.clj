@@ -4,6 +4,9 @@
              [core :as t]
              [format :as tf]]
             [medley.core :as m]
+            [metabase.util
+             [date :as du]]
+            [clojure.tools.logging :as log]
             [metabase.mbql.schema :as mbql.s]
             [metabase.models.params :as params]
             [metabase.util.schema :as su]
@@ -32,8 +35,8 @@
   [^DateTime start, ^DateTime end]
     ;; weeks always start on SUNDAY and end on SATURDAY
     ;; NOTE: in Joda the week starts on Monday and ends on Sunday, so to get the right Sunday we rollback 1 week
-   {:end   (.withDayOfWeek end DateTimeConstants/SATURDAY)
-    :start (.withDayOfWeek ^DateTime (t/minus start (t/weeks 1)) DateTimeConstants/SUNDAY)})
+  {:end   (.withDayOfWeek end DateTimeConstants/SATURDAY)
+   :start (.withDayOfWeek ^DateTime (t/minus start (t/weeks 1)) DateTimeConstants/SUNDAY)})
 
 (defn- month-range
   [^DateTime start, ^DateTime end]
@@ -58,7 +61,9 @@
      :start (t/first-day-of-the-month dt)}))
 
 (def ^:private operations-by-date-unit
-  {"day"   {:unit-range day-range
+  {"minute" {:unit-range day-range
+             :to-period t/minutes}
+   "day"   {:unit-range day-range
             :to-period  t/days}
    "week"  {:unit-range week-range
             :to-period  t/weeks}
@@ -109,7 +114,7 @@
 (def ^:private relative-date-string-decoders
   [{:parser #(= % "today")
     :range  (fn [_ dt]
-              {:start dt,
+              {:start dt
                :end   dt})
     :filter (fn [_ field] [:= [:datetime-field field :day] [:relative-datetime :current]])}
 
@@ -147,7 +152,16 @@
     :range  (fn [{:keys [unit-range]} dt]
               (unit-range dt dt))
     :filter (fn [{:keys [unit]} field]
-              [:time-interval field :current (keyword unit)])}])
+              [:time-interval field :current (keyword unit)])}
+   {:parser (regex->parser #"last([0-9]+)(minute)s", [:int-value :unit])
+    :range (fn [{:keys [unit int-value unit-range to-period]} dt]
+             (let [tz                 (t/time-zone-for-id (.getID du/*report-timezone*))
+
+                   today             (t/to-time-zone (t/now) tz)
+                   last-unit (t/minus today (to-period int-value))]
+               (unit-range  last-unit today)))
+    :filter (fn [{:keys [unit int-value]} field]
+              [:time-interval field (- int-value) (keyword unit)])}])
 
 (defn- day->iso8601 [date]
   (tf/unparse (tf/formatters :year-month-day) date))
@@ -214,8 +228,8 @@
   `:start` and `:end` as iso8601 string formatted dates, respecting the given timezone."
   [date-string report-timezone]
   (let [tz                 (t/time-zone-for-id report-timezone)
-        formatter-local-tz (tf/formatter "yyyy-MM-dd" tz)
-        formatter-no-tz    (tf/formatter "yyyy-MM-dd")
+        formatter-local-tz (tf/formatter "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSZ" tz)
+        formatter-no-tz    (tf/formatter "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSZ")
         today              (.withTimeAtStartOfDay (t/to-time-zone (t/now) tz))]
     ;; Relative dates respect the given time zone because a notion like "last 7 days" might mean a different range of
     ;; days depending on the user timezone
