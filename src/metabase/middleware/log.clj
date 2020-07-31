@@ -14,7 +14,8 @@
              [i18n :refer [trs]]]
             [metabase.toucan.db :as db])
   (:import clojure.core.async.impl.channels.ManyToManyChannel
-           org.eclipse.jetty.util.thread.QueuedThreadPool))
+           org.eclipse.jetty.util.thread.QueuedThreadPool
+           [co.elastic.apm.api ElasticApm Transaction]))
 
 ;; To simplify passing large amounts of arguments around most functions in this namespace take an "info" map that
 ;; looks like
@@ -166,5 +167,19 @@
                               :start-time    (System/nanoTime)
                               :call-count-fn call-count-fn}
               response->info #(assoc info :response %)
-              respond        (comp respond logged-response response->info)]
-          (handler request respond raise))))))
+              respond        (comp respond logged-response response->info)
+              elastic-transaction (ElasticApm/startTransaction)
+              {:keys [request-method uri]} request]
+          (try
+            (with-open [scope (.activate elastic-transaction)]
+              (.setName elastic-transaction (str  (format "%s %s" (str/upper-case (name request-method)) uri)))
+              (.setType elastic-transaction (Transaction/TYPE_REQUEST))
+              (.setStartTimestamp elastic-transaction (* (System/currentTimeMillis) 1000))
+              (handler request respond raise))
+
+            (catch Exception e
+              (throw e))
+            (finally
+              (.end elastic-transaction (* (System/currentTimeMillis) 1000)))))))))
+
+
