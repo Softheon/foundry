@@ -177,13 +177,13 @@ export const idleSessionTimeout = createThunkAction(
   IDLE_TIMEOUT,
   (message) => async (dispatch, getState) => {
     await SessionApi.delete();
-    return {
-      data: {
-        errors: {
-          username: "You have been logged out due to inactivity.",
-        },
-      },
-    };
+    // return {
+    //   data: {
+    //     errors: {
+    //       username: "You have been logged out due to inactivity.",
+    //     },
+    //   },
+    // };
   },
 );
 
@@ -192,6 +192,7 @@ export const sessionTimeout = createThunkAction(
   SESSION_TIMEOUT,
   () => async (dispatch, getState) => {
     dispatch(push("/auth/login"));
+    window.location.reload();
   },
 );
 // reducers
