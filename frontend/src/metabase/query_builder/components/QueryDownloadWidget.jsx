@@ -17,13 +17,13 @@ import * as Urls from "metabase/lib/urls";
 
 import _ from "underscore";
 import cx from "classnames";
-import { getSettingValues } from "../../admin/settings/selectors";
+import { settingValues } from "../../admin/settings/selectors";
 import { connect } from "react-redux";
 const EXPORT_FORMATS = ["csv", "xlsx"];
 
 const mapStateToProps = (state, props) => {
   return {
-    settingValues: getSettingValues(state, props),
+    settingValues: settingValues(state),
   };
 };
 @connect(mapStateToProps, null)
@@ -45,8 +45,9 @@ class QueryDownloadWidget extends React.Component {
       settingValues,
     } = this.props;
 
+    console.log("@debug settingValues \n", settingValues);
     const exportFormats = ["csv"];
-    if (settingValues["enable-xlsx-export"]) {
+    if (settingValues["enable_xlsx_download"]) {
       exportFormats.push("xlsx");
     }
     const rowLimit = settingValues["absolute-max-results"];
@@ -54,14 +55,14 @@ class QueryDownloadWidget extends React.Component {
       settingValues["unsaved-question-max-results"] || 2000;
     const isSaved = card["id"] ? true : false;
     // remove xlsx download option
-    if (!isSaved && settingValues["enable-xlsx-export"]) {
+    if (!isSaved && settingValues["enable_xlsx_download"]) {
       exportFormats.splice(-1, 1);
     }
     const downloadSizeMessage = rowLimit ? (
       <p>{t`The maximum download size is ${rowLimit} rows.`}</p>
     ) : (
-      <p>{t`The maximum download size is limited.`}</p>
-    );
+        <p>{t`The maximum download size is limited.`}</p>
+      );
     return (
       <PopoverWithTrigger
         triggerElement={
@@ -146,70 +147,70 @@ const QueryDownloadWidget_old = ({
   icon,
   params,
 }) => (
-  <PopoverWithTrigger
-    triggerElement={
-      <Tooltip tooltip={t`Download full results`}>
-        <Icon title={t`Download this data`} name={icon} size={16} />
-      </Tooltip>
-    }
-    triggerClasses={cx(className, "text-brand-hover")}
-    triggerClassesClose={classNameClose}
-  >
-    <Box
-      p={2}
-      w={result.data && result.data.rows_truncated != null ? 300 : 260}
+    <PopoverWithTrigger
+      triggerElement={
+        <Tooltip tooltip={t`Download full results`}>
+          <Icon title={t`Download this data`} name={icon} size={16} />
+        </Tooltip>
+      }
+      triggerClasses={cx(className, "text-brand-hover")}
+      triggerClassesClose={classNameClose}
     >
-      <Box p={1}>
-        <h4>{t`Download full results`}</h4>
-      </Box>
-      {result.data != null && result.data.rows_truncated != null && (
-        <Box>
-          <p>{t`Your answer has a large number of rows so it could take a while to download.`}</p>
-          <p>{t`The maximum download size is 1 million rows.`}</p>
+      <Box
+        p={2}
+        w={result.data && result.data.rows_truncated != null ? 300 : 260}
+      >
+        <Box p={1}>
+          <h4>{t`Download full results`}</h4>
         </Box>
-      )}
-      <Box>
-        {EXPORT_FORMATS.map((type) => (
-          <Box w={"100%"}>
-            {dashcardId && token ? (
-              <DashboardEmbedQueryButton
-                key={type}
-                type={type}
-                dashcardId={dashcardId}
-                token={token}
-                card={card}
-                params={params}
-              />
-            ) : uuid ? (
-              <PublicQueryButton
-                key={type}
-                type={type}
-                uuid={uuid}
-                result={result}
-              />
-            ) : token ? (
-              <EmbedQueryButton key={type} type={type} token={token} />
-            ) : card && card.id ? (
-              <SavedQueryButton
-                key={type}
-                type={type}
-                card={card}
-                result={result}
-              />
-            ) : card && !card.id ? (
-              <UnsavedQueryButton
-                key={type}
-                type={type}
-                card={card}
-                result={result}
-              />
-            ) : null}
+        {result.data != null && result.data.rows_truncated != null && (
+          <Box>
+            <p>{t`Your answer has a large number of rows so it could take a while to download.`}</p>
+            <p>{t`The maximum download size is 1 million rows.`}</p>
           </Box>
-        ))}
+        )}
+        <Box>
+          {EXPORT_FORMATS.map((type) => (
+            <Box w={"100%"}>
+              {dashcardId && token ? (
+                <DashboardEmbedQueryButton
+                  key={type}
+                  type={type}
+                  dashcardId={dashcardId}
+                  token={token}
+                  card={card}
+                  params={params}
+                />
+              ) : uuid ? (
+                <PublicQueryButton
+                  key={type}
+                  type={type}
+                  uuid={uuid}
+                  result={result}
+                />
+              ) : token ? (
+                <EmbedQueryButton key={type} type={type} token={token} />
+              ) : card && card.id ? (
+                <SavedQueryButton
+                  key={type}
+                  type={type}
+                  card={card}
+                  result={result}
+                />
+              ) : card && !card.id ? (
+                <UnsavedQueryButton
+                  key={type}
+                  type={type}
+                  card={card}
+                  result={result}
+                />
+              ) : null}
+            </Box>
+          ))}
+        </Box>
       </Box>
-    </Box>
-  </PopoverWithTrigger>
-);
+    </PopoverWithTrigger>
+  );
 
 const UnsavedQueryButton = ({ type, result: { json_query }, card }) => (
   <DownloadModalButton
@@ -271,15 +272,15 @@ const DashboardEmbedQueryButton = ({
   card,
   params,
 }) => (
-  <DownloadButton
-    method="GET"
-    url={`api/embed/dashboard/${token}/dashcard/${dashcardId}/card/${card.id}/${type}`}
-    extensions={[type]}
-    params={params}
-  >
-    {type}
-  </DownloadButton>
-);
+    <DownloadButton
+      method="GET"
+      url={`api/embed/dashboard/${token}/dashcard/${dashcardId}/card/${card.id}/${type}`}
+      extensions={[type]}
+      params={params}
+    >
+      {type}
+    </DownloadButton>
+  );
 
 QueryDownloadWidget.propTypes = {
   card: PropTypes.object,

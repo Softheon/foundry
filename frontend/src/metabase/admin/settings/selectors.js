@@ -447,7 +447,7 @@ const SECTIONS = [
         ]
     }
     */
-   {
+  {
     name: t`Download`,
     slug: "download",
     settings: [
@@ -493,6 +493,15 @@ export const getSettingValues = createSelector(getSettings, settings => {
   return settingValues;
 });
 
+export const enableExcelDownload = createSelector(
+  state => state.settings.values,
+  (settings) => {
+    return settings["enable_xlsx_download"];
+  }
+)
+
+export const settingValues = state => state.settings.values;
+
 export const getNewVersionAvailable = createSelector(getSettings, settings => {
   return MetabaseSettings.newVersionAvailable(settings);
 });
@@ -503,8 +512,8 @@ export const getSections = createSelector(getSettings, settings => {
   }
 
   let settingsByKey = _.groupBy(settings, "key");
-  return SECTIONS.map(function(section) {
-    let sectionSettings = section.settings.map(function(setting) {
+  return SECTIONS.map(function (section) {
+    let sectionSettings = section.settings.map(function (setting) {
       const apiSetting =
         settingsByKey[setting.key] && settingsByKey[setting.key][0];
       if (apiSetting) {
