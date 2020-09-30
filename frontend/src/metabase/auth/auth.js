@@ -100,10 +100,17 @@ export const loginIAM = createThunkAction(LOGIN_IAM, function (
       if (error.status === 428) {
         dispatch(push("/auth/iam_email_is_not_verified"));
       } else {
-        return error;
+        await dispatch(iamLoginError(error));
+        await dispatch(push("/"));
+        throw error;
       }
     }
   };
+});
+
+const IAM_LOGIN_ERROR = "metabaes/auth/IAM_LOGIN_ERROR";
+const iamLoginError = createThunkAction(IAM_LOGIN_ERROR, (error) => (dispatch, getState) => {
+  return error;
 });
 
 // logout
@@ -209,6 +216,9 @@ const loginError = handleActions(
     [IDLE_TIMEOUT]: {
       next: (state, { payload }) => (payload ? payload : null),
     },
+    [IAM_LOGIN_ERROR]: {
+      next: (state, { payload }) => (payload ? payload : null)
+    }
   },
   null,
 );

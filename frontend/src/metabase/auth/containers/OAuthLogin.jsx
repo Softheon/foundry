@@ -98,7 +98,7 @@ export default class OAuthLogin extends Component {
         const redirectUrl = currentUrl.match(
           /\&(?:state)\=([\S\s]*?)\&/
         );
-        const redirect = decodeURIComponent(redirectUrl[1]);
+        const redirect = redirectUrl && decodeURIComponent(redirectUrl[1]);
         loginIAM({ id_token, access_token }, redirect);
       }
     } catch (error) {
