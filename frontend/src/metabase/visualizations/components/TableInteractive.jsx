@@ -359,8 +359,8 @@ export default class TableInteractive extends Component {
         onMouseUp={
           isClickable
             ? e => {
-                this.onVisualizationClick(clicked, e.currentTarget);
-              }
+              this.onVisualizationClick(clicked, e.currentTarget);
+            }
             : undefined
         }
       >
@@ -372,15 +372,25 @@ export default class TableInteractive extends Component {
               extent={getColumnExtent(data.cols, data.rows, columnIndex)}
               cellHeight={ROW_HEIGHT}
             />
-          ) : (
-            /* using formatValue instead of <Value> here for performance. The later wraps in an extra <span> */
-            formatValue(value, {
-              ...columnSettings,
-              type: "cell",
-              jsx: true,
-              rich: true,
-            })
-          )}
+          ) :
+            columnSettings["view_as"] && columnSettings["view_as"] === 'link'
+              && columnSettings["link_text"] ?
+              <a
+                className="link mx1"
+                href={columnSettings["link_text"].replace("{0}", value)}
+                target="_blank"
+              >
+                {value}
+              </a>
+              : (
+                /* using formatValue instead of <Value> here for performance. The later wraps in an extra <span> */
+                formatValue(value, {
+                  ...columnSettings,
+                  type: "cell",
+                  jsx: true,
+                  rich: true,
+                })
+              )}
         </div>
       </div>
     );
@@ -470,10 +480,10 @@ export default class TableInteractive extends Component {
 
     // TODO MBQL: use query lib to get the sort field
     const isSorted =
-    sort && 
-    sort[0] && 
-    sort[0][0] && 
-    (sort[0][0][1] === column.id || sort[0][0][1] === columnIndex);
+      sort &&
+      sort[0] &&
+      sort[0][0] &&
+      (sort[0][0][1] === column.id || sort[0][0][1] === columnIndex);
     const isAscending = sort && sort[0] && sort[0][0] === "asc";
     return (
       <Draggable
@@ -548,8 +558,8 @@ export default class TableInteractive extends Component {
             // only use the onClick if not draggable since it's also handled in Draggable's onStop
             isClickable && !isDraggable
               ? e => {
-                  this.onVisualizationClick(clicked, e.currentTarget);
-                }
+                this.onVisualizationClick(clicked, e.currentTarget);
+              }
               : undefined
           }
         >
