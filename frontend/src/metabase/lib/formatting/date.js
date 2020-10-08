@@ -60,7 +60,7 @@ const DATE_STYLE_TO_FORMAT: {
   },
 };
 
-export const DEFAULT_DATE_STYLE: DateStyle = "MMMM D, YYYY";
+export const DEFAULT_DATE_STYLE: DateStyle = "M/D/YYYY";
 
 export function getDateFormatFromStyle(
   style: DateStyle,

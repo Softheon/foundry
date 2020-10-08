@@ -364,7 +364,7 @@ export const NUMBER_COLUMN_SETTINGS = {
         { name: "100000.00", value: "." },
       ],
     },
-    default: ".,",
+    default: ".",
   },
   decimals: {
     title: t`Minimum number of decimal places`,
