@@ -224,6 +224,7 @@ before finishing)."
         [columns & rows] (cancelable-run-query
                           connection sql params
                           {:identifiers    identity
+                           :timeout 600
                            :as-arrays?     true
                            :read-columns   (read-columns driver (some-> timezone Calendar/getInstance))
                            :set-parameters (set-parameters-with-timezone timezone)}
@@ -417,6 +418,7 @@ before finishing)."
                  :read-columns   (read-columns driver (some-> timezone Calendar/getInstance))
                  :set-parameters (set-parameters-with-timezone timezone)
                  :result-set-fn (export-fn connection)
+                 :timeout 600
                            ;:concurrency :read-only
                  :keywordize? false})]
     stream))
