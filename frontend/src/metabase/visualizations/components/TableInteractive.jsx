@@ -16,6 +16,8 @@ import {
 import { getColumnExtent } from "metabase/visualizations/lib/utils";
 import Query from "metabase/lib/query";
 
+import ReactHtmlParser from 'react-html-parser';
+ 
 import _ from "underscore";
 import cx from "classnames";
 
@@ -333,7 +335,6 @@ export default class TableInteractive extends Component {
       getCellBackgroundColor(value, rowIndex, column.name);
 
     const columnSettings = settings.column(column);
-
     return (
       <div
         key={key}
@@ -382,7 +383,13 @@ export default class TableInteractive extends Component {
               >
                 {value}
               </a>
-              : (
+              : 
+              columnSettings["view_as"] && columnSettings["view_as"] == 'html' ?
+            
+                (ReactHtmlParser(value))
+             
+              :
+              (
                 /* using formatValue instead of <Value> here for performance. The later wraps in an extra <span> */
                 formatValue(value, {
                   ...columnSettings,

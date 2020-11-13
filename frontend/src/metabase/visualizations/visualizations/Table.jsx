@@ -182,24 +182,25 @@ export default class Table extends Component {
         defaultValue = "link";
         options.push({ name: t`Link`, value: "link" });
       }
-      if (!column.special_type || isEmail(column)) {
-        defaultValue = "email_link";
-        options.push({ name: t`Email link`, value: "email_link" });
-      }
-      if (!column.special_type || isImageURL(column) || isAvatarURL(column)) {
-        defaultValue = isAvatarURL(column) ? "image" : "link";
-        options.push({ name: t`Image`, value: "image" });
-      }
-      if (!column.special_type) {
-        defaultValue = "auto";
-        options.push({ name: t`Automatic`, value: "auto" });
-      }
-
+      // if (!column.special_type || isEmail(column)) {
+      //   defaultValue = "email_link";
+      //   options.push({ name: t`Email link`, value: "email_link" });
+      // }
+      // if (!column.special_type || isImageURL(column) || isAvatarURL(column)) {
+      //   defaultValue = isAvatarURL(column) ? "image" : "link";
+      //   options.push({ name: t`Image`, value: "image" });
+      // }
+      // if (!column.special_type) {
+      //   defaultValue = "auto";
+      //   options.push({ name: t`Automatic`, value: "auto" });
+      // }
+      options.push({name: t`Html`, value: "html"});
+      
       if (options.length > 1) {
         settings["view_as"] = {
           title: t`View as link or image`,
           widget: "select",
-          default: defaultValue,
+          default: null,
           props: {
             options,
           },
