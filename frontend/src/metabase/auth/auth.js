@@ -136,7 +136,6 @@ export const logout = createThunkAction(LOGOUT, function () {
     // clear local storage
     window.localStorage.clear();
     dispatch(push("/auth/login"));
-
    
     // refresh to ensure all application state is cleared
     window.location.reload();
@@ -187,7 +186,6 @@ export const IDLE_TIMEOUT = "foundry/auth/IDLE_TIMEOUT";
 export const idleSessionTimeout = createThunkAction(
   IDLE_TIMEOUT,
   (message) => async (dispatch, getState) => {
-    window.localStorage.clear();
     await SessionApi.delete();
   },
 );

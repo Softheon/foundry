@@ -105,6 +105,8 @@ export default class TimeoutModal extends React.Component {
   timeoutUser = () => {
     console.log("timing out user");
     window.localStorage.inactive = 0;
+    this.saveUnsavedCard();
+    this.props.idleSessionTimeout();
     this.setState({ timeout: true });
   }
 
@@ -115,8 +117,7 @@ export default class TimeoutModal extends React.Component {
 
   onSessionTimeout = event => {
     if (this.isUserInActive()) {
-      this.saveUnsavedCard();
-      this.props.idleSessionTimeout();
+       window.localStorage.clear();
     }
     window.location.reload();   
   }
