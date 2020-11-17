@@ -37,6 +37,7 @@ export const login = createThunkAction(LOGIN, function (
 
     try {
       // let newSession = await SessionApi.create(credentials);
+      window.localStorage.clear();
       await SessionApi.create(credentials);
       // since we succeeded, lets set the session cookie
       //MetabaseCookies.setSessionCookie(newSession.id);
@@ -90,6 +91,7 @@ export const loginIAM = createThunkAction(LOGIN_IAM, function (
 ) {
   return async function (dispatch, getState) {
     try {
+      window.localStorage.clear();
       await SessionApi.createWithIamAuth({
         id_token: iam.id_token,
         access_token: iam.access_token,
@@ -131,9 +133,11 @@ export const logout = createThunkAction(LOGOUT, function () {
     //await SessionApi.delete();
     //await clearGoogleAuthCredentials();
     MetabaseAnalytics.trackEvent("Auth", "Logout");
-
+    // clear local storage
+    window.localStorage.clear();
     dispatch(push("/auth/login"));
 
+   
     // refresh to ensure all application state is cleared
     window.location.reload();
   };
@@ -183,25 +187,12 @@ export const IDLE_TIMEOUT = "foundry/auth/IDLE_TIMEOUT";
 export const idleSessionTimeout = createThunkAction(
   IDLE_TIMEOUT,
   (message) => async (dispatch, getState) => {
+    window.localStorage.clear();
     await SessionApi.delete();
-    // return {
-    //   data: {
-    //     errors: {
-    //       username: "You have been logged out due to inactivity.",
-    //     },
-    //   },
-    // };
   },
 );
 
-export const SESSION_TIMEOUT = "foundry/auth/SESSION_TIMEOUT";
-export const sessionTimeout = createThunkAction(
-  SESSION_TIMEOUT,
-  () => async (dispatch, getState) => {
-    dispatch(push("/auth/login"));
-    window.location.reload();
-  },
-);
+
 // reducers
 
 const loginError = handleActions(

@@ -63,7 +63,7 @@ export default class App extends Component {
       <ScrollToTop>
         <div className="relative">
           {currentUser && <Navbar location={location} />}
-          {currentUser && <TimeoutModal idleTimeout={60} modelTimeout={30}/>}
+          {currentUser && <TimeoutModal />}
           {errorPage ? getErrorComponent(errorPage) : children}
           <UndoListing />
         </div>
