@@ -202,6 +202,7 @@ export default class NativeQueryEditor extends Component {
     this._editor.focus();
 
     let aceLanguageTools = ace.require("ace/ext/language_tools");
+    let lang = ace.require("ace/lib/lang");
     this._editor.setOptions({
       enableBasicAutocompletion: true,
       enableSnippets: true,
@@ -222,6 +223,7 @@ export default class NativeQueryEditor extends Component {
             return {
               name: result[0],
               value: result[0],
+              type: result[1],
               meta: result[1],
             };
           });
@@ -231,6 +233,13 @@ export default class NativeQueryEditor extends Component {
           callback(null, []);
         }
       },
+      getDocTooltip: function(item) {
+        if (item.type == 'Table' && !item.docHTML) {
+            item.docHTML = [
+                "<b>",  lang.escapeHTML(item.value), "</b>"          
+            ].join("");
+        }
+    }
     });
   }
 
