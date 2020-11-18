@@ -25,6 +25,7 @@ import _ from "underscore";
 import { isID, isFK } from "metabase/lib/schema_metadata";
 
 import type { VisualizationProps } from "metabase/meta/types/Visualization";
+import ReactHtmlParser from 'react-html-parser';
 
 type Props = VisualizationProps & {
   height: number,
@@ -207,11 +208,11 @@ export default class TableSimple extends Component {
                             onClick={
                               isClickable
                                 ? e => {
-                                    onVisualizationClick({
-                                      ...clicked,
-                                      element: e.currentTarget,
-                                    });
-                                  }
+                                  onVisualizationClick({
+                                    ...clicked,
+                                    element: e.currentTarget,
+                                  });
+                                }
                                 : undefined
                             }
                           >
@@ -227,14 +228,28 @@ export default class TableSimple extends Component {
                                   columnIndex,
                                 )}
                               />
-                            ) : (
-                              formatValue(value, {
-                                ...columnSettings,
-                                type: "cell",
-                                jsx: true,
-                                rich: true,
-                              })
-                            )}
+                            ) :
+                                columnSettings["view_as"] && columnSettings["view_as"] === 'link'
+                                  && columnSettings["link_text"] ?
+                                  <a
+                                    className="link mx1"
+                                    href={columnSettings["link_text"].replace("{0}", value)}
+                                    target="_blank"
+                                  >
+                                    {value}
+                                  </a>
+                                  :
+                                  columnSettings["view_as"] && columnSettings["view_as"] == 'html' ?
+                                    (ReactHtmlParser(value))
+                                    :
+                                    (
+                                      formatValue(value, {
+                                        ...columnSettings,
+                                        type: "cell",
+                                        jsx: true,
+                                        rich: true,
+                                      })
+                                    )}
                           </span>
                         </td>
                       );
@@ -250,9 +265,8 @@ export default class TableSimple extends Component {
             ref="footer"
             className="p1 flex flex-no-shrink flex-align-right fullscreen-normal-text fullscreen-night-text"
           >
-            <span className="text-bold">{t`Rows ${start + 1}-${end + 1} of ${
-              rows.length
-            }`}</span>
+            <span className="text-bold">{t`Rows ${start + 1}-${end + 1} of ${rows.length
+              }`}</span>
             <span
               className={cx("text-brand-hover px1 cursor-pointer", {
                 disabled: start === 0,
