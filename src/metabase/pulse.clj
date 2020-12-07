@@ -255,7 +255,7 @@
 
 
 (defn execute-and-export-card
-  [pulse-id pulse-card]
+  [pulse-id pulse-card skip-if-empty]
   (let [card-id (:id pulse-card)
         site-url (public-settings/site-url)]
     (try
@@ -269,14 +269,16 @@
                         (assoc
                          :constraints nil
                          :middleware {:skip-results-metadata? true
-                                      :export-fn (partial export-fn card-id)}))
+                                      :export-fn (partial export-fn card-id skip-if-empty)}))
               options {:executed-by creator_id
                        :context :pulse
                        :card-id card-id}
               result (qp/process-query-and-stream-file! query options)]
           (if-not (instance? File result)
-            (throw (ex-info "Unable to export the report" {:cause result}))
-
+            (do
+              (log/warn (str "Unable to export the report" {:cause result}))
+              nil)
+       
             (let [_ (db/insert! PulseCardFile {:id  (str (UUID/randomUUID))
                                                :pulse_id pulse-id
                                                :card_id card-id
@@ -315,9 +317,9 @@
      :message (messages/render-report-email pulse results)}))
 
 (defn- pulse->email-notifications
-  [{:keys [cards channel-ids] :as pulse}]
+  [{:keys [cards channel-ids  ] :as pulse}]
   (let [results (for [card cards
-                      :let [result (execute-and-export-card  (:id pulse) card)]
+                      :let [result (execute-and-export-card  (:id pulse) card (:skip_if_empty pulse))]
                       :when result]
                   result)
         channel-ids (or channel-ids (mapv :id (:channels pulse)))]

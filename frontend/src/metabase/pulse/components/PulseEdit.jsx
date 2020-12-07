@@ -161,7 +161,7 @@ export default class PulseEdit extends Component {
               pulseIsValid={isValid}
             />
           </div>
-          {/* <PulseEditSkip {...this.props} setPulse={this.setPulse} /> */}
+          <PulseEditSkip {...this.props} setPulse={this.setPulse} />
         </div>
         <div className="PulseEdit-footer flex align-center border-top py3">
           {pulse.archived ? (

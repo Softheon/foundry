@@ -127,8 +127,12 @@
         .deleteOnExit))))
 
 (defn export-to-csv-file
-  [card-id connection]
+  [card-id  skip-if-empty connection]
   (fn [stmt rset data]
+    (log/info "result count " (count data))
+    (when (and (true? skip-if-empty) (<= (count data) 1))
+      (log/info "skip empty card")
+      (throw (ex-info (str "skip empty result") {:card-id card-id})))
     (let [finished-chan (a/promise-chan)
           file (create-export-file card-id ".csv")
           conn (:connection connection)
@@ -207,8 +211,12 @@
       input)))
 
 (defn export-to-excel-file
-  [card-id connection]
+  [card-id skip-if-empty connection]
   (fn [stmt rset data]
+    (log/info "result count " (count data))
+    (when (and (true? skip-if-empty) (<= (count data) 1))
+      (log/info "skip empty card")
+      (throw (ex-info (str "skip empty result") {:card-id card-id})))
     (let [finished-chan (a/promise-chan)
           file (create-export-file card-id ".xlsx")
           conn (:connection connection)
