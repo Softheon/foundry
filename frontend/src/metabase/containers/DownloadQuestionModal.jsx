@@ -8,6 +8,8 @@ import FormField from "metabase/components/form/FormField.jsx";
 import Button from "metabase/components/Button.jsx";
 import "./DownloadQuestionModal.css";
 import { extractQueryParams } from "metabase/lib/urls";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 
 export default class DownloadQuestionModal extends Component {
   constructor(props, context) {
@@ -54,8 +56,49 @@ export default class DownloadQuestionModal extends Component {
     });
   }
 
-  formSubmitted = async e => {
-    this.refs.downloadForm.submit();
+  formSubmitted = e => {
+
+    const { name } = this.state.details;
+    const { children } = this.props;
+    const cardName = this.props.card.name;
+
+    if (children === 'pdf') {
+      let viz = document.getElementsByClassName('CardVisualization')[0];
+      const clientRect = viz.getBoundingClientRect();
+      const { height, width } = clientRect;
+      const canvasOptions = {
+        // windowWidth: width,
+        // windowHeight: height
+      }
+      html2canvas(viz, canvasOptions).then(canvas => {
+        let pdf = new jsPDF({
+          orientation: 'l',
+          //  unit: 'px',
+          // format: [width, height],
+          format: "a4"
+        });
+
+        const pageHeight = pdf.internal.pageSize.height || pdf.internal.pageSize.getHeight();
+        const pageWidth = pdf.internal.pageSize.width || pdf.internal.pageSize.getWidth();
+        const widthRatio = pageWidth / canvas.width;
+        const heightRatio = pageHeight / canvas.height;
+        const ratio = widthRatio > heightRatio ? heightRatio : widthRatio;
+
+        const canvasWidth = canvas.width * ratio;
+        const canvasHeight = canvas.height * ratio;
+
+        const marginX = (pageWidth - canvasWidth) / 2;
+        const marginY = (pageHeight - canvasHeight) / 2;
+        const img = canvas.toDataURL('image/png');
+        pdf.addImage(img, 'JPEG', marginX, marginY, canvasWidth, canvasHeight);
+        // pdf.text((cardName || ""), pageWidth / 2, pageHeight + 50, 'center');
+        pdf.save(`${name}.pdf`);
+      });
+    }
+    else {
+      this.refs.downloadForm.submit();
+    }
+
     this.props.onClose();
   };
 
@@ -103,11 +146,14 @@ export default class DownloadQuestionModal extends Component {
             </div>
           </CSSTransitionGroup>
         </form>
-        <form method={method} action={url} ref="downloadForm">
+        <form
+          key="hidden"
+          method={method} action={url} ref="downloadForm">
           {queryParams.map(([name, value]) => (
             <input type="hidden" name={name} value={value} />
           ))}
         </form>
+
       </ModalContent>
     );
   }

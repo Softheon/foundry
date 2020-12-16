@@ -44,8 +44,6 @@ class QueryDownloadWidget extends React.Component {
       params,
       settingValues,
     } = this.props;
-
-    console.log("@debug settingValues \n", settingValues);
     const exportFormats = ["csv"];
     if (settingValues["enable_xlsx_download"]) {
       exportFormats.push("xlsx");
@@ -58,6 +56,7 @@ class QueryDownloadWidget extends React.Component {
     if (!isSaved && settingValues["enable_xlsx_download"]) {
       exportFormats.splice(-1, 1);
     }
+    exportFormats.push("pdf");
     const downloadSizeMessage = rowLimit ? (
       <p>{t`The maximum download size is ${rowLimit} rows.`}</p>
     ) : (
@@ -94,7 +93,7 @@ class QueryDownloadWidget extends React.Component {
           )}
           <Box>
             {exportFormats.map((type) => (
-              <Box w={"100%"}>
+              <Box w={"100%"} key={type}>
                 {dashcardId && token ? (
                   <DashboardEmbedQueryButton
                     key={type}

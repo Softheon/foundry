@@ -8,10 +8,10 @@ import ChartTooltip from "../components/ChartTooltip.jsx";
 import ChartWithLegend from "../components/ChartWithLegend.jsx";
 
 import { ChartSettingsError } from "metabase/visualizations/lib/errors";
-import { 
-  getFriendlyName, 
+import {
+  getFriendlyName,
   getDynamicFilterData
- } from "metabase/visualizations/lib/utils";
+} from "metabase/visualizations/lib/utils";
 import {
   metricSetting,
   dimensionSetting,
@@ -24,7 +24,7 @@ import colors, { getColorsForValues } from "metabase/lib/colors";
 
 import cx from "classnames";
 
-import d3 from "d3";
+import d3, { svg } from "d3";
 import _ from "underscore";
 
 const OUTER_RADIUS = 50; // within 100px canvas
@@ -84,14 +84,14 @@ export default class PieChart extends Component {
       title: t`Aggregation`,
       widget: "buttonGroup",
       props: {
-       options: [
-         { name: t`On`, value: true },
-         { name:  t`Off`, value: false}
-       ]
+        options: [
+          { name: t`On`, value: true },
+          { name: t`Off`, value: false }
+        ]
       },
-      getHidden: ([ { card }], vizSettings) => {
+      getHidden: ([{ card }], vizSettings) => {
         const queryType = card.dataset_query && card.dataset_query.type;
-        if (!queryType || queryType !== "native"){
+        if (!queryType || queryType !== "native") {
           return true;
         }
         return !vizSettings["pie.metric"];
@@ -107,8 +107,8 @@ export default class PieChart extends Component {
       widget: "select",
       props: {
         options: [
-          { name: t`Sum`, value: "sum"},
-          { name: t`Count`, value: "count"}
+          { name: t`Sum`, value: "sum" },
+          { name: t`Count`, value: "count" }
         ]
       },
       getHidden: (single, vizSettings) => !vizSettings["pie.aggregation_enabled"],
@@ -173,7 +173,7 @@ export default class PieChart extends Component {
         const dimensionIndex = settings["pie._dimensionIndex"];
         return dimensionIndex >= 0
           ? // cast to string because getColorsForValues expects strings
-            rows.map(row => String(row[dimensionIndex]))
+          rows.map(row => String(row[dimensionIndex]))
           : null;
       },
       readDependencies: ["pie._dimensionIndex"],
@@ -181,13 +181,57 @@ export default class PieChart extends Component {
   };
 
   componentDidUpdate() {
-    let groupElement = ReactDOM.findDOMNode(this.refs.group);
-    let detailElement = ReactDOM.findDOMNode(this.refs.detail);
-    if (groupElement.getBoundingClientRect().width < 100) {
-      detailElement.classList.add("hide");
-    } else {
-      detailElement.classList.remove("hide");
+    // let groupElement = ReactDOM.findDOMNode(this.refs.group);
+    // let detailElement = ReactDOM.findDOMNode(this.refs.detail);
+    // if (groupElement.getBoundingClientRect().width < 100) {
+    //   detailElement.classList.add("hide");
+    // } else {
+    //   detailElement.classList.remove("hide");
+    // } 
+  }
+
+  computeWidthandHeight = () => {
+    const GRID_ASPECT_RATIO = 4 / 3;
+    const PADDING = 14;
+    let {
+      gridSize,
+      aspectRatio,
+      height,
+      width,
+      settings
+    } = this.props;
+
+    const showLegend = settings["pie.show_legend"];
+    let chartWidth, chartHeight;
+    let isHorizontal = gridSize && gridSize.width > gridSize.height / GRID_ASPECT_RATIO;
+    if (!gridSize || (!isHorizontal && (showLegend || gridSize.width > 4 || gridSize.height > 4))) {
+      let desiredWidth = height * aspectRatio;
+      if (desiredWidth <= width * (2 / 3)) {
+        chartWidth = desiredWidth;
+      }
+      else {
+        chartWidth = height;
+      }
+      chartHeight = height;
+    } else if (
+      !isHorizontal &&
+      (showLegend || (gridSize.height > 3 && gridSize.width > 2))
+    ) {
+
+      let desiredHeight = width * (1 / aspectRatio);
+      if (desiredHeight > height * (3 / 4)) {
+        // chartHeight = height * (3 / 4);
+        chartHeight = width;
+      } else {
+        chartHeight = desiredHeight;
+      }
+      chartWidth = width;
     }
+    else {
+      const min = Math.min(width, height);
+      chartWidth = chartHeight = min;
+    }
+    return { width: chartWidth, height: chartHeight };
   }
 
   render() {
@@ -282,7 +326,7 @@ export default class PieChart extends Component {
     if (otherSlice && otherSlice.percentage < OTHER_SLICE_MIN_PERCENTAGE) {
       otherSlice.value = total * OTHER_SLICE_MIN_PERCENTAGE;
     }
-    slices.sort((a,b) => a.percentage - b.percentage);
+    slices.sort((a, b) => a.percentage - b.percentage);
     let legendTitles = slices.map(slice => [
       slice.key === "Other" ? slice.key : formatDimension(slice.key, true),
       settings["pie.show_legend_perecent"]
@@ -301,6 +345,12 @@ export default class PieChart extends Component {
       slices.push(otherSlice);
     }
 
+     let { width, height } = this.computeWidthandHeight();
+
+    width = height = height * 3/4;
+    const radius = Math.min(width, height) / 2;
+    //     .outerRadius(radius - 1)
+    //     .innerRadius(radius * INNER_RADIUS_RATIO))
     const pie = d3.layout
       .pie()
       .sort(null)
@@ -308,8 +358,11 @@ export default class PieChart extends Component {
       .value(d => d.value);
     const arc = d3.svg
       .arc()
-      .outerRadius(OUTER_RADIUS)
-      .innerRadius(OUTER_RADIUS * INNER_RADIUS_RATIO);
+      .outerRadius(radius - 1)
+      .innerRadius(radius * INNER_RADIUS_RATIO);
+
+    // .outerRadius(OUTER_RADIUS)
+    // .innerRadius(OUTER_RADIUS * INNER_RADIUS_RATIO);
 
     function hoverForIndex(index, event) {
       const slice = slices[index];
@@ -340,11 +393,11 @@ export default class PieChart extends Component {
           ].concat(
             showPercentInTooltip && slice.percentage != null
               ? [
-                  {
-                    key: "Percentage",
-                    value: formatPercent(slice.percentage),
-                  },
-                ]
+                {
+                  key: "Percentage",
+                  value: formatPercent(slice.percentage),
+                },
+              ]
               : [],
           ),
         };
@@ -380,6 +433,7 @@ export default class PieChart extends Component {
     const getSliceIsClickable = index =>
       isClickable && slices[index] !== otherSlice;
 
+
     return (
       <ChartWithLegend
         className={className}
@@ -393,8 +447,10 @@ export default class PieChart extends Component {
         }
         showLegend={settings["pie.show_legend"]}
       >
-        <div className={styles.ChartAndDetail}>
-          <div ref="detail" className={styles.Detail}>
+        <div className={styles.ChartAndDetail}
+          style={{marginTop: "50px" , marginLeft:"50px"}}
+          ref="container">
+          {/* <div ref="detail" className={styles.Detail}>
             <div
               className={cx(
                 styles.Value,
@@ -404,10 +460,13 @@ export default class PieChart extends Component {
               {value}
             </div>
             <div className={styles.Title}>{title}</div>
-          </div>
-          <div className={styles.Chart}>
-            <svg className={styles.Donut + " m1"} viewBox="0 0 100 100">
-              <g ref="group" transform={`translate(50,50)`}>
+          </div> */}
+          <div
+            // className={styles.Chart} 
+            
+          >
+            <svg viewBox={`${-width / 2} ${-height / 2} ${width} ${height}`} height={height} width={width}>
+              {/* <g ref="group" transform={`translate(310,310)`}>
                 {pie(slices).map((slice, index) => (
                   <path
                     key={index}
@@ -437,7 +496,41 @@ export default class PieChart extends Component {
                     }
                   />
                 ))}
-              </g>
+              </g> */}
+              {pie(slices).map((slice, index) => (
+                <path
+                  key={index}
+                  d={arc(slice)}
+                  fill={slices[index].color}
+                  opacity={
+                    hovered &&
+                      hovered.index != null &&
+                      hovered.index !== index
+                      ? 0.3
+                      : 1
+                  }
+                  onMouseMove={e =>
+                    onHoverChange && onHoverChange(hoverForIndex(index, e))
+                  }
+                  onMouseLeave={() => onHoverChange && onHoverChange(null)}
+                  className={cx({
+                    "cursor-pointer": getSliceIsClickable(index),
+                  })}
+                  onClick={
+                    getSliceIsClickable(index) &&
+                    (e =>
+                      onVisualizationClick({
+                        ...getSliceClickObject(index),
+                        event: e.nativeEvent,
+                      }))
+                  }
+                />
+              ))}
+              <text textAnchor="middle" className={cx(
+                styles.Value,
+                "fullscreen-normal-text fullscreen-night-text",
+              )}>{value}</text>
+              <text textAnchor="middle" className={styles.Title} y="20">{title}</text>
             </svg>
           </div>
         </div>
