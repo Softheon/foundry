@@ -116,7 +116,7 @@ class SavedAsPdf extends Component {
       const marginY = (pageHeight - canvasHeight) / 2;
 
       // pdf.internal.pageSize.height +=100;
-      pdf.addImage(img, 'JPEG', marginX, marginY, canvasWidth, canvasHeight);
+      pdf.addImage(img, 'JPEG', marginX, 0, canvasWidth, canvasHeight);
       pdf.setFontSize(20);
       //  pdf.text( (dashboard.name || "") , pageWidth / 2, pageHeight +50, 'center');
       pdf.save(filename);

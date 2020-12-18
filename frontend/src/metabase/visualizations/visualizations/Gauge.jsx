@@ -106,7 +106,7 @@ export default class Gauge extends Component {
         let value = 100;
         try {
           value = series[0].data.rows[0][0];
-        } catch (e) {}
+        } catch (e) { }
         return [
           { min: 0, max: value / 2, color: colors["error"], label: "" },
           { min: value / 2, max: value, color: colors["warning"], label: "" },
@@ -219,7 +219,6 @@ export default class Gauge extends Component {
 
     // expand the width to fill available space so that labels don't overflow as often
     const expandWidthFactor = width / svgWidth;
-
     return (
       <div className={cx(className, "relative")}>
         <div
@@ -236,6 +235,8 @@ export default class Gauge extends Component {
         >
           <svg
             viewBox={`0 0 ${viewBoxWidth * expandWidthFactor} ${viewBoxHeight}`}
+            height={svgHeight + 10}
+            width={width}
           >
             <g
               transform={`translate(${viewBoxWidth *
