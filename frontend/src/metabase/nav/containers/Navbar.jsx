@@ -262,6 +262,11 @@ export default class Navbar extends Component {
               currentPath={this.props.path}
             />
             <AdminNavItem
+              name={t`Spreadsheet`}
+              path="/admin/spreadsheets"
+              currentPath={this.props.path}
+            />
+            <AdminNavItem
               name={t`Permissions`}
               path="/admin/permissions"
               currentPath={this.props.path}

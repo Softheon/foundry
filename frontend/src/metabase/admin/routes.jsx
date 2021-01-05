@@ -13,6 +13,11 @@ import SettingsEditorApp from "metabase/admin/settings/containers/SettingsEditor
 import DatabaseListApp from "metabase/admin/databases/containers/DatabaseListApp.jsx";
 import DatabaseEditApp from "metabase/admin/databases/containers/DatabaseEditApp.jsx";
 
+// Spreadsheet Add / List
+import SpreadsheetListApp from "metabase/admin/spreadsheets/containers/SpreadsheetListApp.jsx";
+import SpreadsheetEditApp from "metabase/admin/spreadsheets/containers/SpreadsheetEditApp.jsx";
+
+
 // Metadata / Data model
 import MetadataEditorApp from "metabase/admin/datamodel/containers/MetadataEditorApp.jsx";
 import MetricApp from "metabase/admin/datamodel/containers/MetricApp.jsx";
@@ -44,6 +49,12 @@ const getRoutes = (store, IsAdmin) => (
       <IndexRoute component={DatabaseListApp} />
       <Route path="create" component={DatabaseEditApp} />
       <Route path=":databaseId" component={DatabaseEditApp} />
+    </Route>
+
+    <Route path="spreadsheets" title={t`Spreadsheets`}>
+      <IndexRoute component={SpreadsheetListApp} />
+      <Route path="create" component={SpreadsheetEditApp} />
+      <Route path=":spreadsheetId" component={SpreadsheetListApp}/>
     </Route>
 
     <Route path="datamodel" title={t`Data Model`}>
