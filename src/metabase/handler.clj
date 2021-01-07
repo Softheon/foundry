@@ -14,7 +14,8 @@
             [ring.middleware
              [cookies :refer [wrap-cookies]]
              [keyword-params :refer [wrap-keyword-params]]
-             [params :refer [wrap-params]]]))
+             [params :refer [wrap-params]]
+             [multipart-params :refer [ wrap-multipart-params]]]))
 
 ;; required here because this namespace is not actually used anywhere but we need it to be loaded because it adds
 ;; impls for handling `core.async` channels as web server responses
@@ -37,6 +38,7 @@
    mw.json/wrap-streamed-json-response     ; middleware to automatically serialize suitable objects as JSON in responses
    wrap-keyword-params                     ; converts string keys in :params to keyword keys
    wrap-params                             ; parses GET and POST params as :query-params/:form-params and both as :params
+   wrap-multipart-params 
    mw.session/bind-current-user            ; Binds *current-user* and *current-user-id* if :metabase-user-id is non-nil
    mw.session/wrap-current-user-id         ; looks for :metabase-session-id and sets :metabase-user-id if Session ID is valid
    mw.session/wrap-session-id              ; looks for a Foundry Session ID and assoc as :metabase-session-id

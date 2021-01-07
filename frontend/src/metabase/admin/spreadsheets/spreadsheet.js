@@ -57,22 +57,39 @@ export const initializeSpreadsheet = function (id) {
 }
 
 export const saveSpreadsheet = spreadsheet => async (dispatch, getState) => {
-    try {
-        dispatch.action(CREATE_SPREADSHEET_STARTED, {});
-        const action = await dispatch(Spreadsheets.actions.create(spreadsheet));
-        // const createdSpreadsheet=Spreadsheets.HACK_getObjectFromAction(action);
-        dispatch.action(CREATE_SPREADSHEET);
-        dispatch(push("/admin/spreadsheets"));
-
-    } catch (error) {
-        console.error("error saving spreadsheet", error);
-        dispatch.action(CREATE_SPREADSHEET_FAILED, { error });
-    }
+    dispatch.action(CREATE_SPREADSHEET_STARTED, {});
+    // const action = await dispatch(Spreadsheets.actions.create(spreadsheet));
+    const formData = new FormData();
+    formData.append("type", spreadsheet.type);
+    Object.keys(spreadsheet.details).map(key => formData.append(key, spreadsheet.details[key]));
+    fetch("/api/spreadsheet", {
+        method: 'POST',
+        body: formData
+    }).then(
+        response => {
+            if (!response.ok) {
+                throw response;
+            }
+            else {
+                dispatch.action(CREATE_SPREADSHEET);
+                //   dispatch(push("/admin/spreadsheets"));
+            }
+        }
+    ).catch(error => {
+        error.json().then(body => {
+            console.error("error saving spreadsheet", body);
+            dispatch.action(CREATE_SPREADSHEET_FAILED, 
+            {
+                error: {
+                    data: {
+                        message: body.message
+                    }
+                }
+            }
+                );
+        })
+    })
 }
-
-// export const saveSpreadsheet = request => async (dispatch, getState) => {
-//     dispatch()
-// }
 
 // Reducers
 
@@ -112,8 +129,9 @@ const formState = handleActions({
     [CREATE_SPREADSHEET]: () => ({
         formSuccess: { data: { message: t`Successfully saved` } }
     }),
-    [CREATE_SPREADSHEET_FAILED]: (state, { payload: { error } }) => ({ 
-        formError: error }),
+    [CREATE_SPREADSHEET_FAILED]: (state, { payload: { error } }) => ({
+        formError: error
+    }),
     [CLEAR_FORM_STATE]: () => DEFAULT_FORM_STATE
 }, DEFAULT_FORM_STATE);
 

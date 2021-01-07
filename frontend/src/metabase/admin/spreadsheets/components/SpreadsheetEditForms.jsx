@@ -83,7 +83,6 @@ export default class SpreadsheetEditForms extends Component {
 
     componentDidUpdate() {
         this.validateForm();
-        console.log("current state ", this.state);
     }
 
 

@@ -60,3 +60,7 @@ bin/node_modules/
 .vscode
 target/checksum.txt
 /resources/frontend_client/app/locales
+.clj-kondo/
+.clj-kondo/.cache/2020.12.12/lock
+.clj-kondo/.cache/2020.12.12/clj/metabase.api.routes.transit.json
+.clj-kondo/.cache/2020.12.12/clj/metabase.api.database.transit.json

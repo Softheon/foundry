@@ -85,7 +85,7 @@
                  commons-logging]]
    [compojure "1.6.1" :exclusions [ring/ring-codec]]                  ; HTTP Routing library built on Ring
    [crypto-random "1.2.0"]                                            ; library for generating cryptographically secure random bytes and strings
- ;;  [dk.ative/docjure "1.13.0"]                                        ; Excel export
+   [dk.ative/docjure "1.13.0"]                                        ; Excel export
    [environ "1.1.0"]                                                  ; easy environment management
    [hiccup "1.0.5"]                                                   ; HTML templating
    [honeysql "0.9.4" :exclusions [org.clojure/clojurescript]]         ; Transform Clojure data structures to SQL
@@ -122,8 +122,8 @@
    [ring/ring-json "0.4.0"]                                           ; Ring middleware for reading/writing JSON automatically
    [stencil "0.5.0"]                                                  ; Mustache templates for Clojure
    [toucan "1.11.0" :exclusions [org.clojure/java.jdbc honeysql]] ; Model layer, hydration, and DB utilities
-   [org.apache.poi/poi "4.1.2"]
-   [org.apache.poi/poi-ooxml "4.1.2"]
+   ;[org.apache.poi/poi "4.1.2"]
+  ; [org.apache.poi/poi-ooxml "4.1.2"]
    [net.logstash.log4j/jsonevent-layout "1.7"]
    [co.elastic.apm/apm-agent-api "1.17.0"] ; Elastic APM Agent API
    ]

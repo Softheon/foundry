@@ -28,6 +28,7 @@
              [session :as session]
              [setting :as setting]
              [setup :as setup]
+             [spreadsheet :as spreadsheet]
              [slack :as slack]
              [table :as table]
              [task :as task]
@@ -88,5 +89,6 @@
   (context "/task"                 [] (+auth task/routes))
   (context "/tiles"                [] (+auth tiles/routes))
   (context "/user"                 [] (+auth user/routes))
+  (context "/spreadsheet" [] (+auth spreadsheet/routes))
   (context "/util"                 [] util/routes)
   (route/not-found (constantly {:status 404, :body (tru "API endpoint does not exist.")})))
