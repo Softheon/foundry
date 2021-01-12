@@ -3,18 +3,25 @@ import { createAction } from "redux-actions";
 import {
     handleActions,
     combineReducers,
-    createThunkAction
+    createThunkAction,
+    momentifyObjectsTimestamps
 } from "metabase/lib/redux";
 
 import { MetabaseApi } from "metabase/services";
 import { t } from "c-3po";
 
-import Spreadsheets from "metabase/entities/spreadsheets";
+import Spreadsheets from "metabase/entities/spreadsheets.js";
 import { push } from "react-router-redux";
+import _ from "underscore";
+
+import { SpreadsheetApi } from "metabase/services";
+import { normalize, schema } from "normalizr";
 
 export const RESET = "foundry/admin/spreadsheets/RESET";
 
 export const SELECT_SPREADSHEET_TYPE = "csv"
+
+export const FETCH_SPREADSHEETS = "foundry/admin/spreadsheets/FETCH_SPREADSHEETS";
 
 export const INITIALIZE_SPREADSHEET = "foundry/admin/spreadsheets/INITIALIZE_SPREADSHEET";
 
@@ -72,27 +79,45 @@ export const saveSpreadsheet = spreadsheet => async (dispatch, getState) => {
             }
             else {
                 dispatch.action(CREATE_SPREADSHEET);
-                //   dispatch(push("/admin/spreadsheets"));
+                dispatch(push("/admin/spreadsheets"));
             }
         }
     ).catch(error => {
         error.json().then(body => {
             console.error("error saving spreadsheet", body);
-            dispatch.action(CREATE_SPREADSHEET_FAILED, 
-            {
-                error: {
-                    data: {
-                        message: body.message
+            dispatch.action(CREATE_SPREADSHEET_FAILED,
+                {
+                    error: {
+                        data: {
+                            message: body.message
+                        }
                     }
                 }
-            }
-                );
+            );
         })
     })
 }
 
-// Reducers
+const spreadsheet = new schema.Entity("spreadsheet");
+export const fetchSpreadsheets = createThunkAction(FETCH_SPREADSHEETS, () => async () => {
+    const spreadsheets = await SpreadsheetApi.list();
+    return normalize(spreadsheets, [spreadsheet])
+})
 
+
+export const deleteSpreadsheet = spreadsheetId => async (dispatch, getState) => {
+    try {
+        dispatch.action(DELETE_SPREADSHEET_STARTED, { spreadsheetId });
+        dispatch(push("/admin/spreadsheets"));
+        await SpreadsheetApi.delete({ id: spreadsheetId });
+        dispatch.action(DELETE_SPREADSHEET, { spreadsheetId });
+    } catch (error) {
+        console.error("error deleting spreadsheet", error);
+        dispatch.action(DELETE_SPREADSHEET_FAILED, { spreadsheetId, error });
+    }
+}
+
+// Reducers
 const editingSpreadsheet = handleActions({
     [RESET]: () => null,
     [INITIALIZE_SPREADSHEET]: (state, { payload }) => payload,
@@ -113,7 +138,7 @@ const deletes = handleActions({
 }, []);
 
 const deletionError = handleActions({
-    [DELETE_SPREADSHEET]: (state, { payload: { error } }) => error,
+    [DELETE_SPREADSHEET_FAILED]: (state, { payload: { error } }) => error,
 }, null);
 
 const DEFAULT_FORM_STATE = {
@@ -136,9 +161,21 @@ const formState = handleActions({
 }, DEFAULT_FORM_STATE);
 
 
+const sheets = handleActions({
+    [FETCH_SPREADSHEETS]: {
+        next: (state, { payload }) =>
+            momentifyObjectsTimestamps(payload.entities.spreadsheet, ["created_at", "updated_at"]),
+    },
+    [DELETE_SPREADSHEET]: {
+        next: (state, { payload: { spreadsheetId } }) =>
+            _.omit(state, spreadsheetId)
+    }
+}, null);
+
 export default combineReducers({
     editingSpreadsheet,
     deletionError,
     formState,
-    deletes
+    deletes,
+    sheets
 })

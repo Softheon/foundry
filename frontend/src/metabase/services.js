@@ -300,6 +300,11 @@ export const UserApi = {
   send_invite: POST("/api/user/:id/send_invite"),
 };
 
+export const SpreadsheetApi = {
+  list: GET("/api/spreadsheet"),
+  delete: DELETE("/api/spreadsheet/:id")
+}
+
 export const UtilApi = {
   password_check: POST("/api/util/password_check"),
   random_token: GET("/api/util/random_token"),

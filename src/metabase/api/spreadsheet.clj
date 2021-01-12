@@ -2,12 +2,17 @@
   "/api/spreadsheet endpoints"
   (:require [clojure.string :as str]
             [clojure.tools.logging :as log]
-            [compojure.core :refer [DELETE GET POST PUT]]
+            [compojure.core :refer [DELETE GET POST]]
+            [honeysql.helpers :as hh]
             [metabase.api
              [common :as api]]
+            [metabase.models
+             [spreadsheet :refer [Spreadsheet]]]
             [metabase.util
              [i18n :refer [tru]]
              [schema :as su]]
+            [metabase.toucan
+             [db :as db]]
             [schema.core :as s]
             [clojure.data.csv :as csv]
             [dk.ative.docjure.spreadsheet :as excel]
@@ -16,7 +21,31 @@
              [jdbc :as jdbc]]))
 
 
-;;; ----------------------------------------------- POST /api/database ------------------------------------------------
+;;; ----------------------------------------------- DELETE /api/spreadsheet/:id  ------------------------------------------------
+(api/defendpoint DELETE "/:id"
+  "Delete a spreadsheet"
+  [id]
+  (api/check-superuser)
+  (let [spreadsheet (Spreadsheet id)
+        db-spec (:details spreadsheet)
+        name (:name spreadsheet)
+        drop-table-ddl (jdbc/drop-table-ddl (keyword (str "[" name "]")))]
+    (jdbc/db-do-commands db-spec drop-table-ddl)
+    (db/delete! Spreadsheet :id id)))
+
+;;; ----------------------------------------------- GET /api/spreadsheet ------------------------------------------------
+
+(api/defendpoint GET "/"
+  "Fetch a list of spreadsheets"
+  []
+  (api/check-superuser)
+  (db/select Spreadsheet
+             (-> {}
+                 (hh/merge-order-by [:created_at :desc])
+                 (hh/merge-where [:= :is_completed true]))))
+
+
+;;; ----------------------------------------------- POST /api/spreadsheet ------------------------------------------------
 
 (def SpreadsheetType
   (su/with-api-error-message (s/constrained 
@@ -54,7 +83,6 @@
 
 (defn- import-xlsx
   [connection file table-name]
-  (log/info "file name" (.getAbsolutePath file))
   (let [rows    (->> (excel/load-workbook (.getAbsolutePath file))
                      (excel/select-sheet #".")
                      excel/row-seq
@@ -79,6 +107,10 @@
       (case type
         "csv" (import-csv connection tempfile name)
         "xlsx" (import-xlsx connection tempfile name)
-        (throw (Exception.  "Unsupported file type"))))))
+        (throw (Exception.  "Unsupported file type")))
+      (db/insert! Spreadsheet  {:name name
+                                :type (keyword type)
+                                :is_completed true
+                                :details db-spec}))))
 
 (api/define-routes)

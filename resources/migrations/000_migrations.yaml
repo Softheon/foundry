@@ -5454,4 +5454,47 @@ databaseChangeLog:
             tableName: revision
             columnName: object
             newDataType: varchar(max)
+  - changeSet:
+      id: 106
+      author: hxia
+      changes:
+      - createTable:
+          tableName: spreadsheet
+          columns:
+          - column:
+              name: id
+              type: int
+              autoIncrement: true
+              constraints:
+                nullable: false
+                primaryKey: true
+          - column:
+              name: created_at
+              type: DATETIME
+              constraints:
+                nullable: false
+          - column:
+              name: updated_at
+              type: DATETIME
+              constraints:
+                nullable: false          
+          - column:
+              name: name
+              type: varchar(254)
+              constraints:
+                nullable: false
+          - column:
+              name: details
+              type: text
+          - column:
+              name: type
+              type: varchar(254)
+              constraints:
+                nullable: false
+          - column:
+              constraints:
+                nullable: false
+              name: is_completed
+              type: boolean
+              defaultValueBoolean: false
 
