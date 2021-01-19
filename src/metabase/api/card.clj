@@ -731,9 +731,11 @@ Exception if preconditions (such as read perms) are not met before returning a c
 (defn- pulse-file-detail
   [card-id  token]
   (when-let [[_ pulse-id file-token] (re-matches #"(^\d+)_(.+$)" token)]
-    (when-let [pulse-file (if api/*is-superuser?*
-                            (pulse/retrieve-notification (Integer/parseInt pulse-id))
-                            (pulse/pulse-file api/*current-user-id* card-id pulse-id))]
+    (when-let [pulse-file  (pulse/retrieve-notification (Integer/parseInt pulse-id))
+              ;;  (if api/*is-superuser?*
+              ;;               (pulse/retrieve-notification (Integer/parseInt pulse-id))
+              ;;               (pulse/pulse-file api/*current-user-id* card-id pulse-id))
+               ]
       (let [card  (first
                    (filter (fn [card] (= card-id (:id card))) (:cards pulse-file)))
             file  (db/select-one-field :location PulseCardFile :id file-token)]

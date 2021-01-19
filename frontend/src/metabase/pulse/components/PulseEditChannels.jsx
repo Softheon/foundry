@@ -201,7 +201,7 @@ export default class PulseEditChannels extends Component {
               autoFocus={!!this.props.pulse.name}
               recipients={channel.recipients}
               recipientTypes={channelSpec.recipients}
-              users={validRecipients}
+              users={this.props.users}
               onRecipientsChange={recipients =>
                 this.onChannelPropertyChange(index, "recipients", recipients)
               }
