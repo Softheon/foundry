@@ -34,7 +34,7 @@
 
 (defmethod set-cell! nil
   [^Cell cell val]
-  (.setBlank cell))
+  (.setCellValue cell ""))
 
 (defmethod set-cell! :default
   [^Cell cell val]

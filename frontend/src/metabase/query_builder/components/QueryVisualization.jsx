@@ -146,8 +146,8 @@ export default class QueryVisualization extends Component {
           <div className="ShownRowCount">
             {result.data.rows_truncated != null
               ? jt`Showing first ${(
-                  <strong>{countString}</strong>
-                )} ${rowsString}`
+                <strong>{countString}</strong>
+              )} ${rowsString}`
               : jt`Showing ${<strong>{countString}</strong>} ${rowsString}`}
           </div>
         ),
@@ -200,21 +200,27 @@ export default class QueryVisualization extends Component {
               size={18}
             />
           )}
-          {!isResultDirty && result && !result.error ? (
+          {/* {!isResultDirty && result && !result.error ? (
             <QueryDownloadWidget
               className="mx1 hide sm-show"
               card={question.card()}
-              result={result}
+              result={question}
             />
-          ) : null}
+          ) : null} */}
+          <QueryDownloadWidget
+            className="mx1 hide sm-show"
+            card={question.card()}
+            question={question}
+            //result={question}
+          />
           {question.isSaved() &&
-          ((isPublicLinksEnabled && (isAdmin || question.publicUUID())) ||
-            (isEmbeddingEnabled && isAdmin)) ? (
-            <QuestionEmbedWidget
-              className="mx1 hide sm-show"
-              card={question.card()}
-            />
-          ) : null}
+            ((isPublicLinksEnabled && (isAdmin || question.publicUUID())) ||
+              (isEmbeddingEnabled && isAdmin)) ? (
+              <QuestionEmbedWidget
+                className="mx1 hide sm-show"
+                card={question.card()}
+              />
+            ) : null}
         </div>
       </div>
     );
@@ -292,11 +298,11 @@ export const VisualizationEmptyState = ({ showTutorialLink }) => (
   <div className="flex full layout-centered text-light flex-column">
     <h1
     >{t`If you give me some data I can show you something cool. Run a Query!`}</h1>
-    {showTutorialLink && (
+    {/* {showTutorialLink && (
       <Link
         to={Urls.question(null, "?tutorial")}
         className="link cursor-pointer my2"
       >{t`How do I use this thing?`}</Link>
-    )}
+    )} */}
   </div>
 );
