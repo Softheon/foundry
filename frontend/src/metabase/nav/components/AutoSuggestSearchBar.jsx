@@ -26,7 +26,7 @@ import {
 
 function autocompleteResults(q) {
   let apiCall = SearchApi.search({
-      q: q
+    q: q
   });
   return apiCall;
 }
@@ -43,8 +43,8 @@ const normalizeSuggestions = suggestions => {
   const normalizedSuggestions = [];
   suggestionCategories.forEach((value, key, map) => {
     let updatedKey = key;
-    if(key === "segment"){
-        return;
+    if (key === "segment") {
+      return;
     }
     if (key === "card") {
       updatedKey = "question";
@@ -67,7 +67,9 @@ const renderSectionTitle = section => {
 };
 
 const renderSuggestion = (suggestion, { query, isHighlighted }) => {
-  return <div>{suggestion.name}</div>;
+  const collection_name = suggestion.collection_name ? suggestion.collection_name : "ANALYTICS"
+  const suggestion_msg = suggestion.model === "collection" ? suggestion.name : `[${collection_name}] ${suggestion.name}`;
+  return <div>{suggestion_msg}</div>;
 };
 
 const renderSuggestionsContainer = ({ containerProps, children, query }) => {
@@ -109,17 +111,17 @@ export default class AutoSuggestSearchBar extends Component {
   inactive = () => this.setState({ active: false });
 
   loadSuggestion = async value => {
-      try {
-        let results = await autocompleteResults(value);
-        this.setState({
-            suggestions: normalizeSuggestions(results),
-        })
-      } catch (error) {
-          console.log("error getting suggestion results", error);
-          this.setState({
-              suggestions: []
-          })
-      }
+    try {
+      let results = await autocompleteResults(value);
+      this.setState({
+        suggestions: normalizeSuggestions(results),
+      })
+    } catch (error) {
+      console.log("error getting suggestion results", error);
+      this.setState({
+        suggestions: []
+      })
+    }
   }
 
   onSuggestionsFetchRequested = ({ value, reason }) => {
@@ -195,8 +197,8 @@ export default class AutoSuggestSearchBar extends Component {
         renderSectionTitle={renderSectionTitle}
         multiSection={true}
         getSectionSuggestions={getSectionSuggestions}
-        // onSuggestionUnSelected={this.onSuggestionUnSelected}
-        //alwaysRenderSuggestions={true}
+      // onSuggestionUnSelected={this.onSuggestionUnSelected}
+      //alwaysRenderSuggestions={true}
       />
     );
   }
@@ -211,7 +213,7 @@ const ActiveSearchColor = color(colors["bg-light-dark"])
 
 const SearchWrapper = Flex.extend`
   ${width} background-color: ${props =>
-      props.active ? ActiveSearchColor : DefaultSearchColor};
+    props.active ? ActiveSearchColor : DefaultSearchColor};
   border-radius: 6px;
   align-items: center;
   color: white;

@@ -26,18 +26,19 @@
 
 (def ^:private card-columns-without-type
   (concat default-columns
-          [:collection_id :collection_position [:card_fav.id :favorite]]))
+          [:collection_id :collection_position [:card_fav.id :favorite] [:temp_name :collection_name]]))
 
 (def ^:private dashboard-columns-without-type
   (concat default-columns
-          [:collection_id :collection_position [:dashboard_fav.id :favorite]]))
+          [:collection_id :collection_position [:dashboard_fav.id :favorite] [:temp_name :collection_name]]))
 
 (def ^:private pulse-columns-without-type
-  [:id :name :collection_id])
+  (concat [:id :name :collection_id]
+          [[:temp_name :collection_name]]))
 
 (def ^:private collection-columns-without-type
   (concat default-columns
-          [[:id :collection_id]]))
+          [[:id :collection_id] [:name :collection_name]]))
 
 (def ^:private segment-columns-without-type
   default-columns)
@@ -134,11 +135,15 @@
 (s/defmethod ^:private create-search-query :card
   [_ search-ctx :- SearchContext]
   (-> (make-honeysql-search-query Card "card" card-columns-without-type)
-      (h/left-join [(-> (h/select :id :card_id)
-                        (h/merge-from CardFavorite)
-                        (h/merge-where [:= :owner_id *current-user-id*]))
-                    :card_fav]
-                   [:= :card.id :card_fav.card_id])
+      (h/merge-left-join [(-> (h/select :id :card_id)
+                              (h/merge-from CardFavorite)
+                              (h/merge-where [:= :owner_id *current-user-id*]))
+                          :card_fav]
+                         [:= :card.id :card_fav.card_id])
+      (h/merge-left-join [(-> (h/select [:id :temp_id] [:name :temp_name])
+                              (h/merge-from Collection))
+                          :temp]
+                         [:= :card.collection_id :temp_id])
       (merge-name-and-archived-search search-ctx)
       (add-collection-criteria :collection_id search-ctx)))
 
@@ -151,11 +156,15 @@
 (s/defmethod ^:private create-search-query :dashboard
   [_ search-ctx :- SearchContext]
   (-> (make-honeysql-search-query Dashboard "dashboard" dashboard-columns-without-type)
-      (h/left-join [(-> (h/select :id :dashboard_id)
-                        (h/merge-from DashboardFavorite)
-                        (h/merge-where [:= :user_id *current-user-id*]))
-                    :dashboard_fav]
-                   [:= :dashboard.id :dashboard_fav.dashboard_id])
+      (h/merge-left-join [(-> (h/select :id :dashboard_id)
+                              (h/merge-from DashboardFavorite)
+                              (h/merge-where [:= :user_id *current-user-id*]))
+                          :dashboard_fav]
+                         [:= :dashboard.id :dashboard_fav.dashboard_id])
+      (h/merge-left-join [(-> (h/select [:id :temp_id] [:name :temp_name])
+                              (h/merge-from Collection))
+                          :temp]
+                         [:= :dashboard.collection_id :temp_id])
       (merge-name-and-archived-search search-ctx)
       (add-collection-criteria :collection_id search-ctx)))
 
@@ -163,6 +172,10 @@
   [_ search-ctx :- SearchContext]
   ;; Pulses don't currently support being archived, omit if archived is true
   (-> (make-honeysql-search-query Pulse "pulse" pulse-columns-without-type)
+      (h/merge-left-join [(-> (h/select [:id :temp_id] [:name :temp_name])
+                              (h/merge-from Collection))
+                          :temp]
+                         [:= :pulse.collection_id :temp_id])
       (merge-name-and-archived-search search-ctx)
       (add-collection-criteria :collection_id search-ctx)
       ;; We don't want alerts included in pulse results
@@ -185,7 +198,9 @@
     row))
 
 (def search-entities
-  [:card :collection :dashboard :pulse :segment :metric])
+  [:card :collection :dashboard :pulse]
+ ; [:card :collection :dashboard :pulse :segment :metric]
+  )
 (s/defn ^:private search
   "Builds a search query that includes all of the searchable entities and runs it"
   [search-ctx :- SearchContext]
