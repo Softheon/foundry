@@ -9,6 +9,8 @@ import Icon from "metabase/components/Icon";
 import Text from "metabase/components/Text";
 import ModalWithTrigger from "./ModalWithTrigger";
 import DownloadQuestionModal from "../containers/DownloadQuestionModal";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 
 function colorForType(type) {
   switch (type) {
@@ -23,12 +25,46 @@ function colorForType(type) {
   }
 }
 
+function downloadAsPdf (card) {
+  console.log("card to be download", card);
+  let viz = document.getElementsByClassName('CardVisualization')[0];
+  const canvasOptions = {
+    // windowWidth: width,
+    // windowHeight: height
+  }
+  html2canvas(viz, canvasOptions).then(canvas => {
+    let pdf = new jsPDF({
+      orientation: 'l',
+      //  unit: 'px',
+      // format: [width, height],
+      format: "a4"
+    });
+
+    const pageHeight = pdf.internal.pageSize.height || pdf.internal.pageSize.getHeight();
+    const pageWidth = pdf.internal.pageSize.width || pdf.internal.pageSize.getWidth();
+    const widthRatio = pageWidth / canvas.width;
+    const heightRatio = pageHeight / canvas.height;
+    const ratio = widthRatio > heightRatio ? heightRatio : widthRatio;
+
+    const canvasWidth = canvas.width * ratio;
+    const canvasHeight = canvas.height * ratio;
+
+    const marginX = (pageWidth - canvasWidth) / 2;
+    const marginY = (pageHeight - canvasHeight) / 2;
+    const img = canvas.toDataURL('image/png');
+    pdf.addImage(img, 'JPEG', marginX, marginY, canvasWidth, canvasHeight);
+    // pdf.text((cardName || ""), pageWidth / 2, pageHeight + 50, 'center');
+    pdf.save(`${card && card.name || "new-report"}.pdf`);
+  });
+}
+
 const DownloadButton = ({
   children,
   method,
   url,
   params,
   extensions,
+  card,
   ...props
 }) => (
     <Box>
@@ -45,6 +81,10 @@ const DownloadButton = ({
               e.preventDefault();
               // download using the API provided by the OS X app
               window.OSX.download(method, url, params, extensions);
+            }
+            if (children === "pdf") {
+              e.preventDefault();
+              downloadAsPdf(card);
             }
           }}
           {...props}

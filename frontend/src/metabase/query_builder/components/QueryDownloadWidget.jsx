@@ -43,7 +43,7 @@ class QueryDownloadWidget extends React.Component {
       icon,
       params,
       settingValues,
-      question
+      question,
     } = this.props;
     const exportFormats = ["csv"];
     if (settingValues["enable_xlsx_download"]) {
@@ -57,18 +57,21 @@ class QueryDownloadWidget extends React.Component {
     if (!isSaved && settingValues["enable_xlsx_download"]) {
       exportFormats.splice(-1, 1);
     }
-    exportFormats.push("pdf");
+    if (card.display !== "scalar") {
+      exportFormats.push("pdf");
+    }
     const downloadSizeMessage = rowLimit ? (
       <p>{t`The maximum download size is ${rowLimit} rows.`}</p>
     ) : (
-        <p>{t`The maximum download size is limited.`}</p>
-      );
+      <p>{t`The maximum download size is limited.`}</p>
+    );
 
-    const parameters = question.parametersList()
+    const parameters = question
+      .parametersList()
       // include only parameters that have a value applied
-      .filter(param => _.has(param, "value"))
+      .filter((param) => _.has(param, "value"))
       // only the superset of parameters object that API expects
-      .map(param => _.pick(param, "type", "target", "value"));
+      .map((param) => _.pick(param, "type", "target", "value"));
     const json_query = { parameters };
     return (
       <PopoverWithTrigger
@@ -221,25 +224,31 @@ const QueryDownloadWidget_old = ({
 );
 
 const UnsavedQueryButton = ({ type, result: { json_query }, card }) => (
-  <DownloadModalButton
+  <DownloadButton
     url={`api/dataset/${type}`}
-    params={{ query: JSON.stringify(_.omit(json_query, "constraints")) }}
+    params={{
+      query: JSON.stringify(_.omit(json_query, "constraints")),
+      name: card.name || "report",
+    }}
     extensions={[type]}
     card={card}
   >
     {type}
-  </DownloadModalButton>
+  </DownloadButton>
 );
 
 const SavedQueryButton = ({ type, result: { json_query }, card }) => (
-  <DownloadModalButton
+  <DownloadButton
     url={`api/card/${card.id}/query/${type}`}
-    params={{ parameters: JSON.stringify(json_query.parameters) }}
+    params={{
+      parameters: JSON.stringify(json_query.parameters),
+      name: card.name || "report",
+    }}
     extensions={[type]}
     card={card}
   >
     {type}
-  </DownloadModalButton>
+  </DownloadButton>
 );
 
 const PublicQueryButton = ({ type, uuid, result: { json_query } }) => (
