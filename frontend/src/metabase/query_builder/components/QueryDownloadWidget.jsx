@@ -43,7 +43,6 @@ class QueryDownloadWidget extends React.Component {
       icon,
       params,
       settingValues,
-      question,
     } = this.props;
     const exportFormats = ["csv"];
     if (settingValues["enable_xlsx_download"]) {
@@ -57,22 +56,16 @@ class QueryDownloadWidget extends React.Component {
     if (!isSaved && settingValues["enable_xlsx_download"]) {
       exportFormats.splice(-1, 1);
     }
-    if (card.display !== "scalar") {
-      exportFormats.push("pdf");
+    if (result && result.status === "completed") {
+      if (card.display !== "scalar") {
+        exportFormats.push("pdf");
+      }
     }
     const downloadSizeMessage = rowLimit ? (
       <p>{t`The maximum download size is ${rowLimit} rows.`}</p>
     ) : (
       <p>{t`The maximum download size is limited.`}</p>
     );
-
-    const parameters = question
-      .parametersList()
-      // include only parameters that have a value applied
-      .filter((param) => _.has(param, "value"))
-      // only the superset of parameters object that API expects
-      .map((param) => _.pick(param, "type", "target", "value"));
-    const json_query = { parameters };
     return (
       <PopoverWithTrigger
         triggerElement={
@@ -120,7 +113,7 @@ class QueryDownloadWidget extends React.Component {
                     key={type}
                     type={type}
                     uuid={uuid}
-                    result={{ json_query }}
+                    result={result}
                   />
                 ) : token ? (
                   <EmbedQueryButton key={type} type={type} token={token} />
@@ -129,14 +122,14 @@ class QueryDownloadWidget extends React.Component {
                     key={type}
                     type={type}
                     card={card}
-                    result={{ json_query }}
+                    result={result}
                   />
                 ) : card && !card.id ? (
                   <UnsavedQueryButton
                     key={type}
                     type={type}
                     card={card}
-                    result={{ json_query }}
+                    result={result}
                   />
                 ) : null}
               </Box>

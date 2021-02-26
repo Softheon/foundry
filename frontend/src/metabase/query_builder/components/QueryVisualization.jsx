@@ -43,18 +43,18 @@ type Props = {
   tableMetadata?: TableMetadata,
   tableForeignKeys?: [],
   tableForeignKeyReferences?: {},
-  setDisplayFn: any => void,
-  onUpdateVisualizationSettings: any => void,
-  onReplaceAllVisualizationSettings: any => void,
-  cellIsClickableFn?: any => void,
-  cellClickedFn?: any => void,
+  setDisplayFn: (any) => void,
+  onUpdateVisualizationSettings: (any) => void,
+  onReplaceAllVisualizationSettings: (any) => void,
+  cellIsClickableFn?: (any) => void,
+  cellClickedFn?: (any) => void,
   isRunning: boolean,
   isRunnable: boolean,
   isAdmin: boolean,
   isObjectDetail: boolean,
   isResultDirty: boolean,
-  runQuestionQuery: any => void,
-  cancelQuery?: any => void,
+  runQuestionQuery: (any) => void,
+  cancelQuery?: (any) => void,
   className: string,
 };
 
@@ -146,9 +146,9 @@ export default class QueryVisualization extends Component {
           <div className="ShownRowCount">
             {result.data.rows_truncated != null
               ? jt`Showing first ${(
-                <strong>{countString}</strong>
-              )} ${rowsString}`
-              : jt`Showing ${<strong>{countString}</strong>} ${rowsString}`}
+                  <strong>{countString}</strong>
+                )} ${rowsString}`
+              : jt`Showing ${(<strong>{countString}</strong>)} ${rowsString}`}
           </div>
         ),
       });
@@ -156,6 +156,12 @@ export default class QueryVisualization extends Component {
 
     const isPublicLinksEnabled = MetabaseSettings.get("public_sharing");
     const isEmbeddingEnabled = MetabaseSettings.get("embedding");
+
+    const parameters = question
+      .parametersList()
+      .filter((param) => _.has(param, "value"))
+      .map((param) => _.pick(param, "type", "target", "value"));
+    const json_query = { parameters };
     return (
       <div className="relative flex align-center flex-no-shrink mt2 mb1 px2 sm-py3">
         <div className="z4 absolute left hide sm-show">
@@ -181,13 +187,13 @@ export default class QueryVisualization extends Component {
           <ShrinkableList
             className="flex"
             items={messages}
-            renderItem={item => (
+            renderItem={(item) => (
               <div className="flex-no-shrink flex align-center mx2 h5 text-medium">
                 <Icon className="mr1" name={item.icon} size={12} />
                 {item.message}
               </div>
             )}
-            renderItemSmall={item => (
+            renderItemSmall={(item) => (
               <Tooltip tooltip={<div className="p1">{item.message}</div>}>
                 <Icon className="mx1" name={item.icon} size={16} />
               </Tooltip>
@@ -200,27 +206,28 @@ export default class QueryVisualization extends Component {
               size={18}
             />
           )}
-          {/* {!isResultDirty && result && !result.error ? (
+          {!isResultDirty && result && !result.error ? (
             <QueryDownloadWidget
               className="mx1 hide sm-show"
               card={question.card()}
-              result={question}
+              result={result}
             />
-          ) : null} */}
-          <QueryDownloadWidget
-            className="mx1 hide sm-show"
-            card={question.card()}
-            question={question}
-            //result={question}
-          />
+          ) : question.isSaved() ? (
+            <QueryDownloadWidget
+              className="mx1 hide sm-show"
+              card={question.card()}
+              result={{json_query}}
+              
+            />
+          ) : null}
           {question.isSaved() &&
-            ((isPublicLinksEnabled && (isAdmin || question.publicUUID())) ||
-              (isEmbeddingEnabled && isAdmin)) ? (
-              <QuestionEmbedWidget
-                className="mx1 hide sm-show"
-                card={question.card()}
-              />
-            ) : null}
+          ((isPublicLinksEnabled && (isAdmin || question.publicUUID())) ||
+            (isEmbeddingEnabled && isAdmin)) ? (
+            <QuestionEmbedWidget
+              className="mx1 hide sm-show"
+              card={question.card()}
+            />
+          ) : null}
         </div>
       </div>
     );
@@ -255,8 +262,8 @@ export default class QueryVisualization extends Component {
         viz = (
           <VisualizationResult
             lastRunDatasetQuery={this.state.lastRunDatasetQuery}
-            onUpdateWarnings={warnings => this.setState({ warnings })}
-            onOpenChartSettings={initial => this.refs.settings.open(initial)}
+            onUpdateWarnings={(warnings) => this.setState({ warnings })}
+            onOpenChartSettings={(initial) => this.refs.settings.open(initial)}
             {...this.props}
             className="spread"
           />
@@ -296,8 +303,7 @@ export default class QueryVisualization extends Component {
 
 export const VisualizationEmptyState = ({ showTutorialLink }) => (
   <div className="flex full layout-centered text-light flex-column">
-    <h1
-    >{t`If you give me some data I can show you something cool. Run a Query!`}</h1>
+    <h1>{t`If you give me some data I can show you something cool. Run a Query!`}</h1>
     {/* {showTutorialLink && (
       <Link
         to={Urls.question(null, "?tutorial")}

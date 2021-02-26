@@ -357,15 +357,15 @@ export const initializeQB = (location, params) => {
     // if we have loaded up a card that we can run then lets kick that off as well
     if (question) {
       // skip running question automatically
-      // if (question.canRun()) {
-      //   // NOTE: timeout to allow Parameters widget to set parameterValues
-      //   setTimeout(
-      //     () =>
-      //       // TODO Atte Keinänen 5/31/17: Check if it is dangerous to create a question object without metadata
-      //       dispatch(runQuestionQuery({ shouldUpdateUrl: false })),
-      //     0,
-      //   );
-      // }
+      if (question.canRun()) {
+        // NOTE: timeout to allow Parameters widget to set parameterValues
+        // setTimeout(
+        //   () =>
+        //     // TODO Atte Keinänen 5/31/17: Check if it is dangerous to create a question object without metadata
+        //     dispatch(runQuestionQuery({ shouldUpdateUrl: false })),
+        //   0,
+        // );
+      }
 
       // clean up the url and make sure it reflects our card state
       const originalQuestion =
@@ -1245,20 +1245,6 @@ export const runQuestionQuery = ({
     dispatch.action(RUN_QUERY, { cancelQueryDeferred });
   };
 };
-
-export const CURRENT_QUESTION = "foundry/qb/CURRENT_QUESTION"
-export const getCurrentQuestion = () => async (dispatch, getState) => {
-
-  const question: Question = getQuestion(getState());
-  const originalQuestion: ?Question = getOriginalQuestion(getState());
-
-  const cardIsDirty = originalQuestion
-    ? question.isDirtyComparedTo(originalQuestion)
-    : true;
-
-  dispatch(updateUrl(question.card(), { dirty: cardIsDirty }));
-  return question;
-}
 
 export const CLEAR_QUERY_RESULT = "metabase/query_builder/CLEAR_QUERY_RESULT";
 export const clearQueryResult = createAction(CLEAR_QUERY_RESULT);
