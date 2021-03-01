@@ -93,7 +93,7 @@
   {:email {:type              "email"
            :name              "Email"
            :allows_recipients true
-           :recipients        ["user"]
+           :recipients        ["user","email"]
            :schedules         [:daily :weekly :monthly]}
   ;;  :slack {:type              "slack"
   ;;          :name              "Slack"
@@ -263,15 +263,7 @@
          (valid-schedule? schedule_type schedule_hour schedule_day schedule_frame)
          (coll? recipients)
          (every? map? recipients)]}
-
-  (let [recipients-by-type (group-by integer?
-                                     (filter identity
-                                             (map
-                                              #(or (:id %)
-                                                   ;; skip any other manullay added emails
-                                                   ;;(:email %)
-                                                   )
-                                              recipients)))
+  (let [recipients-by-type (group-by integer? (filter identity (map #(or (:id %) (:email %)) recipients)))
         {:keys [id]} (db/insert! PulseChannel
                                  :pulse_id       pulse_id
                                  :channel_type   channel_type
