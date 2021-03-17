@@ -135,6 +135,22 @@ export default class QueryHeader extends Component {
     this.props.onBeginEditing();
   };
 
+  onReportSharing = () => {
+    const reportName = this.props.card ? this.props.card.name : "";
+    const title = "Foundry Report: " + reportName;
+    const text = "I wanted to share this report with you";
+    const url = window.location.href;
+    window.open(
+      "mailto:?subject=" +
+        encodeURIComponent(title) +
+        "&body=" +
+        encodeURIComponent(text) +
+        " " +
+        encodeURIComponent(url),
+      "_blank",
+    );
+  };
+  
   onCancel = async () => {
     if (this.props.fromUrl) {
       this.onGoBack();
@@ -204,7 +220,7 @@ export default class QueryHeader extends Component {
             originalCard={this.props.originalCard}
             tableMetadata={this.props.tableMetadata}
             // if saving modified question, don't show "add to dashboard" modal
-            saveFn={card => this.onSave(card, false)}
+            saveFn={(card) => this.onSave(card, false)}
             createFn={this.onCreate}
             onClose={() => this.refs.saveModal && this.refs.saveModal.toggle()}
             initialCollectionId={this.props.initialCollectionId}
@@ -238,6 +254,18 @@ export default class QueryHeader extends Component {
                 onClick={this.onBeginEditing}
               >
                 <Icon name="pencil" size={16} />
+              </a>
+            </Tooltip>,
+          ]);
+          // share button
+          buttonSections.push([
+            <Tooltip key="share" tooltip={t`Share by Email`}>
+              <a
+                className="cursor-pointer text-brand-hover"
+                //  href="mailto:?subject=I wanted you to see this report&amp;body=Check out this site"
+                onClick={this.onReportSharing}
+              >
+                <Icon name="share" size={16} />
               </a>
             </Tooltip>,
           ]);
@@ -288,7 +316,7 @@ export default class QueryHeader extends Component {
                   this.props.card && this.props.card.collection_id
                 }
                 onClose={onClose}
-                onMove={collection => {
+                onMove={(collection) => {
                   this.props.onSetCardAttribute(
                     "collection_id",
                     collection && collection.id,
@@ -359,11 +387,11 @@ export default class QueryHeader extends Component {
               card={this.props.card}
               originalCard={this.props.originalCard}
               tableMetadata={this.props.tableMetadata}
-              saveFn={async card => {
+              saveFn={async (card) => {
                 await this.onSave(card, false);
                 this.setState({ modal: "add-to-dashboard" });
               }}
-              createFn={async card => {
+              createFn={async (card) => {
                 await this.onCreate(card, false);
                 this.setState({ modal: "add-to-dashboard" });
               }}
@@ -414,7 +442,7 @@ export default class QueryHeader extends Component {
               tableMetadata.db &&
               tableMetadata.db.native_permissions === "write"
             : // if no table is selected, only enable if user has native write permissions for ANY database
-              _.any(databases, db => db.native_permissions === "write")
+              _.any(databases, (db) => db.native_permissions === "write")
         }
         nativeForm={
           this.props.result &&
@@ -478,12 +506,7 @@ export default class QueryHeader extends Component {
 
       buttonSections.push([
         <div className="mr1" style={{ marginLeft: "-15px" }}>
-          <EntityMenu
-            triggerIcon="burger"
-            items={[
-              viewDescription,
-            ]}
-          />
+          <EntityMenu triggerIcon="burger" items={[viewDescription]} />
         </div>,
       ]);
     }
@@ -504,7 +527,7 @@ export default class QueryHeader extends Component {
     const { questionAlerts, user } = this.props;
 
     const hasAlertsCreatedByCurrentUser = Object.values(questionAlerts).some(
-      alert => alert.creator.id === user.id,
+      (alert) => alert.creator.id === user.id,
     );
 
     if (hasAlertsCreatedByCurrentUser) {
@@ -588,11 +611,11 @@ export default class QueryHeader extends Component {
             card={this.props.card}
             originalCard={this.props.originalCard}
             tableMetadata={this.props.tableMetadata}
-            saveFn={async card => {
+            saveFn={async (card) => {
               await this.onSave(card, false);
               this.showAlertsAfterQuestionSaved();
             }}
-            createFn={async card => {
+            createFn={async (card) => {
               await this.onCreate(card, false);
               this.showAlertsAfterQuestionSaved();
             }}
@@ -608,7 +631,7 @@ export default class QueryHeader extends Component {
         </Modal>
 
         <Modal
-         // full
+          // full
           isOpen={this.state.modal === "view-question-description"}
           onClose={this.onCloseModal}
         >
@@ -618,7 +641,11 @@ export default class QueryHeader extends Component {
                 "full  flex flex-column text-card-markdown py2 px2",
                 styles["text-card-markdown"],
               )}
-              source={this.props.card && this.props.card.description ? `${this.props.card.description}` : "No Documentation is available." }
+              source={
+                this.props.card && this.props.card.description
+                  ? `${this.props.card.description}`
+                  : "No Documentation is available."
+              }
               escapeHtml={true}
             />
           </ModalContent>
