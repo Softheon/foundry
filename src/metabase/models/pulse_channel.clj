@@ -212,7 +212,7 @@
          (every? integer? user-ids)]}
   (let [authorized-user-ids (user-ids-with-pulse-permission user-ids)
         recipients-old (set (db/select-field :user_id PulseChannelRecipient, :pulse_channel_id id))
-        recipients-new (set authorized-user-ids)
+        recipients-new (set user-ids)
         recipients+    (set/difference recipients-new recipients-old)
         recipients-    (set/difference recipients-old recipients-new)]
     (when (seq recipients+)
