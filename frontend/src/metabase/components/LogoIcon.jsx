@@ -17,8 +17,8 @@ export default class LogoIcon extends Component {
   render() {
     let { dark, height, width, size } = this.props;
     return (
-      <img className={cx("Icon", { "text-brand": !dark}, {"text-white": dark})} style = {{width: "500px"}}
-        src="app/assets/img/Softheon_Logo_Color.png"
+      <img className={cx("Icon", { "text-brand": !dark}, {"text-white": dark})} style = {{width: "500px", "padding-bottom" : "25px"}}
+      src="app/assets/img/Softheon_Logo_Color.png"
       />
     );
   }
