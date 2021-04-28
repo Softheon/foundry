@@ -195,11 +195,31 @@ const SECTIONS = [
   //     },
   //   ],
   // },
-  // {
-  //   name: t`Authentication`,
-  //   slug: "authentication",
-  //   settings: [],
-  // },
+  {
+    name: t`Single Sign-On`,
+    slug: "single_sign_on",
+    sidebar: false,
+    settings: [
+      {
+        key: "ids-auth-client-id",
+      },
+      {
+        key: "ids-auth-authorize-api"
+      },
+      {
+        key: "ids-auth-user-info-api"
+      },
+      {
+        key: "ids-auth-client-redirect-url"
+      }
+    ]
+  },
+
+  {
+    name: t`Authentication`,
+    slug: "authentication",
+    settings: [],
+  },
   // {
   //   name: t`LDAP`,
   //   slug: "ldap",

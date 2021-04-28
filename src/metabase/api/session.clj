@@ -62,8 +62,8 @@
           ;; Since LDAP knows about the user, fail here to prevent the local strategy to be tried with a possibly
           ;; outdated password
           (throw (ui18n/ex-info password-fail-message
-                   {:status-code 400
-                    :errors      {:password password-fail-snippet}})))
+                                {:status-code 400
+                                 :errors      {:password password-fail-snippet}})))
         ;; password is ok, return new session
         (create-session! (ldap/fetch-or-create-user! user-info password)))
       (catch LDAPSDKException e
@@ -288,9 +288,22 @@ couldn't be autenticated."
           response   {:id session-id}]
       (mw.session/set-session-cookie request response session-id))))
 
+;;; -------------------------------------------------- IDS AUTH ---------------------------------------------------
+
+(defsetting ids-auth-client-id
+  (tru "Client ID for IDS Auth SSO. If this is set, IDS Auth is considered to be enabled."))
+
+(defsetting ids-auth-authorize-api
+  (tru "The IDS endpoint to authroize."))
+
+(defsetting ids-auth-user-info-api
+  (tru "The IDS endpoint to obtain user information"))
+
+(defsetting ids-auth-client-redirect-url
+  (tru "The IDS client redirect url."))
 
 (defn- iam-auth-token-info [^String token]
-  (let [{:keys [status body]} (http/get (config/config-str :iam-api-user-info) {:oauth-token token})]
+  (let [{:keys [status body]} (http/get (or (ids-auth-user-info-api) (config/config-str :iam-api-user-info)) {:oauth-token token})]
     (when-not (= status 200)
       (throw (ui18n/ex-info (tru "Invalid Iam Access token.") {:status-code 400
                                                                :message (tru "Invalid Iam Access token")})))

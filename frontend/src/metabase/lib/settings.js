@@ -60,12 +60,9 @@ const MetabaseSettings = {
   },
 
   iamEnabled: function() {
-    return mb_settings.enable_iam_auth &&
-    mb_settings.iam_authorization_endpoint &&
-    mb_settings.iam_auth_redirect &&
-    mb_settings.iam_auth_client_id
+    return mb_settings.ids_auth_client_id || mb_settings.enable_iam_auth 
   },
-
+  
   emailLoginEnabled: function() {
     return mb_settings.enable_email_login
   },

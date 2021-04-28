@@ -16,7 +16,7 @@ import SettingsSetupList from "../components/SettingsSetupList.jsx";
 import SettingsUpdatesForm from "../components/SettingsUpdatesForm.jsx";
 import SettingsSingleSignOnForm from "../components/SettingsSingleSignOnForm.jsx";
 import SettingsAuthenticationOptions from "../components/SettingsAuthenticationOptions.jsx";
-
+import SettingsIdsSingleSignOnForm from "../components/SettingsIdsSingleSignOnForm.jsx";
 import { prepareAnalyticsValue } from "metabase/admin/settings/utils";
 
 import _ from "underscore";
@@ -181,9 +181,18 @@ export default class SettingsEditorApp extends Component {
             //   updateSetting={this.updateSetting}
             // /> */}
           );
+        } else if (this.props.params.authType == "ids") {
+          return <SettingsIdsSingleSignOnForm
+            elements={
+              _.findWhere(this.props.sections, {
+                slug: "single_sign_on"
+              }).settings
+            }
+            updateSetting={this.updateSetting}
+          />
         }
       } else {
-        return <SettingsAuthenticationOptions />;
+        return <SettingsAuthenticationOptions settingValues={settingValues} />;
       }
     } else {
       return (

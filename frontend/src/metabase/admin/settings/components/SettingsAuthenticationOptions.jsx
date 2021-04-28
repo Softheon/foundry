@@ -3,10 +3,32 @@ import { Link } from "react-router";
 import { t } from "c-3po";
 
 class SettingsAuthenticationOptions extends Component {
+  constructor(props, context) {
+    super(props, context);
+  }
+
   render() {
     return (
       <ul className="text-measure">
         <li>
+          <div className="bordered rounded shadowed bg-white p4">
+            <div className="flex align-center">
+              <h2>{t`Sign in With Identity Service`}</h2>
+              {
+                this.props.settingValues && this.props.settingValues["ids-auth-client-id"] &&
+                (<div className="ml-auto flex align-center text-uppercase text-success">
+                  <div className="bg-success circular mr1" style={{ "width": "10px", "height": "10px" }}></div>
+                  {t`active`}
+                </div>)
+              }
+            </div>
+            <p>
+              {t`Allows users authenticated and authorized by Identity Service to login with a Foundry account that matches their email addresses in addition to their Foundry username and password`}
+            </p>
+            <Link className="Button" to="admin/settings/authentication/ids">{t`Configure`}</Link>
+          </div>
+        </li>
+        {/* <li>
           <div className="bordered rounded shadowed bg-white p4">
             <h2>{t`Sign in with Google`}</h2>
             <p
@@ -28,7 +50,7 @@ class SettingsAuthenticationOptions extends Component {
               to="/admin/settings/authentication/ldap"
             >{t`Configure`}</Link>
           </div>
-        </li>
+        </li> */}
       </ul>
     );
   }
