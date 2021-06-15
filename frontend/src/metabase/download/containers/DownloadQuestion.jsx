@@ -17,8 +17,8 @@ const DownloadQuestion = (props) => {
     >
       <EmptyState
         illustrationElement={<img src="../app/assets/img/segments-list.png" />}
-        title={t`Download Foundry Report`}
-        message={t`Report is ready to download`}
+        title={t`Foundry Report`}
+        message={t`If your download does not begin, please click below to retry`}
         download={{
           id: cardId,
           token: token
