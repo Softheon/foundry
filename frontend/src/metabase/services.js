@@ -143,6 +143,8 @@ export const MetabaseApi = {
   db_autocomplete_suggestions: GET(
     "/api/database/:dbId/autocomplete_suggestions?prefix=:prefix",
   ),
+  db_all_tables: GET("/api/database/:dbId/tables/all"),
+  db_all_fields: GET ("/api/database/:dbId/fields/all"),
   db_sync_schema: POST("/api/database/:dbId/sync_schema"),
   db_rescan_values: POST("/api/database/:dbId/rescan_values"),
   db_discard_values: POST("/api/database/:dbId/discard_values"),

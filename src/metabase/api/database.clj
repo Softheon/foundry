@@ -34,7 +34,8 @@
             [schema.core :as s]
             [metabase.toucan
              [db :as db]
-             [hydrate :refer [hydrate]]])
+             [hydrate :refer [hydrate]]]
+            [clojure.core.cache.wrapped :as cache])
   (:import metabase.models.database.DatabaseInstance))
 
 (def DBEngineString
@@ -45,6 +46,27 @@
                               "Valid database engine")
     (tru "value must be a valid database engine.")))
 
+;;; ----------------------------------------------- Caches ------------------------------------------------
+(def table-cache (cache/ttl-cache-factory {} :ttl 1800000))
+(def field-cache (cache/ttl-cache-factory {} :ttl 1800000))
+
+(defn tables-by-db [db-id]
+  (cache/lookup-or-miss table-cache db-id (fn [db-id]
+                                            (db/select [Table :id :db_id :schema :name]
+                                                       {:where    [:and [:= :db_id db-id]
+                                                                   [:= :active true]
+
+                                                                   [:= :visibility_type nil]]
+                                                        :order-by [[:%lower.name :asc]]}))))
+(defn fields-by-db [db-id]
+  (cache/lookup-or-miss field-cache db-id (fn [db-id]
+                                            (db/select [Field :name :base_type :special_type :id :table_id [:table.name :table_name] [:table.schema :table_schema]]
+                                                       :metabase_field.active          true
+                                                       :metabase_field.visibility_type [:not-in ["sensitive" "retired"]]
+                                                       :table.db_id                    db-id
+                                                       {:order-by  [[:%lower.metabase_field.name :asc]
+                                                                    [:%lower.table.name :asc]]
+                                                        :left-join [[:metabase_table :table] [:= :table.id :metabase_field.table_id]]}))))
 
 ;;; ----------------------------------------------- GET /api/database ------------------------------------------------
 
@@ -264,6 +286,27 @@
     (catch Throwable t
       (log/warn "Error with autocomplete: " (.getMessage t)))))
 
+;;; ------------------------------------------ GET /api/database/:id/tables/all ------------------------------------------
+(api/defendpoint GET "/:id/tables/all"
+  "Get a list of all tables in a databse."
+  [id]
+  (api/read-check Database id)
+  (let [tables (filter mi/can-read? (tables-by-db id))]
+    (concat (for [{table-name :name} tables]
+              [table-name "Table"]))))
+;;; ------------------------------------------ GET /api/database/:id/fields/all ------------------------------------------
+
+(api/defendpoint GET "/:id/fields/all"
+  "Get a list of all `Fields` in `Database`."
+  [id]
+  (api/read-check Database id)
+  (let [fields (readable-fields-only (fields-by-db id))]
+    (for [{:keys [table_name base_type id special_type name table_schema table_id]} fields]
+      {:id id
+       :name name
+       :table_id table_id
+       :table_name table_name
+       :table_schema table_schema})))
 
 ;;; ------------------------------------------ GET /api/database/:id/fields ------------------------------------------
 

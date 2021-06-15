@@ -126,6 +126,7 @@
   ; [org.apache.poi/poi-ooxml "4.1.2"]
    [net.logstash.log4j/jsonevent-layout "1.7"]
    [co.elastic.apm/apm-agent-api "1.17.0"] ; Elastic APM Agent API
+   [org.clojure/core.cache "1.0.207"] ; cache
    ]
 
   :main ^:skip-aot metabase.core

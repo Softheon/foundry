@@ -54,6 +54,8 @@ import {
   SchemaAndTableDataSelector,
 } from "metabase/query_builder/components/DataSelector";
 
+import TrieSearch from "trie-search";
+
 type AutoCompleteResult = [string, string, string];
 type AceEditor = any; // TODO;
 
@@ -147,6 +149,8 @@ export default class NativeQueryEditor extends Component {
 
   componentWillUnmount() {
     document.removeEventListener("keydown", this.handleKeyDown);
+    this.fieldCache = null;
+    this.tableCache = null;
   }
 
   handleKeyDown = (e: KeyboardEvent) => {
@@ -173,6 +177,24 @@ export default class NativeQueryEditor extends Component {
       }
     }
   };
+
+  async loadcaches() {
+    let dbId = this.props.card && this.props.card.dataset_query && this.props.card.dataset_query.database;
+    if (dbId && (!this.workingDbId || this.workingDbId != dbId)) {
+      const tables = await this.props.dbTablesForAutoComplete();
+      this.tableCache = new TrieSearch();
+      tables.map(table => {
+        this.tableCache.map(table[0], table);
+      });
+      const fields = await this.props.dbFieldsForAutoComplete();
+      this.fieldCache = new TrieSearch();
+      fields.map(field => {
+        const key = field["name"];
+        this.fieldCache.map(key, field);
+      });
+      this.workingDbId = dbId;
+    }
+  }
 
   loadAceEditor() {
     const { query } = this.props;
@@ -216,30 +238,58 @@ export default class NativeQueryEditor extends Component {
     aceLanguageTools.addCompleter({
       getCompletions: async (editor, session, pos, prefix, callback) => {
         try {
+          await this.loadcaches();
           // HACK: call this.props.autocompleteResultsFn rather than caching the prop since it might change
-          let results = await this.props.autocompleteResultsFn(prefix);
+          // let results = await this.props.autocompleteResultsFn(prefix);
           // transform results of the API call into what ACE expects
-          let js_results = results.map(function(result) {
+          // let js_results = results.map(function (result) {
+          //   return {
+          //     name: result[0],
+          //     value: result[0],
+          //     type: result[1],
+          //     meta: result[1],
+          //   };
+          // });
+          let matchedTables = this.tableCache.search(prefix).map(function (table) {
             return {
-              name: result[0],
-              value: result[0],
-              type: result[1],
-              meta: result[1],
+              name: table[0],
+              value: table[0],
+              type: "table",
+              meta: table[1]
             };
           });
+
+          let matchedFields = this.fieldCache.search(prefix).map(function (field) {
+     
+            const caption = lang.escapeHTML( field["name"]);
+            return {
+              name: field["name"],
+              value: field["name"],
+              type: "field",
+              meta:  caption,
+
+            };
+          });
+          console.log("matched field", matchedFields);
+          let js_results = [...matchedTables, ...matchedFields];
           callback(null, js_results);
         } catch (error) {
           console.log("error getting autocompletion data", error);
           callback(null, []);
         }
       },
-      getDocTooltip: function(item) {
-        if (item.type == 'Table' && !item.docHTML) {
-            item.docHTML = [
-                "<b>",  lang.escapeHTML(item.value), "</b>"          
-            ].join("");
+      getDocTooltip: function (item) {
+        if (item.type == 'table' && !item.docHTML) {
+          item.docHTML = [
+            "<b>", lang.escapeHTML(item.value), "</b>"
+          ].join("");
         }
-    }
+        else if (item.type == 'field' && !item.docHTML) {
+          item.docHTML = [
+            "<b>", item.meta, "<b>"
+          ].join("");
+        }
+      }
     });
   }
 
