@@ -159,7 +159,7 @@
     (with-open [conn (jdbc/get-connection db)]
       (f conn))))
 
-(defn- close-quitely
+(defn- close-quietly
   [object]
   (when (some? object)
     (try
@@ -222,7 +222,7 @@ before finishing)."
           ;; This is what does the real work of canceling the query. We aren't checking the result of
           ;; `query-future` but this will cause an exception to be thrown, saying the query has been cancelled.
             (.cancel stmt)
-            (close-quitely stmt)
+            (close-quietly stmt)
             (finally
               (throw e))))))))
 
@@ -236,7 +236,8 @@ before finishing)."
                            :timeout 600
                            :as-arrays?     true
                            :read-columns   (read-columns driver (some-> timezone Calendar/getInstance))
-                           :set-parameters (set-parameters-with-timezone timezone)}
+                           :set-parameters (set-parameters-with-timezone timezone)
+                           :max-rows 2000}
                           canceled-chan)]
     {:rows    (or (if (= max-rows 0)
                     rows
@@ -412,8 +413,8 @@ before finishing)."
           ;; `query-future` but this will cause an exception to be thrown, saying the query has been cancelled.
             (.cancel stmt)
             (catch Throwable e
-              (close-quitely stmt)
-              (close-quitely conn)
+              (close-quietly stmt)
+              (close-quietly conn)
               (throw e))))))))
 
 (defn- query-stream

@@ -41,7 +41,7 @@
   (cons (map :display_name (get-in results [:result :data :cols]))
         (get-in results [:result :data :rows])))
 
-(defn- close-quitely
+(defn- close-quietly
   [object]
   (when (some? object)
     (try
@@ -154,8 +154,8 @@
                    (finally
                      (try
                        (a/close! finished-chan)
-                       (close-quitely rset)
-                       (close-quitely stmt)
+                       (close-quietly rset)
+                       (close-quietly stmt)
                     ;   (.rollback conn)
                        (catch Throwable e
                          (throw (ex-info (str "export-to-csv-file: failed to export to csv because Rollback failed handling \""
@@ -164,9 +164,9 @@
                                          {:rollback e})))
                        (finally
                          (try
-                           (close-quitely rset)
-                           (close-quitely stmt)
-                           (close-quitely conn)
+                           (close-quietly rset)
+                           (close-quietly stmt)
+                           (close-quietly conn)
                            (catch Throwable e
                              (log/error e)
                              (throw (ex-info (str "failed to close db connection properly \""
@@ -205,9 +205,9 @@
                                          {:rollback e})))
                        (finally
                          (try
-                           (close-quitely rset)
-                           (close-quitely stmt)
-                           (close-quitely conn)
+                           (close-quietly rset)
+                           (close-quietly stmt)
+                           (close-quietly conn)
                            (log/info "all csv stream db resources are closed")
                            (catch Throwable e
                              (log/error e)
@@ -256,9 +256,9 @@
                                          {:rollback e})))
                        (finally
                          (try
-                           (close-quitely rset)
-                           (close-quitely stmt)
-                           (close-quitely conn)
+                           (close-quietly rset)
+                           (close-quietly stmt)
+                           (close-quietly conn)
                            (catch Throwable e
                              (log/error e)
                              (throw (ex-info (str "failed to close db connection properly \""
@@ -303,9 +303,9 @@
                                          {:rollback e})))
                        (finally
                          (try
-                           (close-quitely rset)
-                           (close-quitely stmt)
-                           (close-quitely conn)
+                           (close-quietly rset)
+                           (close-quietly stmt)
+                           (close-quietly conn)
                            (log/info "all xlsx-stream db resources are closed")
                            (catch Throwable e
                              (log/error e)
