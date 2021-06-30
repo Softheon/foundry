@@ -41,6 +41,14 @@
   (cons (map :display_name (get-in results [:result :data :cols]))
         (get-in results [:result :data :rows])))
 
+(defn- close-quitely
+  [object]
+  (when (some? object)
+    (try
+      (.close object)
+      (catch Throwable e
+        (log/error e)))))
+
 ;; (defn- export-to-xlsx [columns rows]
 ;;   (let [wb  (spreadsheet/create-workbook "Query result" (cons (mapv name columns) rows))
 ;;         ;; note: byte array streams don't need to be closed
@@ -146,8 +154,8 @@
                    (finally
                      (try
                        (a/close! finished-chan)
-                       (.close rset)
-                       (.close stmt)
+                       (close-quitely rset)
+                       (close-quitely stmt)
                     ;   (.rollback conn)
                        (catch Throwable e
                          (throw (ex-info (str "export-to-csv-file: failed to export to csv because Rollback failed handling \""
@@ -156,7 +164,9 @@
                                          {:rollback e})))
                        (finally
                          (try
-                           (.close conn)
+                           (close-quitely rset)
+                           (close-quitely stmt)
+                           (close-quitely conn)
                            (catch Throwable e
                              (log/error e)
                              (throw (ex-info (str "failed to close db connection properly \""
@@ -185,8 +195,6 @@
                      (try
                        (.flush output)
                        (.close output)
-                       (.close rset)
-                       (.close stmt)
                      ;  (.rollback conn)
                        (catch Throwable e
                          (log/info "failed to close reousrces properly")
@@ -197,7 +205,10 @@
                                          {:rollback e})))
                        (finally
                          (try
-                           (.close conn)
+                           (close-quitely rset)
+                           (close-quitely stmt)
+                           (close-quitely conn)
+                           (log/info "all csv stream db resources are closed")
                            (catch Throwable e
                              (log/error e)
                              (throw (ex-info (str "failed to close db connection properly \""
@@ -205,10 +216,11 @@
                                                   "\"")
                                              {:connection e}))))))
 
-                     (log/info "all resources are closed"))))]
+                     )))]
       (.connect input output)
       (.submit (thread-pool) ^Runnable task)
       input)))
+
 
 (defn export-to-excel-file
   [card-id skip-if-empty connection]
@@ -234,8 +246,6 @@
                    (finally
                      (try
                        (a/close! finished-chan)
-                       (.close rset)
-                       (.close stmt)
                       ; (.rollback conn)
                        (catch Throwable e
                          (log/info "excel: failed to close reousrces properly")
@@ -246,7 +256,9 @@
                                          {:rollback e})))
                        (finally
                          (try
-                           (.close conn)
+                           (close-quitely rset)
+                           (close-quitely stmt)
+                           (close-quitely conn)
                            (catch Throwable e
                              (log/error e)
                              (throw (ex-info (str "failed to close db connection properly \""
@@ -281,8 +293,6 @@
                      (try
                        (.flush output)
                        (.close output)
-                       (.close rset)
-                       (.close stmt)
                       ; (.rollback conn)
                        (catch Throwable e
                          (log/info "failed to close reousrces properly")
@@ -293,14 +303,16 @@
                                          {:rollback e})))
                        (finally
                          (try
-                           (.close conn)
+                           (close-quitely rset)
+                           (close-quitely stmt)
+                           (close-quitely conn)
+                           (log/info "all xlsx-stream db resources are closed")
                            (catch Throwable e
                              (log/error e)
                              (throw (ex-info (str "failed to close db connection properly \""
                                                   (.getMessage e)
                                                   "\"")
-                                             {:connection e}))))))
-                     (log/info "all resources are closed"))))]
+                                             {:connection e})))))))))]
       (.connect input output)
       (.submit (thread-pool) ^Runnable task)
       (a/<!! transfering-chan)

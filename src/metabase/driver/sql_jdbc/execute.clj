@@ -159,6 +159,14 @@
     (with-open [conn (jdbc/get-connection db)]
       (f conn))))
 
+(defn- close-quitely
+  [object]
+  (when (some? object)
+    (try
+      (.close object)
+      (catch Throwable e
+        (log/error e)))))
+
 (defmacro ^:private with-ensured-connection
   "In many of the clojure.java.jdbc functions, it checks to see if there's already a connection open before opening a
   new one. This macro checks to see if one is open, or will open a new one. Will bind the connection to `conn-sym`."
@@ -208,12 +216,13 @@ before finishing)."
           (if (instance? Throwable result)
             (throw result)
             result))
-        (catch InterruptedException e
+        (catch Exception e
           (try
             (log/warn (tru "Client closed connection, canceling query"))
           ;; This is what does the real work of canceling the query. We aren't checking the result of
           ;; `query-future` but this will cause an exception to be thrown, saying the query has been cancelled.
             (.cancel stmt)
+            (close-quitely stmt)
             (finally
               (throw e))))))))
 
@@ -396,15 +405,15 @@ before finishing)."
         ;;   ;; we can give up on the query running in the future
         ;;   @query-future)
         (f-jdbc/steaming-download-query conn (into [stmt] params) opts)
-        (catch InterruptedException e
+        (catch Throwable e
           (try
-            (log/warn e "Client closed connection, cancelling query")
+            (log/warn e "Client closed connection, cancelling downloading query")
           ;; This is what does the real work of cancelling the query. We aren't checking the result of
           ;; `query-future` but this will cause an exception to be thrown, saying the query has been cancelled.
             (.cancel stmt)
-            (finally
-              (.close stmt)
-              (.close conn)
+            (catch Throwable e
+              (close-quitely stmt)
+              (close-quitely conn)
               (throw e))))))))
 
 (defn- query-stream
