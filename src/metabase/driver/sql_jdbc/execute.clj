@@ -181,7 +181,7 @@
 
       (let [run-query-chan (a/go
                              (try
-                               (jdbc/query conn (into [stmt] params) opts)
+                               (f-jdbc/query-with-limited-resultset conn (into [stmt] params) opts)
                                (catch Throwable e
                                  e)))
             [value port] (a/alts! [run-query-chan canceled-chan])]
@@ -235,9 +235,9 @@ before finishing)."
                           {:identifiers    identity
                            :timeout 600
                            :as-arrays?     true
+                           :limited max-rows
                            :read-columns   (read-columns driver (some-> timezone Calendar/getInstance))
-                           :set-parameters (set-parameters-with-timezone timezone)
-                           :max-rows 2000}
+                           :set-parameters (set-parameters-with-timezone timezone)}
                           canceled-chan)]
     {:rows    (or (if (= max-rows 0)
                     rows
