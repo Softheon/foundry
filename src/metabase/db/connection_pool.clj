@@ -25,9 +25,6 @@
    (reify DataSource
      (getConnection [_]
        (let [connectionInstance (.connect driver jdbc-url properties)]
-         (when (instance? com.microsoft.sqlserver.jdbc.SQLServerDriver driver)
-           (log/info "setting isolation to read uncommitted")
-           (.setTransactionIsolation connectionInstance (Connection/TRANSACTION_READ_UNCOMMITTED)))
          connectionInstance))
      (getConnection [_ username password]
        (doseq [[k v] {"user" username, "password" password}]
@@ -35,9 +32,6 @@
            (.setProperty properties k (name v))
            (.remove properties k)))
        (let [connectionInstance (.connect driver jdbc-url properties)]
-         (when (instance? com.microsoft.sqlserver.jdbc.SQLServerDriver driver)
-           (log/info "setting isolation to read uncommitted")
-           (.setTransactionIsolation connectionInstance (Connection/TRANSACTION_READ_UNCOMMITTED)))
          connectionInstance)))))
 
 

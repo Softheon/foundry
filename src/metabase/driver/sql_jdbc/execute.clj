@@ -157,6 +157,7 @@
   (if-let [conn (jdbc/db-find-connection db)]
     (f conn)
     (with-open [conn (jdbc/get-connection db)]
+      (log/info "do-with-ensure-connection is getting new connection")
       (f conn))))
 
 (defn- close-quietly
@@ -222,7 +223,7 @@ before finishing)."
           ;; This is what does the real work of canceling the query. We aren't checking the result of
           ;; `query-future` but this will cause an exception to be thrown, saying the query has been cancelled.
             (.cancel stmt)
-            (close-quietly stmt)
+            (.rollback conn)
             (finally
               (throw e))))))))
 
@@ -299,7 +300,7 @@ before finishing)."
   (f))
 
 (defn- do-in-transaction [connection f]
-  (jdbc/with-db-transaction [transaction-connection connection]
+  (jdbc/with-db-transaction [transaction-connection connection {:isolation :read-uncommitted}]
     (do-with-auto-commit-disabled transaction-connection (partial f transaction-connection))))
 
 
@@ -434,7 +435,7 @@ before finishing)."
     stream))
 
 (defn- do-in-transaction-stream [connection f]
-  (f-jdbc/with-db-transaction-without-auto-close [transaction-connection connection]
+  (f-jdbc/with-db-transaction-without-auto-close [transaction-connection connection {:isolation :read-uncommitted}]
     (do-with-auto-commit-disabled-for-exporting transaction-connection (partial f transaction-connection))))
 
 (defn- run-query-without-timezone-stream [driver _ connection query export-fn]

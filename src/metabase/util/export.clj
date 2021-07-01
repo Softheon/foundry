@@ -156,7 +156,7 @@
                        (a/close! finished-chan)
                        (close-quietly rset)
                        (close-quietly stmt)
-                    ;   (.rollback conn)
+                       (.rollback conn)
                        (catch Throwable e
                          (throw (ex-info (str "export-to-csv-file: failed to export to csv because Rollback failed handling \""
                                               (.getMessage e)
@@ -195,7 +195,7 @@
                      (try
                        (.flush output)
                        (.close output)
-                     ;  (.rollback conn)
+                       (.rollback conn)
                        (catch Throwable e
                          (log/info "failed to close reousrces properly")
                          (log/info e)
@@ -246,7 +246,7 @@
                    (finally
                      (try
                        (a/close! finished-chan)
-                      ; (.rollback conn)
+                       (.rollback conn)
                        (catch Throwable e
                          (log/info "excel: failed to close reousrces properly")
                          (log/info e)
@@ -293,7 +293,7 @@
                      (try
                        (.flush output)
                        (.close output)
-                      ; (.rollback conn)
+                       (.rollback conn)
                        (catch Throwable e
                          (log/info "failed to close reousrces properly")
                          (log/info e)

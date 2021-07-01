@@ -1737,31 +1737,42 @@
               (catch Throwable t
                 (try
                   (.rollback con)
+
                   (catch Throwable rb
                    ;; combine both exceptions
                     (throw (ex-info (str "Rollback failed handling \""
                                          (.getMessage t)
                                          "\"")
                                     {:rollback rb
-                                     :handling t}))))
+                                     :handling t})))
+                  (finally
+                    (try
+                      (.close con)
+                      (catch Throwable connect-ex
+                        (throw (ex-info (str "Stream db connection failed to cose \""
+                                             (.getMessage t)
+                                             "\"")
+                                        {:cklosingdbconnectioin connect-ex
+                                         :handling t}))))))
                 (throw t))
               (finally
-                (db-unset-rollback-only! nested-db)
-               ;; the following can throw SQLExceptions but we do not
-               ;; want those to replace any exception currently being
-               ;; handled -- and if the connection got closed, we just
-               ;; want to ignore exceptions here anyway
-                (try
-                  (.setAutoCommit con auto-commit)
-                  (catch Exception e  (log/info (str "" (.getMessage e)))))
-                (when isolation
-                  (try
-                    (.setTransactionIsolation con old-isolation)
-                    (catch Exception e  (log/info (str "" (.getMessage e))))))
-                (when read-only?
-                  (try
-                    (.setReadOnly con old-readonly)
-                    (catch Exception e  (log/info (str "" (.getMessage e))))))))))
+              ;;   (db-unset-rollback-only! nested-db)
+              ;;  ;; the following can throw SQLExceptions but we do not
+              ;;  ;; want those to replace any exception currently being
+              ;;  ;; handled -- and if the connection got closed, we just
+              ;;  ;; want to ignore exceptions here anyway
+              ;;   (try
+              ;;     (.setAutoCommit con auto-commit)
+              ;;     (catch Exception e  (log/info (str "" (.getMessage e)))))
+              ;;   (when isolation
+              ;;     (try
+              ;;       (.setTransactionIsolation con old-isolation)
+              ;;       (catch Exception e  (log/info (str "" (.getMessage e))))))
+              ;;   (when read-only?
+              ;;     (try
+              ;;       (.setReadOnly con old-readonly)
+              ;;       (catch Exception e  (log/info (str "" (.getMessage e))))))
+                ))))
         ;; avoid confusion of read-only? TX and read-only? connection:
         ;; ******* the connection is needed to be closed explicitly!!!!!! *******
          (let [con (get-connection db (dissoc opts :read-only?))]
