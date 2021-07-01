@@ -73,16 +73,14 @@ function autocompleteResults(card, prefix) {
   return apiCall;
 }
 
-function dbTablesForAutoComplete(card) {
-  let databaseId = card && card.dataset_query && card.dataset_query.database;
+function dbTablesForAutoComplete(databaseId) {
   let apiCall = MetabaseApi.db_all_tables({
     dbId: databaseId,
   });
   return apiCall;
 }
 
-function dbFieldsForAutoComplete(card){
-  let databaseId = card && card.dataset_query && card.dataset_query.database;
+function dbFieldsForAutoComplete(databaseId){
   let apiCall = MetabaseApi.db_all_fields({
     dbId: databaseId,
   });
@@ -138,8 +136,8 @@ const mapStateToProps = (state, props) => {
     loadTableAndForeignKeysFn: loadTableAndForeignKeys,
     autocompleteResultsFn: prefix => autocompleteResults(state.qb.card, prefix),
     instanceSettings: getSettings(state),
-    dbTablesForAutoComplete: () => dbTablesForAutoComplete(state.qb.card),
-    dbFieldsForAutoComplete: () => dbFieldsForAutoComplete(state.qb.card),
+    dbTablesForAutoComplete: (databaseId) => dbTablesForAutoComplete(databaseId),
+    dbFieldsForAutoComplete: (databaseId) => dbFieldsForAutoComplete(databaseId),
     
   };
 };
