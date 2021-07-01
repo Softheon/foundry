@@ -93,9 +93,14 @@ export default class NativeQueryEditor extends Component {
       (props.query && props.query.lineCount()) || MAX_AUTO_SIZE_LINES,
     );
 
+    const { query } = this.props;
+    const database = query.database();
     this.state = {
       showEditor: !props.question || !props.question.isSaved(),
       initialHeight: getEditorLineHeight(lines),
+      selectedDatabaseId: database && database.id,
+      fieldCache: null,
+      tableCache: null
     };
 
     // Ace sometimes fires mutliple "change" events in rapid succession
@@ -108,12 +113,15 @@ export default class NativeQueryEditor extends Component {
     isOpen: false,
   };
 
-  componentDidMount() {
+  async componentDidMount() {
     this.loadAceEditor();
     document.addEventListener("keydown", this.handleKeyDown);
+    if (this.state.selectedDatabaseId) {
+      await this.loadAutoCompleteTries(this.state.selectedDatabaseId);
+    }
   }
 
-  componentDidUpdate() {
+  async componentDidUpdate(prevProps, prevState) {
     const { query } = this.props;
     if (!query || !this._editor) {
       return;
@@ -145,12 +153,13 @@ export default class NativeQueryEditor extends Component {
         this._editor.getSession().$mode.$behaviour = new SQLBehaviour();
       }
     }
+    if (prevState.selectedDatabaseId !== this.state.selectedDatabaseId) {
+      await this.loadAutoCompleteTries(this.state.selectedDatabaseId);
+    }
   }
 
   componentWillUnmount() {
     document.removeEventListener("keydown", this.handleKeyDown);
-    this.fieldCache = null;
-    this.tableCache = null;
   }
 
   handleKeyDown = (e: KeyboardEvent) => {
@@ -178,21 +187,24 @@ export default class NativeQueryEditor extends Component {
     }
   };
 
-  async loadcaches() {
-    let dbId = this.props.card && this.props.card.dataset_query && this.props.card.dataset_query.database;
-    if (dbId && (!this.workingDbId || this.workingDbId != dbId)) {
-      const tables = await this.props.dbTablesForAutoComplete();
-      this.tableCache = new TrieSearch();
+  loadAutoCompleteTries = async (dbId) => {
+
+    if (dbId) {
+      const tables = await this.props.dbTablesForAutoComplete(dbId);
+      const tableCache = new TrieSearch();
       tables.map(table => {
-        this.tableCache.map(table[0], table);
+        tableCache.map(table[0], table);
       });
-      const fields = await this.props.dbFieldsForAutoComplete();
-      this.fieldCache = new TrieSearch();
+      const fields = await this.props.dbFieldsForAutoComplete(dbId);
+      const fieldCache = new TrieSearch();
       fields.map(field => {
         const key = field["name"];
-        this.fieldCache.map(key, field);
+        fieldCache.map(key, field);
       });
-      this.workingDbId = dbId;
+      this.setState({
+        tableCache,
+        fieldCache
+      });
     }
   }
 
@@ -238,7 +250,6 @@ export default class NativeQueryEditor extends Component {
     aceLanguageTools.addCompleter({
       getCompletions: async (editor, session, pos, prefix, callback) => {
         try {
-          await this.loadcaches();
           // HACK: call this.props.autocompleteResultsFn rather than caching the prop since it might change
           // let results = await this.props.autocompleteResultsFn(prefix);
           // transform results of the API call into what ACE expects
@@ -250,27 +261,27 @@ export default class NativeQueryEditor extends Component {
           //     meta: result[1],
           //   };
           // });
-          let matchedTables = this.tableCache.search(prefix).map(function (table) {
+          const { tableCache, fieldCache } = this.state;
+          let matchedTables = tableCache ? tableCache.search(prefix).map(function (table) {
             return {
               name: table[0],
               value: table[0],
               type: "table",
               meta: table[1]
             };
-          });
+          }) : [{ type: null }];
 
-          let matchedFields = this.fieldCache.search(prefix).map(function (field) {
-     
-            const caption = lang.escapeHTML( field["name"]);
+          let matchedFields = fieldCache ? fieldCache.search(prefix).map(function (field) {
+            const caption = lang.escapeHTML(field["name"]);
             return {
               name: field["name"],
               value: field["name"],
               type: "field",
-              meta:  caption,
+              meta: caption,
 
             };
-          });
-          console.log("matched field", matchedFields);
+          }) : [{ type: null }];
+
           let js_results = [...matchedTables, ...matchedFields];
           callback(null, js_results);
         } catch (error) {
@@ -323,9 +334,12 @@ export default class NativeQueryEditor extends Component {
   };
 
   /// Change the Database we're currently editing a query for.
-  setDatabaseId = (databaseId: DatabaseId) => {
+  setDatabaseId = async (databaseId: DatabaseId) => {
     // TODO: use metabase-lib
     this.props.setDatabaseFn(databaseId);
+    this.setState({
+      selectedDatabaseId: databaseId
+    })
   };
 
   setTableId = (tableId: TableId) => {
