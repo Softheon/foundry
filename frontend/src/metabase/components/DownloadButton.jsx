@@ -65,6 +65,7 @@ const DownloadButton = ({
   params,
   extensions,
   card,
+  onDownloadStarted,
   ...props
 }) => (
   <Box>
@@ -85,6 +86,9 @@ const DownloadButton = ({
           if (children === "pdf") {
             e.preventDefault();
             downloadAsPdf(card);
+          }
+          if (onDownloadStarted) {
+            onDownloadStarted(e);
           }
         }}
         {...props}

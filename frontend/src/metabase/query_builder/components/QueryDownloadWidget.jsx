@@ -30,7 +30,17 @@ const mapStateToProps = (state, props) => {
 class QueryDownloadWidget extends React.Component {
   constructor(props) {
     super(props);
+    this.state = {
+      downloadStarted: false
+    }
   }
+
+  onDownloadStarted = flag => {
+    this.setState({
+      downloadStarted: flag
+    });
+  }
+
   render() {
     const {
       className,
@@ -66,6 +76,7 @@ class QueryDownloadWidget extends React.Component {
     ) : (
       <p>{t`The maximum download size is limited.`}</p>
     );
+    const { downloadStarted } = this.state;
     return (
       <PopoverWithTrigger
         triggerElement={
@@ -93,7 +104,13 @@ class QueryDownloadWidget extends React.Component {
               ) : (
                 downloadSizeMessage
               )} */}
-              <p>{t`The maximum download size is 1 million rows.`}</p>
+              {/* <p>{t`The maximum download size is 1 million rows.`}</p> */}
+            </Box>
+          )}
+          {downloadStarted && (
+            <Box p={1}>
+              <p>{t`Your download has started.`}</p>
+              <p>{t`If the report doesn't start downloading within 10 minutes, please refresh the page and try again`}</p>
             </Box>
           )}
           <Box>
@@ -114,6 +131,7 @@ class QueryDownloadWidget extends React.Component {
                     type={type}
                     uuid={uuid}
                     result={result}
+                    onDownloadStarted={this.onDownloadStarted}
                   />
                 ) : token ? (
                   <EmbedQueryButton key={type} type={type} token={token} />
@@ -123,6 +141,7 @@ class QueryDownloadWidget extends React.Component {
                     type={type}
                     card={card}
                     result={result}
+                    onDownloadStarted={this.onDownloadStarted}
                   />
                 ) : card && !card.id ? (
                   <UnsavedQueryButton
@@ -130,6 +149,7 @@ class QueryDownloadWidget extends React.Component {
                     type={type}
                     card={card}
                     result={result}
+                    onDownloadStarted={this.onDownloadStarted}
                   />
                 ) : null}
               </Box>
@@ -216,7 +236,7 @@ const QueryDownloadWidget_old = ({
   </PopoverWithTrigger>
 );
 
-const UnsavedQueryButton = ({ type, result: { json_query }, card }) => (
+const UnsavedQueryButton = ({ type, result: { json_query }, card, onDownloadStarted }) => (
   <DownloadButton
     url={`api/dataset/${type}`}
     params={{
@@ -225,12 +245,13 @@ const UnsavedQueryButton = ({ type, result: { json_query }, card }) => (
     }}
     extensions={[type]}
     card={card}
+    onDownloadStarted={onDownloadStarted}
   >
     {type}
   </DownloadButton>
 );
 
-const SavedQueryButton = ({ type, result: { json_query }, card }) => (
+const SavedQueryButton = ({ type, result: { json_query }, card, onDownloadStarted }) => (
   <DownloadButton
     url={`api/card/${card.id}/query/${type}`}
     params={{
@@ -239,17 +260,19 @@ const SavedQueryButton = ({ type, result: { json_query }, card }) => (
     }}
     extensions={[type]}
     card={card}
+    onDownloadStarted={onDownloadStarted}
   >
     {type}
   </DownloadButton>
 );
 
-const PublicQueryButton = ({ type, uuid, result: { json_query } }) => (
+const PublicQueryButton = ({ type, uuid, result: { json_query }, onDownloadStarted }) => (
   <DownloadButton
     method="GET"
     url={Urls.publicQuestion(uuid, type)}
     params={{ parameters: JSON.stringify(json_query.parameters) }}
     extensions={[type]}
+    onDownloadStarted={onDownloadStarted}
   >
     {type}
   </DownloadButton>
