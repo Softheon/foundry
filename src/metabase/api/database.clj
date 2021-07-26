@@ -55,7 +55,7 @@
                                             (db/select [Table :id :db_id :schema :name]
                                                        {:where    [:and [:= :db_id db-id]
                                                                    [:= :active true]
-
+                                                                   [:= :schema "dbo"]
                                                                    [:= :visibility_type nil]]
                                                         :order-by [[:%lower.name :asc]]}))))
 (defn fields-by-db [db-id]
@@ -64,7 +64,8 @@
                                                        :metabase_field.active          true
                                                        :metabase_field.visibility_type [:not-in ["sensitive" "retired"]]
                                                        :table.db_id                    db-id
-                                                       {:order-by  [[:%lower.metabase_field.name :asc]
+                                                       {:where [:= :table.schema "dbo"]
+                                                        :order-by  [[:%lower.metabase_field.name :asc]
                                                                     [:%lower.table.name :asc]]
                                                         :left-join [[:metabase_table :table] [:= :table.id :metabase_field.table_id]]}))))
 
@@ -241,9 +242,9 @@
 (defn- autocomplete-tables [db-id prefix]
   (db/select [Table :id :db_id :schema :name]
     {:where    [:and [:= :db_id db-id]
-                     [:= :active true]
-                     [:like :%lower.name (str (str/lower-case prefix) "%")]
-                     [:= :visibility_type nil]]
+                [:= :active true]
+                [:like :%lower.name (str (str/lower-case prefix) "%")]
+                [:= :visibility_type nil]]
      :order-by [[:%lower.name :asc]]}))
 
 (defn- autocomplete-fields [db-id prefix]
