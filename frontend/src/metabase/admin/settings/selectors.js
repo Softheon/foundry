@@ -93,6 +93,11 @@ const SECTIONS = [
         display_name: t`Enable X-ray features`,
         type: "boolean",
       },
+      {
+        key: "enable-email-login",
+        display_name: t`Enable email login method`,
+        type: "boolean"
+      }
     ],
   },
   // {

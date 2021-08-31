@@ -199,6 +199,7 @@ export const getRoutes = store => (
         <Route component={IsNotAuthenticated}>
           <Route path="login" title={t`Login`} component={OAuthLogin} />
         </Route>
+        <Route path = "/auth/admin" title={t`Admin Login`} component={LoginApp} />
         <Route path="logout" component={LogoutApp} />
         <Route path="forgot_password" component={ForgotPasswordApp} />
         <Route path="reset_password/:token" component={PasswordResetApp} />

@@ -104,12 +104,14 @@ couldn't be autenticated."
   [username :- su/NonBlankString, password :- su/NonBlankString]
   ;; Primitive "strategy implementation", should be reworked for modular providers in #3210
   (or
-   (if (config/config-bool :enable-email-login)
-     (email-login username password)
-     (throw
-      (ui18n/ex-info invalid-login-method-message
-                     {:status-code 400
-                      :error {:username invalid-login-method-message}})))
+  ;;  (if (public-settings/enable-email-login)
+  ;;    (email-login username password)
+  ;;    (throw
+  ;;     (ui18n/ex-info invalid-login-method-message
+  ;;                    {:status-code 400
+  ;;                     :error {:username invalid-login-method-message}}))
+  ;;    )
+   (and (public-settings/enable-email-login) (email-login username password))
   ;(ldap-login username password)    ; First try LDAP if it's enabled
    (admin-email-login username password)   ; Then try local authentication
       ;; If nothing succeeded complain about it
@@ -155,14 +157,12 @@ couldn't be autenticated."
   {email su/Email}
   (throttle-check (forgot-password-throttlers :ip-address) remote-address)
   (throttle-check (forgot-password-throttlers :email)      email)
-  (if (config/config-bool :enable-email-login)
-  ;; Don't leak whether the account doesn't exist, just pretend everything is ok
-    (when-let [{user-id :id, google-auth? :google_auth, iam-auth? :iam_auth} (db/select-one [User :id :google_auth :iam_auth]
-                                                                                            :email email, :is_active true)]
-      (let [reset-token        (user/set-password-reset-token! user-id)
-            password-reset-url  (str (public-settings/site-url) "/auth/reset_password/" reset-token)]
-        (email/send-password-reset-email! email google-auth? iam-auth? server-name password-reset-url)
-        (log/info password-reset-url)))))
+  (when-let [{user-id :id, google-auth? :google_auth, iam-auth? :iam_auth} (db/select-one [User :id :google_auth :iam_auth]
+                                                                                          :email email, :is_active true)]
+    (let [reset-token        (user/set-password-reset-token! user-id)
+          password-reset-url  (str (public-settings/site-url) "/auth/reset_password/" reset-token)]
+      (email/send-password-reset-email! email google-auth? iam-auth? server-name password-reset-url)
+      (log/info password-reset-url))))
 
 
 (def ^:private ^:const reset-token-ttl-ms

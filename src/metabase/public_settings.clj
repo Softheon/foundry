@@ -207,6 +207,11 @@
   :type    :boolean
   :default true)
 
+(defsetting enable-email-login
+  (tru "Allow users to use foundry email to login")
+  :type :boolean
+  :default true)
+
 (defn remove-public-uuid-if-public-sharing-is-disabled
   "If public sharing is *disabled* and OBJECT has a `:public_uuid`, remove it so people don't try to use it (since it
    won't work). Intended for use as part of a `post-select` implementation for Cards and Dashboards."
@@ -269,7 +274,7 @@
    :iam_authorization_endpoint (or (setting/get :ids-auth-authorize-api) (config/config-str :iam-authorization-endpoint))
    :iam_auth_client_id    (or (setting/get :ids-auth-client-id) (config/config-str :iam-auth-client-id))
    :iam_auth_redirect     (or (setting/get :ids-auth-client-redirect-url) (config/config-str :iam-auth-redirect))
-   :enable_email_login    (config/config-bool :enable-email-login)
+   :enable_email_login    (enable-email-login)
    :enable_iam_auth (config/config-bool :enable-iam-auth)
    :enable_xlsx_download (enable-xlsx-export)
    :lighthouse_url (config/config-str :lighthouse-url)
