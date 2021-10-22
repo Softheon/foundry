@@ -124,10 +124,8 @@
   (.setCellValue cell ^String val)
   (update-max-column-width idx val columns-width))
 
-(defmethod set-printable-cell! Number
+(defmethod set-printable-cell! Double
   [cell idx val style columns-width]
-  (when style
-    (.setCellStyle cell style))
   (.setCellValue cell (double val))
   (update-max-column-width idx val columns-width))
 
@@ -141,6 +139,15 @@
   (when style
     (.setCellStyle cell style))
   (.setCellValue cell ^Date val))
+
+
+(defmethod set-printable-cell! java.math.BigDecimal
+  [cell idx val style columns-width]
+  (when (map? style)
+    (.setCellStyle cell (:money style)))
+  (.setCellValue cell (double val))
+  (update-max-column-width idx val columns-width))
+
 
 (defmethod set-printable-cell! nil
   [cell idx val style columns-width]
@@ -204,7 +211,7 @@
     (re-matches #"(?i).*date.*" header) (:date styles)
     (re-matches #"(?i).*time.*" header) (:time styles)
     (re-matches #"(?i).*dollar.*" header) (:dollar styles)
-    :else nil))
+    :else {:money (:dollar styles)}))
 
 (defn- add-printable-data-rows
   [sheet column-names data-rows columns-width]
