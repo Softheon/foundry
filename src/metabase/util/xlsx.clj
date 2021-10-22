@@ -136,8 +136,9 @@
 
 (defmethod set-printable-cell! Date
   [cell idx val style columns-width]
-  (when style
-    (.setCellStyle cell style))
+  (if  (contains? style :cell-style)
+    (.setCellStyle cell (:cell-style style))
+    (.setCellStyle cell (:date style)))
   (.setCellValue cell ^Date val))
 
 
@@ -208,10 +209,11 @@
 (defn- get-data-cell-style
   [styles header]
   (cond
-    (re-matches #"(?i).*date.*" header) (:date styles)
-    (re-matches #"(?i).*time.*" header) (:time styles)
-    (re-matches #"(?i).*dollar.*" header) (:dollar styles)
-    :else {:money (:dollar styles)}))
+    (re-matches #"(?i).*date.*" header) {:cell-style (:date styles)}
+    (re-matches #"(?i).*time.*" header)  {:cell-style (:time styles)}
+    (re-matches #"(?i).*dollar.*" header) {:cell-style (:dollar styles)}
+    :else {:money (:dollar styles)
+           :date (:date styles)}))
 
 (defn- add-printable-data-rows
   [sheet column-names data-rows columns-width]
