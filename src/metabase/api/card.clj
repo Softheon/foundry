@@ -711,10 +711,10 @@ Exception if preconditions (such as read perms) are not met before returning a c
         current-user-name (str (:first_name user) " " (:last_name user))]
     (if (and (= export-format "xlsx")
              (enable-printable-excel))
-      (str (.format (java.text.SimpleDateFormat. "MM-dd-yyyy") (java.util.Date.))
+      (str (.format (java.text.SimpleDateFormat. "yyyyMMdd") (java.util.Date.))
            " "
            sanitized-report-name
-           " By "
+           " by "
            current-user-name)
       sanitized-report-name)))
 
