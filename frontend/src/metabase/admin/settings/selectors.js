@@ -97,6 +97,11 @@ const SECTIONS = [
         key: "enable-email-login",
         display_name: t`Enable email login method`,
         type: "boolean"
+      },
+      {
+        key: "enable-printable-excel",
+        display_name: t`Enable printable excel download`,
+        type: "boolean"
       }
     ],
   },
