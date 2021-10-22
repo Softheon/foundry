@@ -24,10 +24,12 @@
              [interface :as mi]
              [pulse :as pulse :refer [Pulse]]
              [query :as query]
+             [setting :as setting :refer [defsetting]]
              [table :refer [Table]]
              [view-log :refer [ViewLog]]
              [field :as field :refer [Field]]
-             [pulse-card-file :refer [PulseCardFile]]]
+             [pulse-card-file :refer [PulseCardFile]]
+             [user :as user :refer [User]]]
             [metabase.models.query.permissions :as query-perms]
             [metabase.query-processor
              [async :as qp.async]
@@ -680,6 +682,42 @@ Exception if preconditions (such as read perms) are not met before returning a c
 
     (qp.async/process-query-and-stream-file! query options)))
 
+(defsetting enable-printable-excel
+  (tru "Allow users to download print-friendly excel")
+  :type :boolean
+  :default false)
+
+(defn- get-export-function
+  [export-format params name user]
+  (if (and (= export-format "xlsx")
+           (enable-printable-excel))
+    (let [title name
+          author (str (:first_name user) " " (:last_name user))
+          report-params (reduce (fn [param-map param]
+                                  (assoc param-map (get (get (:target param) 1) 1) (:value param)))
+                                {}
+                                params)
+          sheet-name "Sheet1"]
+      ((:export-fn (ex/export-formats "printable-xlsx")) {:title title
+                                                          :author author
+                                                          :sheet-name sheet-name
+                                                          :params report-params}))
+    
+    (:export-fn (ex/export-formats export-format))))
+
+(defn- get-file-name
+  [name export-format user]
+  (let [sanitized-report-name (.replaceAll name "[\\\\/:*?\"<>|]"  "_")
+        current-user-name (str (:first_name user) " " (:last_name user))]
+    (if (and (= export-format "xlsx")
+             (enable-printable-excel))
+      (str (.format (java.text.SimpleDateFormat. "MM-dd-yyyy") (java.util.Date.))
+           " "
+           sanitized-report-name
+           " By "
+           current-user-name)
+      sanitized-report-name)))
+
 ;; (api/defendpoint-async POST "/:card-id/query/:export-format"
 ;;   "Run the query associated with a Card, and return its results as a file in the specified format. Note that this
 ;;   expects the parameters as serialized JSON in the 'parameters' parameter"
@@ -705,13 +743,18 @@ Exception if preconditions (such as read perms) are not met before returning a c
    name su/NonBlankString}
   (binding [cache/*ignore-cached-results* true]
     (api/check-supported-export-format export-format)
-    (dataset-api/as-format-async-file name export-format respond raise
-                                      (run-query-for-card-async-file (Integer/parseUnsignedInt card-id)
-                                                                     :parameters  (json/parse-string parameters keyword)
-                                                                     :constraints nil
-                                                                     :context     (dataset-api/export-format->context export-format)
-                                                                     :middleware  {:skip-results-metadata? true
-                                                                                   :export-fn (:export-fn (ex/export-formats export-format))}))
+    (let [user (db/select-one [User :id :first_name :last_name]
+                              :id api/*current-user-id*)]
+      (dataset-api/as-format-async-file (get-file-name name export-format user) export-format respond raise
+                                        (run-query-for-card-async-file (Integer/parseUnsignedInt card-id)
+                                                                       :parameters  (json/parse-string parameters keyword)
+                                                                       :constraints nil
+                                                                       :context     (dataset-api/export-format->context export-format)
+                                                                       :middleware  {:skip-results-metadata? true
+                                                                                     :export-fn
+                                                                                     (get-export-function export-format (json/parse-string parameters keyword) name user)})))
+    
+
     ;; (if (= export-format "csv")
 
     ;;   (dataset-api/as-format-async-file name export-format respond raise

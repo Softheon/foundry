@@ -214,9 +214,7 @@
                              (throw (ex-info (str "failed to close db connection properly \""
                                                   (.getMessage e)
                                                   "\"")
-                                             {:connection e}))))))
-
-                     )))]
+                                             {:connection e})))))))))]
       (.connect input output)
       (.submit (thread-pool) ^Runnable task)
       input)))
@@ -318,6 +316,37 @@
       (a/<!! transfering-chan)
       input)))
 
+(defn export-printable-xlsx-stream
+  [settings]
+  (fn [connection]
+    (fn [stmt rset data]
+      (let [input (PipedInputStream.)
+            output (PipedOutputStream.)
+            transfering-chan (a/promise-chan)
+            conn (:connection connection)
+            task (bound-fn []
+                   (try
+                     (let [workbook (excel/printable-workbook (assoc settings :data data))]
+                       (try
+                         (a/>!! transfering-chan :start)
+                         (excel/save-workbook! output workbook)
+                         (finally
+                           (excel/dispose-workbook workbook)
+                           (a/close! transfering-chan)
+                           (.flush output)
+                           (.rollback conn))))
+                     (catch Throwable e
+                       (log/error e (trs "Unable to stream printable excel")))
+                     (finally
+                       (close-quietly output)
+                       (close-quietly rset)
+                       (close-quietly stmt)
+                       (close-quietly conn))))]
+        (.connect input output)
+        (.submit (thread-pool) ^Runnable task)
+        (a/<!! transfering-chan)
+        input))))
+
 (def export-formats
   "Map of export types to their relevant metadata"
   {"csv"  {:export-fn    export-to-csv-stream
@@ -328,6 +357,10 @@
            :content-type "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
            :ext          "xlsx"
            :context      :xlsx-download}
+   "printable-xlsx" {:export-fn export-printable-xlsx-stream
+                     :content-type "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                     :ext          "xlsx"
+                     :context      :xlsx-download}
   ;  "json" {:export-fn    export-to-json
   ;          :content-type "applicaton/json"
   ;          :ext          "json"

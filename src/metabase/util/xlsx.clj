@@ -264,17 +264,18 @@
 
 (defn- params-string
   [params, number-param-per-line]
-  (println params)
-  (let [params-array (reduce (fn [result [k v]] (conj result [k v]))
-                             []
-                             params)]
-    (loop [result ""
-           current params-array]
-      (let [firstN  (take number-param-per-line current)
-            rest (drop number-param-per-line current)]
-        (if (= 0  (count firstN))
-          result
-          (recur (join-params-str result firstN) rest))))))
+  (if (= 0 (count params))
+    ""
+    (let [params-array (reduce (fn [result [k v]] (conj result [k v]))
+                               []
+                               params)]
+      (loop [result ""
+             current params-array]
+        (let [firstN  (take number-param-per-line current)
+              rest (drop number-param-per-line current)]
+          (if (= 0  (count firstN))
+            result
+            (recur (join-params-str result firstN) rest)))))))
 
 (defn- add-printable-sheet-data
   [wb sheet column-headers records columns-width-atom]
@@ -286,13 +287,19 @@
   (doall
    (map-indexed
     (fn [idx val]
-      (println (str idx ":" val))
       (when (> val default-width)
         (.autoSizeColumn sheet idx)))
     @columns-width)))
 
+(defn- drop-last-n-character
+  [str n]
+  (if (>= n (count str))
+    ""
+    (.substring (java.lang.String. str) 0 (- (count str) n))))
+
+
 (defn- add-printable-sheet
-  [wb {:keys [sheet-name data author title params styles] :as report-detail}]
+  [wb {:keys [sheet-name data author title params styles] :or {params {} styles {}} :as report-detail}]
   (let [column-headers (first data)
         records (rest data)
         sheet (add-sheet! wb sheet-name)
@@ -302,8 +309,7 @@
         formatted-params-str (params-string params 2)]
     (apply-printable-sheet-styles sheet {:header {:left author
                                                   :middle title
-                                                  :right
-                                                  (.substring (java.lang.String. formatted-params-str) 0 (- (count formatted-params-str) 2))}
+                                                  :right (drop-last-n-character formatted-params-str 2)}
                                          :footer {:left "Printed &D &T"
                                                   :middle ""
                                                   :right "&P of &N"}})
@@ -311,7 +317,7 @@
     (make-column-content-visibile sheet default-column-width columns-width)))
 
 (defn- create-printable-workbook
-  [{:keys [author title params] :as props}]
+  [{:keys [author title params] :or {params {}} :as props}]
   (let [report-params (params-string params 1)
         wb (SXSSFWorkbook. (:window-size props 800))
         current-date (Date.)
@@ -325,8 +331,14 @@
                                           "Run on:" (.format (java.text.SimpleDateFormat. "MMM-dd-yyyy") current-date) "\n"
                                           "Report Parameters: \n"
                                           (string/replace report-params "," "")))
-    (.setApplication extended-properties "Foundry")
+    (.setApplication (.getUnderlyingProperties extended-properties) "Foundry")
     wb))
+
+(defn printable-workbook
+  [report-detail]
+  (let [workbook (create-printable-workbook report-detail)]
+    (add-printable-sheet workbook report-detail)
+    workbook))
 
 (defn export-printable-excel!
   "
