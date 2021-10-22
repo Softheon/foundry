@@ -687,6 +687,11 @@ Exception if preconditions (such as read perms) are not met before returning a c
   :type :boolean
   :default false)
 
+(defsetting enable-printable-excel-column-auto-sizing
+  (tru "Auto size column width so that its content can be visibile")
+  :type :boolean
+  :default false)
+
 (defn- get-export-function
   [export-format params name user]
   (if (and (= export-format "xlsx")
@@ -701,6 +706,7 @@ Exception if preconditions (such as read perms) are not met before returning a c
       ((:export-fn (ex/export-formats "printable-xlsx")) {:title title
                                                           :author author
                                                           :sheet-name sheet-name
+                                                          :enable-column-auto-sizing (enable-printable-excel-column-auto-sizing)
                                                           :params report-params}))
     
     (:export-fn (ex/export-formats export-format))))

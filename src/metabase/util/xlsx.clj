@@ -232,9 +232,13 @@
     footer))
 
 (defn- apply-printable-sheet-styles
-  [sheet {:keys [header footer column-width] :or {column-width 12} :as style}]
+  [sheet {:keys [header footer column-width enable-column-auto-sizing] 
+          :or {column-width 12
+               enable-column-auto-sizing false} 
+          :as style}]
   (.createFreezePane sheet 1 1)
-  (.trackAllColumnsForAutoSizing sheet)
+  (when enable-column-auto-sizing
+    (.trackAllColumnsForAutoSizing sheet))
   (add-sheet-header  sheet header)
   (add-sheet-footer  sheet footer)
   (.setDefaultColumnWidth sheet column-width)
@@ -299,7 +303,9 @@
 
 
 (defn- add-printable-sheet
-  [wb {:keys [sheet-name data author title params styles] :or {params {} styles {}} :as report-detail}]
+  [wb {:keys [sheet-name data author title params styles enable-column-auto-sizing] 
+       :or {params {} styles {} enable-column-auto-sizing false} 
+       :as report-detail}]
   (let [column-headers (first data)
         records (rest data)
         sheet (add-sheet! wb sheet-name)
@@ -312,9 +318,12 @@
                                                   :right (drop-last-n-character formatted-params-str 2)}
                                          :footer {:left "Printed &D &T"
                                                   :middle ""
-                                                  :right "&P of &N"}})
+                                                  :right "&P of &N"}
+                                         :column-width default-column-width
+                                         :enable-column-auto-sizing enable-column-auto-sizing})
     (add-printable-sheet-data wb sheet column-headers records columns-width)
-    (make-column-content-visibile sheet default-column-width columns-width)))
+    (when enable-column-auto-sizing
+      (make-column-content-visibile sheet default-column-width columns-width))))
 
 (defn- create-printable-workbook
   [{:keys [author title params] :or {params {}} :as props}]

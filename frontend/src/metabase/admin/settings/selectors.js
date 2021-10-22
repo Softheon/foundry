@@ -97,11 +97,6 @@ const SECTIONS = [
         key: "enable-email-login",
         display_name: t`Enable email login method`,
         type: "boolean"
-      },
-      {
-        key: "enable-printable-excel",
-        display_name: t`Enable printable excel download`,
-        type: "boolean"
       }
     ],
   },
@@ -498,6 +493,16 @@ const SECTIONS = [
         type: "number",
         allowValueCollection: false
       },
+      {
+        key: "enable-printable-excel",
+        display_name: t`Enable printable excel download`,
+        type: "boolean"
+      },
+      {
+        key:  "enable-printable-excel-column-auto-sizing",
+        display_name: t`Auto size column width to fit when downloading print-friendly excel`,
+        type: "boolean"
+      }
     ]
   },
 
