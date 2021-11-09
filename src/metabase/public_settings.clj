@@ -222,6 +222,16 @@
   :type :boolean
   :default false)
 
+(defsetting enable-printable-pulse-excel
+  (tru "Allow users to download print-friendly excel")
+  :type :boolean
+  :default false)
+
+(defsetting enable-printable-pulse-excel-column-auto-sizing
+  (tru "Auto size column width so that its content can be visibile")
+  :type :boolean
+  :default false)
+
 (defn remove-public-uuid-if-public-sharing-is-disabled
   "If public sharing is *disabled* and OBJECT has a `:public_uuid`, remove it so people don't try to use it (since it
    won't work). Intended for use as part of a `post-select` implementation for Cards and Dashboards."

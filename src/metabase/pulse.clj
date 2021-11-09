@@ -263,18 +263,18 @@
 
 (defn- get-excel-export-fn
   [card]
-  (if (setting/get :enable-printable-excel)
+  (if (setting/get :enable-printable-pulse-excel)
     (let [report-name (:name card)]
       (export/export-to-printable-excel-file {:title report-name
                                               :author "SoftheonPulse"
                                               :sheet-name "Sheet1"
-                                              :enable-column-auto-sizing (setting/get :enable-printable-excel-column-auto-sizing)
+                                              :enable-column-auto-sizing (setting/get :enable-printable-pulse-excel-column-auto-sizing)
                                               :params (report-default-parameters card)}))
     export/export-to-excel-file))
 
 (defn- report-name-to-display
   [name]
-  (if (setting/get :enable-printable-excel)
+  (if (setting/get :enable-printable-pulse-excel)
     (str (.format (java.text.SimpleDateFormat. "yyyyMMdd") (java.util.Date.))
          " "
          name

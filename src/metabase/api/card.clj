@@ -793,6 +793,20 @@ Exception if preconditions (such as read perms) are not met before returning a c
   (let [file (io/file file)]
     (io/copy file out)))
 
+(defn- pulse-file-name
+  [name export-format user]
+  (let [sanitized-report-name (.replaceAll name "[\\\\/:*?\"<>|]"  "_")
+        current-user-name (str (:first_name user) " " (:last_name user))]
+    (if (and (= export-format "xlsx")
+             (setting/get :enable-printable-pulse-excel))
+      (str (.format (java.text.SimpleDateFormat. "yyyyMMdd") (java.util.Date.))
+           " "
+           sanitized-report-name
+           " by "
+           current-user-name)
+      sanitized-report-name)))
+
+
 (api/defendpoint-async POST "/:card-id/download"
   [{{:keys [card-id token]} :params} respond raise]
   {token su/NonBlankString}
@@ -809,7 +823,7 @@ Exception if preconditions (such as read perms) are not met before returning a c
                        :headers
                        {"Content-Type" "application/octet-stream"
                         "Content-Disposition" (str "attachment; filename=\""
-                                                   (get-file-name name "xlsx" {:first_name "SoftheonPulse"
+                                                   (pulse-file-name name  ext {:first_name "SoftheonPulse"
                                                                                :last_name ""})
                                                    "." ext "\"")}}))
 

@@ -137,7 +137,6 @@
 (defn export-to-csv-file
   [card-id  skip-if-empty connection]
   (fn [stmt rset data]
-    (log/info "result count " (count data))
     (when (and (true? skip-if-empty) (<= (count data) 1))
       (log/info "skip empty card")
       (throw (ex-info (str "skip empty result") {:card-id card-id})))
@@ -223,7 +222,6 @@
 (defn export-to-excel-file
   [card-id skip-if-empty connection]
   (fn [stmt rset data]
-    (log/info "result count " (count data))
     (when (and (true? skip-if-empty) (<= (count data) 1))
       (log/info "skip empty card")
       (throw (ex-info (str "skip empty result") {:card-id card-id})))
