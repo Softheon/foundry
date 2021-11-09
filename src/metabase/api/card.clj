@@ -682,20 +682,10 @@ Exception if preconditions (such as read perms) are not met before returning a c
 
     (qp.async/process-query-and-stream-file! query options)))
 
-(defsetting enable-printable-excel
-  (tru "Allow users to download print-friendly excel")
-  :type :boolean
-  :default false)
-
-(defsetting enable-printable-excel-column-auto-sizing
-  (tru "Auto size column width so that its content can be visibile")
-  :type :boolean
-  :default false)
-
 (defn- get-export-function
   [export-format params name user]
   (if (and (= export-format "xlsx")
-           (enable-printable-excel))
+           (setting/get :enable-printable-excel))
     (let [title name
           author (str (:first_name user) " " (:last_name user))
           report-params (reduce (fn [param-map param]
@@ -706,9 +696,9 @@ Exception if preconditions (such as read perms) are not met before returning a c
       ((:export-fn (ex/export-formats "printable-xlsx")) {:title title
                                                           :author author
                                                           :sheet-name sheet-name
-                                                          :enable-column-auto-sizing (enable-printable-excel-column-auto-sizing)
+                                                          :enable-column-auto-sizing (setting/get :enable-printable-excel-column-auto-sizing)
                                                           :params report-params}))
-    
+
     (:export-fn (ex/export-formats export-format))))
 
 (defn- get-file-name
@@ -716,7 +706,7 @@ Exception if preconditions (such as read perms) are not met before returning a c
   (let [sanitized-report-name (.replaceAll name "[\\\\/:*?\"<>|]"  "_")
         current-user-name (str (:first_name user) " " (:last_name user))]
     (if (and (= export-format "xlsx")
-             (enable-printable-excel))
+             (setting/get :enable-printable-excel))
       (str (.format (java.text.SimpleDateFormat. "yyyyMMdd") (java.util.Date.))
            " "
            sanitized-report-name
@@ -759,7 +749,7 @@ Exception if preconditions (such as read perms) are not met before returning a c
                                                                        :middleware  {:skip-results-metadata? true
                                                                                      :export-fn
                                                                                      (get-export-function export-format (json/parse-string parameters keyword) name user)})))
-    
+
 
     ;; (if (= export-format "csv")
 
@@ -818,7 +808,10 @@ Exception if preconditions (such as read perms) are not met before returning a c
                               (partial write-file-to-outputstream file))
                        :headers
                        {"Content-Type" "application/octet-stream"
-                        "Content-Disposition" (str "attachment; filename=\"" name "." ext "\"")}}))
+                        "Content-Disposition" (str "attachment; filename=\""
+                                                   (get-file-name name "xlsx" {:first_name "SoftheonPulse"
+                                                                               :last_name ""})
+                                                   "." ext "\"")}}))
 
                    (catch Throwable e
                      (log/error "Unable to read file" e)

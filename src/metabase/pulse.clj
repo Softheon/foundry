@@ -12,7 +12,8 @@
             [metabase.integrations.slack :as slack]
             [metabase.models
              [card :refer [Card]]
-             [pulse :refer [Pulse]]]
+             [pulse :refer [Pulse]]
+             [setting :as setting]]
             [metabase.pulse.render :as render]
             [metabase.util
              [i18n :refer [trs tru]]
@@ -253,6 +254,32 @@
   {:pre [(map? pulse) (every? map? cards) (every? :id cards)]}
   (send-notifications! (pulse->notifications (merge pulse (when channel-ids {:channel-ids channel-ids})))))
 
+(defn- report-default-parameters
+  [card]
+  (reduce (fn [result [_ value]]
+            (assoc result (:display-name value) (:default value "")))
+          {}
+          (get-in (:dataset_query card) [:native :template-tags] {})))
+
+(defn- get-excel-export-fn
+  [card]
+  (if (setting/get :enable-printable-excel)
+    (let [report-name (:name card)]
+      (export/export-to-printable-excel-file {:title report-name
+                                              :author "SoftheonPulse"
+                                              :sheet-name "Sheet1"
+                                              :enable-column-auto-sizing (setting/get :enable-printable-excel-column-auto-sizing)
+                                              :params (report-default-parameters card)}))
+    export/export-to-excel-file))
+
+(defn- report-name-to-display
+  [name]
+  (if (setting/get :enable-printable-excel)
+    (str (.format (java.text.SimpleDateFormat. "yyyyMMdd") (java.util.Date.))
+         " "
+         name
+         " by SoftheonPulse")
+    name))
 
 (defn execute-and-export-card
   [pulse-id pulse-card skip-if-empty]
@@ -262,7 +289,7 @@
       (when-let [card (Card :id card-id, :archived false)]
         (let [{:keys [creator_id dataset_query]}  card
               export-fn (if (:include_xls pulse-card)
-                          export/export-to-excel-file
+                          (get-excel-export-fn card)
                           export/export-to-csv-file)
               query (-> dataset_query
                         (assoc :async? false)
@@ -278,7 +305,7 @@
             (do
               (log/warn (str "Unable to export the report" {:cause result}))
               nil)
-       
+
             (let [_ (db/insert! PulseCardFile {:id  (str (UUID/randomUUID))
                                                :pulse_id pulse-id
                                                :card_id card-id
@@ -298,7 +325,10 @@
                                        [:= :pulse_id pulse-id]
                                        [:<= :created_at expired-date]]})))
               (-> latest-file
-                  (assoc :name (:name card))
+                  (assoc :name
+                         (if (:include_xls pulse-card)
+                           (report-name-to-display (:name card))
+                           (:name card)))
                   (assoc :download
                          (str site-url "/question/" card-id "/download/"
                               (str (:pulse_id latest-file) "_" (:id latest-file)))))))))
@@ -317,7 +347,7 @@
      :message (messages/render-report-email pulse results)}))
 
 (defn- pulse->email-notifications
-  [{:keys [cards channel-ids  ] :as pulse}]
+  [{:keys [cards channel-ids] :as pulse}]
   (let [results (for [card cards
                       :let [result (execute-and-export-card  (:id pulse) card (:skip_if_empty pulse))]
                       :when result]

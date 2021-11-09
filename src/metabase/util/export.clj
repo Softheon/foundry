@@ -268,6 +268,41 @@
       (.submit (thread-pool) ^Runnable task)
       (a/<!! finished-chan))))
 
+(defn export-to-printable-excel-file
+  [setting]
+  (fn [card-id skip-if-empty connection]
+    (fn [stmt rset data]
+      (if (and  (true? skip-if-empty) (<= (count data) 1))
+        (log/info "skipping generating printable excel file because the result is empty for the card id " card-id)
+        (let [finished-chan (a/promise-chan)
+              file (create-export-file card-id ".xlsx")
+              conn (:connection connection)
+              task (bound-fn []
+                     (try
+                       (let [workbook (excel/printable-workbook (assoc setting :data data))]
+                         (with-open [output-stream (FileOutputStream. file)]
+                           (try
+                             (excel/save-workbook! output-stream workbook)
+                             (finally
+                               (excel/dispose-workbook workbook)))))
+                       (a/>!! finished-chan file)
+                       (catch Throwable e
+                         (log/error "failed to generate printable excel file " e)
+                         (a/>!! finished-chan e))
+                       (finally
+                         (try
+                           (a/close! finished-chan)
+                           (.rollback conn)
+                           (catch Throwable e
+                             (log/error "failed to rollback database connection" e))
+                           (finally
+                             (close-quietly rset)
+                             (close-quietly stmt)
+                             (close-quietly conn)
+                             (log/info "all db resources are closed."))))))]
+          (.submit (thread-pool) ^Runnable task)
+          (a/<!! finished-chan))))))
+
 (defn export-to-xlsx-stream
   [connection]
   (fn [stmt rset data]
