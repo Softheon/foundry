@@ -204,14 +204,16 @@
   [wb]
   {:date  (create-format wb "m/d/yyyy")
    :time (create-format wb "h:mm AM/PM")
+   :datetime (create-format wb "m/d/yyyy h:mm:ss AM/PM")
    :dollar (create-format wb "$#,#0.00")})
 
 (defn- get-data-cell-style
   [styles header]
   (cond
-    (re-matches #"(?i).*date.*" header) {:cell-style (:date styles)}
-    (re-matches #"(?i).*time.*" header)  {:cell-style (:time styles)}
-    (re-matches #"(?i).*dollar.*" header) {:cell-style (:dollar styles)}
+    (re-find #"(?i)(^date\s+\S*|^date$|\S*\s+date$|\S*\s+date\s+\S*)"  header) {:cell-style (:date styles)}
+    (re-find #"(?i)(^time\s+\S*|^time$|\S*\s+time$|\S*\s+time\s+\S*)" header)  {:cell-style (:time styles)}
+    (re-find #"(?i)(^datetime\s+\S*|^datetime$|\S*\s+datetime$|\S*\s+datetime\s+\S*)" header)  {:cell-style (:datetime styles)}
+    (re-find #"(?i)(^dollar\s+\S*|^dollar$|\S*\s+dollar$|\S*\s+dollar\s+\S*)" header) {:cell-style (:dollar styles)}
     :else {:money (:dollar styles)
            :date (:date styles)}))
 
