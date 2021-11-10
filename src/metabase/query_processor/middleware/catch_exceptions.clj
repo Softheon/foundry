@@ -28,6 +28,14 @@
    ;; add the fully-preprocessed and native forms to the error message for MBQL queries, since they're extremely
    ;; useful for debugging purposes. Since generating them requires us to recursively run the query processor,
    ;; make sure we can skip adding them if we end up back here so we don't recurse forever
+   (when (instance? SQLException e)
+     (try
+       (let [sql-server-error (.getSQLServerError e)]
+         {:error
+          (str "Line " (- (.getLineNumber  sql-server-error) 1) ": "
+               (.getErrorMessage  (.getSQLServerError e)))})
+       (catch Throwable e)))
+
    (when (and
           (instance? SQLException e)
           (not (s/starts-with? (.getSQLState e) "S0")))
