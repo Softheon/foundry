@@ -139,7 +139,8 @@
   (if  (contains? style :cell-style)
     (.setCellStyle cell (:cell-style style))
     (.setCellStyle cell (:date style)))
-  (.setCellValue cell ^Date val))
+  (.setCellValue cell ^Date val)
+  (update-max-column-width idx val columns-width))
 
 
 (defmethod set-printable-cell! java.math.BigDecimal
@@ -203,15 +204,17 @@
 (defn- cell-style-map
   [wb]
   {:date  (create-format wb "m/d/yyyy")
-   :time (create-format wb "h:mm AM/PM")
+   :time (create-format wb "h:mm:ss AM/PM")
+   :datetime (create-format wb "m/d/yyyy h:mm:ss AM/PM")
    :dollar (create-format wb "$#,#0.00")})
 
 (defn- get-data-cell-style
   [styles header]
   (cond
-    (re-matches #"(?i).*date.*" header) {:cell-style (:date styles)}
-    (re-matches #"(?i).*time.*" header)  {:cell-style (:time styles)}
-    (re-matches #"(?i).*dollar.*" header) {:cell-style (:dollar styles)}
+    (re-find #"(?i)(^date\s+\S*|^date$|\S*\s+date$|\S*\s+date\s+\S*)"  header) {:cell-style (:date styles)}
+    (re-find #"(?i)(^time\s+\S*|^time$|\S*\s+time$|\S*\s+time\s+\S*)" header)  {:cell-style (:time styles)}
+    (re-find #"(?i)(^datetime\s+\S*|^datetime$|\S*\s+datetime$|\S*\s+datetime\s+\S*)" header)  {:cell-style (:datetime styles)}
+    (re-find #"(?i)(^dollar\s+\S*|^dollar$|\S*\s+dollar$|\S*\s+dollar\s+\S*)" header) {:cell-style (:dollar styles)}
     :else {:money (:dollar styles)
            :date (:date styles)}))
 
@@ -245,7 +248,7 @@
           :or {column-width 12
                enable-column-auto-sizing false} 
           :as style}]
-  (.createFreezePane sheet 1 1)
+  (.createFreezePane sheet 0 1)
   (when enable-column-auto-sizing
     (.trackAllColumnsForAutoSizing sheet))
   (add-sheet-header  sheet header)

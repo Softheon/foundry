@@ -502,6 +502,16 @@ const SECTIONS = [
         key:  "enable-printable-excel-column-auto-sizing",
         display_name: t`Auto size column width to fit when downloading print-friendly excel`,
         type: "boolean"
+      },
+      {
+        key: "enable-printable-pulse-excel",
+        display_name: t`Enable printable excel creation for pulse reports`,
+        type: "boolean"
+      },
+      {
+        key:  "enable-printable-pulse-excel-column-auto-sizing",
+        display_name: t`Auto size column width to fit when print-friendly excel is created by pulse`,
+        type: "boolean"
       }
     ]
   },
