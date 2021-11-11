@@ -37,6 +37,8 @@ export default class DateDayMonthYearWidget extends Component {
       <Calendar
         initial={value ? moment(value) : null}
         selected={value ? moment(value) : null}
+        isRangePicker={false}
+        isDual={false}
         onChange={(clicked, selected) => {
           this.onClose(clicked);
         }}
