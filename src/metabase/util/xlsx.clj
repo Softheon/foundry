@@ -139,7 +139,8 @@
   (if  (contains? style :cell-style)
     (.setCellStyle cell (:cell-style style))
     (.setCellStyle cell (:date style)))
-  (.setCellValue cell ^Date val))
+  (.setCellValue cell ^Date val)
+  (update-max-column-width idx val columns-width))
 
 
 (defmethod set-printable-cell! java.math.BigDecimal
@@ -203,7 +204,7 @@
 (defn- cell-style-map
   [wb]
   {:date  (create-format wb "m/d/yyyy")
-   :time (create-format wb "h:mm AM/PM")
+   :time (create-format wb "h:mm:ss AM/PM")
    :datetime (create-format wb "m/d/yyyy h:mm:ss AM/PM")
    :dollar (create-format wb "$#,#0.00")})
 
@@ -247,7 +248,7 @@
           :or {column-width 12
                enable-column-auto-sizing false} 
           :as style}]
-  (.createFreezePane sheet 1 1)
+  (.createFreezePane sheet 0 1)
   (when enable-column-auto-sizing
     (.trackAllColumnsForAutoSizing sheet))
   (add-sheet-header  sheet header)
