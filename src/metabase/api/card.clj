@@ -793,13 +793,22 @@ Exception if preconditions (such as read perms) are not met before returning a c
   (let [file (io/file file)]
     (io/copy file out)))
 
+(defn file-creation-time
+  [file]
+  (let [file-path    (.toPath (clojure.java.io/file file))]
+    (.creationTime
+     (java.nio.file.Files/readAttributes
+      file-path
+      java.nio.file.attribute.BasicFileAttributes
+      (into-array java.nio.file.LinkOption [])))))
+
 (defn- pulse-file-name
-  [name export-format user]
+  [name file export-format user]
   (let [sanitized-report-name (.replaceAll name "[\\\\/:*?\"<>|]"  "_")
         current-user-name (str (:first_name user) " " (:last_name user))]
     (if (and (= export-format "xlsx")
              (setting/get :enable-printable-pulse-excel))
-      (str (.format (java.text.SimpleDateFormat. "yyyyMMdd") (java.util.Date.))
+      (str (.format (java.text.SimpleDateFormat. "yyyyMMdd") (.toMillis (file-creation-time file)))
            " "
            sanitized-report-name
            " by "
@@ -823,7 +832,7 @@ Exception if preconditions (such as read perms) are not met before returning a c
                        :headers
                        {"Content-Type" "application/octet-stream"
                         "Content-Disposition" (str "attachment; filename=\""
-                                                   (pulse-file-name name  ext {:first_name "SoftheonPulse"
+                                                   (pulse-file-name name file ext {:first_name "SoftheonPulse"
                                                                                :last_name ""})
                                                    "." ext "\"")}}))
 
