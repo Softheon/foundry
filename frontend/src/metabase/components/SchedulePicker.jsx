@@ -32,7 +32,15 @@ export const DAY_OF_WEEK_OPTIONS = [
 export const MONTH_DAY_OPTIONS = _.times(31, n => ({
   name: t`${n + 1}`,
   value: `${n + 1}`
-}))
+}));
+
+export const HOURLY_HOUSR_OPTIONS = _.times(23, n => (
+  {
+    name: t`${n + 1}`,
+    value: n + 1
+  }
+));
+
 // export const MONTH_DAY_OPTIONS = [
 //   // { name: t`First`, value: "first" },
 //   // { name: t`Last`, value: "last" },
@@ -73,7 +81,7 @@ export default class SchedulePicker extends Component {
           ...newSchedule,
           schedule_day: null,
           schedule_frame: null,
-          schedule_hour: null,
+          // schedule_hour: null,
         };
       }
 
@@ -166,6 +174,27 @@ export default class SchedulePicker extends Component {
     );
   }
 
+  renderHourlyPicker() {
+    const { schedule } = this.props;
+    const selectedHour = _.find(
+      HOURLY_HOUSR_OPTIONS,
+      option => option.value === schedule.schedule_hour
+    );
+    return (
+      <div className="mt1">
+        <span className="h4 text-bold mr1">Every</span>
+        <Select
+          value={selectedHour || HOURLY_HOUSR_OPTIONS[0]}
+          options={HOURLY_HOUSR_OPTIONS}
+          optionNameFn={option => option.name}
+          optionValueFn={option => option.value}
+          onChange={value => this.onPropertyChange("schedule_hour", value)}
+        />
+        <span className="h4 text-bold ml1">Hours</span>
+      </div>
+    )
+  }
+
   renderDayPicker() {
     let { schedule } = this.props;
 
@@ -245,6 +274,7 @@ export default class SchedulePicker extends Component {
           scheduleType === "weekly" ||
           scheduleType === "monthly") &&
           this.renderHourPicker()}
+        {scheduleType === "hourly" && this.renderHourlyPicker()}
       </div>
     );
   }
