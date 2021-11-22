@@ -188,7 +188,7 @@
    ;; single day
    {:parser (regex->parser #"([0-9-T:]+)" [:date])
     :range  (fn [{:keys [date]} _]
-              {:start date, :end date})
+              {:start date, :end (t/plus date (t/hours 23) (t/minutes 59) (t/seconds 59) (t/millis 999))})
     :filter (fn [{:keys [date]} field-id-clause]
               (let [iso8601date (day->iso8601 date)]
                 [:= [:datetime-field field-id-clause :day] iso8601date]))}
@@ -223,6 +223,12 @@
             (parser-result-decoder parser-result decoder-param)))
         decoders))
 
+(defn- to-timezone
+  "convert the data range to the give timezone"
+  [tz range]
+  (m/map-vals (fn [val] (t/from-time-zone val tz))
+              range))
+
 (defn date-string->range
   "Takes a string description of a date range such as 'lastmonth' or '2016-07-15~2016-08-6' and return a MAP with
   `:start` and `:end` as iso8601 string formatted dates, respecting the given timezone."
@@ -238,6 +244,7 @@
         ;; Absolute date ranges don't need the time zone conversion because in SQL the date ranges are compared
         ;; against the db field value that is casted granularity level of a day in the db time zone
         (->> (execute-decoders absolute-date-string-decoders :range nil date-string)
+             (to-timezone tz)
              (m/map-vals (partial tf/unparse formatter-no-tz))))))
 
 (s/defn date-string->filter :- mbql.s/Filter
