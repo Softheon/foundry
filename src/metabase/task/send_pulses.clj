@@ -23,6 +23,18 @@
 (defn- log-pulse-exception [pulse-id exception]
   (log/error exception (trs "Error sending Pulse {0}" pulse-id)))
 
+(defn- keep-hourly-scheduled-channels
+  "Keep all scheudled channels that are not hourly scheduled channel. Hourly shecueldy will be kept only if
+  current scheudle type is hourly and schedule_hour is either null or a mulitple of the given hour. "
+  [channels hour]
+  (filter (fn [channel]
+            (or (not= (:schedule_type channel) :hourly)
+                (and (= (:schedule_type channel) :hourly)
+                     (or  (not (:schedule_hour channel))
+                          (and (not= hour 0)
+                               (= (rem hour (:schedule_hour channel)) 0))))))
+          channels))
+
 (defn- send-pulses!
   "Send any `Pulses` which are scheduled to run in the current day/hour. We use the current time and determine the
   hour of the day and day of the week according to the defined reporting timezone, or UTC. We then find all `Pulses`
@@ -39,7 +51,10 @@
           (<= 1 monthday 31)
           (contains? #{:first :last :other} monthweek)]}
    (log/info (trs "Sending scheduled pulses..."))
-   (let [channels-by-pulse (group-by :pulse_id (pulse-channel/retrieve-scheduled-channels hour weekday monthday monthweek))]
+   (let [channels-by-pulse (group-by :pulse_id
+                                     (keep-hourly-scheduled-channels
+                                      (pulse-channel/retrieve-scheduled-channels hour weekday monthday monthweek)
+                                      hour))]
      (doseq [pulse-id (keys channels-by-pulse)]
        (try
          (task-history/with-task-history {:task (format "send-pulse %s" pulse-id)}

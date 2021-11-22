@@ -94,7 +94,7 @@
            :name              "Email"
            :allows_recipients true
            :recipients        ["user","email"]
-           :schedules         [:daily :weekly :monthly]}
+           :schedules         [:hourly :daily :weekly :monthly]}
   ;;  :slack {:type              "slack"
   ;;          :name              "Slack"
   ;;          :allows_recipients false
@@ -174,7 +174,7 @@
         ;                               :else                "invalid")
         monthly-schedule-day-or-nil (when (= :other monthday)
                                       weekday)]
-    (db/select [PulseChannel :id :pulse_id :schedule_type :channel_type]
+    (db/select [PulseChannel :id :pulse_id :schedule_type :channel_type :schedule_hour]
                {:where [:and [:= :enabled true]
                         [:or [:= :schedule_type "hourly"]
                          [:and [:= :schedule_type "daily"]
@@ -242,8 +242,9 @@
                                   (supports-recipients? channel_type) (assoc :emails (get recipients-by-type false)))
                 :enabled        enabled
                 :schedule_type  schedule_type
-                :schedule_hour  (when (not= schedule_type :hourly)
-                                  schedule_hour)
+                :schedule_hour  schedule_hour
+                ;; (when (not= schedule_type :hourly)
+                ;;                   schedule_hour)
                 :schedule_day   (when (contains? #{:weekly :monthly} schedule_type)
                                   schedule_day)
                 :schedule_frame (when (= schedule_type :monthly)
@@ -270,8 +271,9 @@
                                  :details        (cond-> details
                                                    (supports-recipients? channel_type) (assoc :emails (get recipients-by-type false)))
                                  :schedule_type  schedule_type
-                                 :schedule_hour  (when (not= schedule_type :hourly)
-                                                   schedule_hour)
+                                 :schedule_hour  schedule_hour
+                                ;;  (when (not= schedule_type :hourly)
+                                ;;    schedule_hour)
                                  :schedule_day   (when (contains? #{:weekly :monthly} schedule_type)
                                                    schedule_day)
                                  :schedule_frame (when (= schedule_type :monthly)
