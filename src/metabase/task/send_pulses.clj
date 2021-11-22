@@ -31,7 +31,8 @@
             (or (not= (:schedule_type channel) :hourly)
                 (and (= (:schedule_type channel) :hourly)
                      (or  (not (:schedule_hour channel))
-                          (= (rem hour (:schedule_hour channel)) 0)))))
+                          (and (not= hour 0)
+                               (= (rem hour (:schedule_hour channel)) 0))))))
           channels))
 
 (defn- send-pulses!
