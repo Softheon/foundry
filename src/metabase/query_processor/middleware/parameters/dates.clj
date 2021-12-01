@@ -195,7 +195,7 @@
    ;; day range
    {:parser (regex->parser #"([0-9-T:]+)~([0-9-T:]+)" [:date-1 :date-2])
     :range  (fn [{:keys [date-1 date-2]} _]
-              {:start date-1, :end date-2})
+              {:start date-1, :end (t/plus date-2 (t/hours 23) (t/minutes 59) (t/seconds 59) (t/millis 999))})
     :filter (fn [{:keys [date-1 date-2]} field-id-clause]
               [:between [:datetime-field field-id-clause :day] (day->iso8601 date-1) (day->iso8601 date-2)])}
    ;; before day
