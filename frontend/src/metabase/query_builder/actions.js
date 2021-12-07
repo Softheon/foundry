@@ -1269,7 +1269,7 @@ export const getDisplayTypeForCard = (card, queryResults) => {
     queryResult.data.cols.length === 1
   ) {
     // if we have a 1x1 data result then this should always be viewed as a scalar
-    cardDisplay = "scalar";
+    //cardDisplay = "scalar";
   } else if (
     isScalarVisualization &&
     queryResult.data.rows &&
