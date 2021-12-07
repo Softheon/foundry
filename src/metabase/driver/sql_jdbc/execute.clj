@@ -234,7 +234,7 @@ before finishing)."
         [columns & rows] (cancelable-run-query
                           connection sql params
                           {:identifiers    identity
-                           :timeout 600
+                           :timeout (* 20 60)
                            :as-arrays?     true
                            :limited max-rows
                            :read-columns   (read-columns driver (some-> timezone Calendar/getInstance))
