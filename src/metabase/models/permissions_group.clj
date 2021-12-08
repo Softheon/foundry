@@ -59,6 +59,16 @@
   "Fetch the `Managers` permissions group, creating it if needed."
   (group-fetch-fn "Managers"))
 
+(def ^{:arglists '([])} ^metabase.models.permissions_group.PermissionsGroupInstance
+  external-users
+  "Fetch the `External Users` permissions group, creating it if needed."
+  (group-fetch-fn "External Users"))
+
+(def ^{:arglists '([])} ^metabase.models.permissions_group.PermissionsGroupInstance
+  softheon-users
+  "Fetch the `Softheon Users` permissions group, creating it if needed."
+  (group-fetch-fn "Softheon Users"))
+
 (defn- admin-only-group-ids
   "Fetch a set of group ids that only admin has access to."
   []
