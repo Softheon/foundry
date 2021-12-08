@@ -48,7 +48,11 @@
            (when reset_token
              {:reset_token (creds/hash-bcrypt reset_token)}))))
 
-(defn- post-insert [{user-id :id, superuser? :is_superuser, iam? :iam_auth, :as user}]
+(defn- is-internal-user
+  [email]
+  (str/ends-with? email "@softheon.com"))
+
+(defn- post-insert [{user-id :id, superuser? :is_superuser, iam? :iam_auth, email-address :email :as user}]
   (u/prog1 user
 
     ;; add the newly created user to the magic perms groups
@@ -60,7 +64,18 @@
              (when iam?
                (db/insert! PermissionsGroupMembership
                            :user_id  user-id
-                           :group_id (:id (group/ids-users)))))
+                           :group_id (:id (group/ids-users))))
+             (if (is-internal-user email-address)
+               (do
+                 (db/insert! PermissionsGroupMembership
+                             :user_id  user-id
+                             :group_id (:id (group/softheon-users)))
+                 (db/insert! PermissionsGroupMembership
+                             :user_id  user-id
+                             :group_id (:id (group/pulse-users))))
+               (db/insert! PermissionsGroupMembership
+                           :user_id  user-id
+                           :group_id (:id (group/external-users)))))
 
            (when superuser?
              (log/info (trs "Adding User {0} to Admin permissions group..." user-id))
