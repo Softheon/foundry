@@ -187,8 +187,8 @@
                     (if (:is_superuser user)
                       group-ids
                       (remove (fn [id] (contains? (group/admin-only-group-ids-set) id)) group-ids)))
-            ;; (assoc  :is_pulse_recipient (or (:is_superuser user)
-            ;;                                 (contains? group-ids pulse-group-id)))
+            (assoc  :is_pulse_user (or (:is_superuser user)
+                                            (contains? group-ids pulse-group-id)))
             (assoc :is_manager (or (:is_superuser user)
                                    (contains? group-ids manager-group-id))))))))
 

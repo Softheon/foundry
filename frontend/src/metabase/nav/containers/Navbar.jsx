@@ -30,13 +30,14 @@ import ProfileLink from "metabase/nav/components/ProfileLink.jsx";
 import { getPath, getContext, getUser } from "../selectors";
 import { entityListLoader } from "metabase/entities/containers/EntityListLoader";
 import AutoSuggestSearchBar from "metabase/nav/components/AutoSuggestSearchBar";
-import { getUserIsAdmin } from "metabase/selectors/user";
+import { getUserIsAdmin, getUserIsPulseUser } from "metabase/selectors/user";
 
 const mapStateToProps = (state, props) => ({
   path: getPath(state, props),
   context: getContext(state, props),
   user: getUser(state),
-  isAdmin: getUserIsAdmin(state)
+  isAdmin: getUserIsAdmin(state),
+  isPulseUser: getUserIsPulseUser(state)
 });
 
 const mapDispatchToProps = {
@@ -316,7 +317,7 @@ export default class Navbar extends Component {
         action: () => this.setModal(MODAL_NEW_DASHBOARD),
         event: `NavBar;New Dashboard Click;`,
       }]
-    if (this.props.isAdmin) {
+    if (this.props.isPulseUser) {
       menuItems.push(
         {
           title: t`New pulse`,

@@ -95,7 +95,7 @@
   "Fetch a sequence of 'child' objects belonging to a Collection, filtered using `options`."
   [collection                                     :- collection/CollectionWithLocationAndIDOrRoot
    {:keys [model collections-only?], :as options} :- CollectionChildrenOptions]
-  (->> (for [model-kw (if api/*is-superuser?*
+  (->> (for [model-kw (if (or api/*is-superuser?* api/*is-pulse-user?*)
                         search-models
                         (vec (remove (fn [entity] (= entity :pulse)) search-models)))
             ;; only fetch models that are specified by the `model` param; or everything if it's `nil`

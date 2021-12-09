@@ -16,19 +16,20 @@ import ItemTypeFilterBar, {
   FILTERS,
 } from "metabase/components/ItemTypeFilterBar";
 
-import { getUserIsAdmin } from "metabase/selectors/user";
+import { getUserIsAdmin, getUserIsPulseUser } from "metabase/selectors/user";
 
 const PAGE_PADDING = [1, 2, 4];
 
 const mapStateToProps = (state, props) => {
   return {
-    isAdmin: getUserIsAdmin(state)
+    isAdmin: getUserIsAdmin(state),
+    isPulseUser: getUserIsPulseUser(state)
   }
 }
 
 class SearchApp extends React.Component {
   render() {
-    const { location, isAdmin } = this.props;
+    const { location, isAdmin, isPulseUser } = this.props;
     return (
       <Box mx={PAGE_PADDING}>
         {location.query.q && (
@@ -144,7 +145,7 @@ class SearchApp extends React.Component {
                       </Card>
                     </Box>
                   )}
-                  {isAdmin && types.pulse && (
+                  {isPulseUser && types.pulse && (
                     <Box mt={2} mb={3}>
                       <div className="text-uppercase text-medium text-small text-bold my1">
                         {t`Pulse`}

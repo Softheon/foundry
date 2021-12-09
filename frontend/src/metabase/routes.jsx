@@ -143,6 +143,15 @@ const UserIsManager = UserAuthWrapper({
   redirectAction: routerActions.replace,
 });
 
+const UserIsPulseUser = UserAuthWrapper({
+  predicate: currentUser => currentUser &&  (currentUser.is_superuser || currentUser.is_pulse_user) ,
+  failureRedirectPath: "/unauthorized",
+  authSelector: state => state.currentUser,
+  allowRedirectBack: false,
+  wrapperDisplayName: "UserIsPulseUser",
+  redirectAction: routerActions.replace,
+});
+
 const UserIsNotAuthenticated = UserAuthWrapper({
   predicate: currentUser => !currentUser,
   failureRedirectPath: "/",
@@ -161,6 +170,10 @@ const IsAdmin = MetabaseIsSetup(
 
 const IsManager = MetabaseIsSetup(
   UserIsAuthenticated(UserIsManager(({ children }) => children))
+);
+
+const IsPulseUser = MetabaseIsSetup(
+  UserIsAuthenticated(UserIsPulseUser(({ children }) => children)),
 );
 
 const IsNotAuthenticated = MetabaseIsSetup(
@@ -339,7 +352,7 @@ export const getRoutes = store => (
 
       {/* PULSE */}
       <Route path="/pulse" title={t`Pulses`}
-        component={IsAdmin}>
+        component={IsPulseUser}>
         {/* NOTE: legacy route, not linked to in app */}
         <IndexRedirect to="/search" query={{ type: "pulse" }} />
         <Route path="create" component={PulseEditApp} />

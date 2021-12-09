@@ -38,6 +38,10 @@
   "Is the current user a manger?"
   false)
 
+(def ^:dynamic ^Boolean *is-pulse-user?*
+  "Is the current user  in a pulse user ?"
+  false)
+
 (def ^:dynamic *current-user-permissions-set*
   "Delay to the set of permissions granted to the current user."
   (atom #{}))
@@ -96,6 +100,11 @@
   "Check if `*current-user*` is a superuser or a site manager. If not, throw a 403."
   []
   (check-403 (or *is-superuser?* *is-manager?*)))
+
+(defn check-pulse-permission
+    "Check if `*current-user*` is a superuser or a pulse manager. If not, throw a 403."
+  []
+  (check-403 (or *is-superuser?* *is-pulse-user?*)))
 
 ;; checkp- functions: as in "check param". These functions expect that you pass a symbol so they can throw exceptions
 ;; w/ relevant error messages.

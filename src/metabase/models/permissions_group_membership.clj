@@ -85,3 +85,7 @@ default, this is `false`, but enable it when adding or deleting users"}
 (defn is-manager?
   [user-id]
   (db/exists? PermissionsGroupMembership :user_id user-id :group_id (:id (group/manager))))
+
+(defn is-pulse-user?
+  [user-id]
+  (db/exists? PermissionsGroupMembership :user_id user-id :group_id (:id (group/pulse-users))))

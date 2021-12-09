@@ -5,7 +5,7 @@ import { withRouter } from "react-router";
 import { connect } from "react-redux"
 import Icon from "metabase/components/Icon";
 import Link from "metabase/components/Link";
-import { getUserIsAdmin } from "metabase/selectors/user"
+import { getUserIsAdmin, getUserIsPulseUser } from "metabase/selectors/user"
 import colors from "metabase/lib/colors";
 
 export const FILTERS = [
@@ -36,9 +36,11 @@ class ItemTypeFilterBar extends React.Component {
   }
   render() {
 
-    const { location, analyticsContext, isAdmin } = this.props;
-    const filterSections = this.props.filters.filter(
-      section => section.filter !== 'pulse' || isAdmin)
+    const { location, analyticsContext, isAdmin, isPulseUser } = this.props;
+    const filterSections = isPulseUser
+      ? this.props.filters :
+      this.props.filters.filter(
+        section => section.filter !== 'pulse' || isAdmin);
     return (
       <Flex align="center" className="border-bottom mt1">
         {filterSections.map(f => {
@@ -64,8 +66,7 @@ class ItemTypeFilterBar extends React.Component {
               py={1}
               data-metabase-event={`${analyticsContext};Item Filter;${f.name}`}
               style={{
-                borderBottom: `2px solid ${
-                  isActive ? colors.brand : "transparent"
+                borderBottom: `2px solid ${isActive ? colors.brand : "transparent"
                   }`,
               }}
             >
@@ -93,7 +94,8 @@ ItemTypeFilterBar.defaultProps = {
 
 const mapStateToProps = (state, props) => {
   return {
-    isAdmin: getUserIsAdmin(state)
+    isAdmin: getUserIsAdmin(state),
+    isPulseUser: getUserIsPulseUser(state)
   }
 }
 export default withRouter(connect(mapStateToProps, null)(ItemTypeFilterBar));

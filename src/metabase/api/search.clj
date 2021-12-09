@@ -206,7 +206,7 @@
   [search-ctx :- SearchContext]
 
   (map favorited->boolean
-       (db/query {:union-all (for [entity (if api/*is-superuser?*
+       (db/query {:union-all (for [entity (if (or api/*is-superuser?* api/*is-pulse-user?*)
                                             search-entities
                                             (vec (remove (fn [entity] (= entity :pulse)) search-entities)))
                                    :let [query-map (create-search-query entity search-ctx)]

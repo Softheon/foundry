@@ -7,7 +7,8 @@
             [metabase.api.common :refer
              [*current-user* *current-user-id* *current-user-permissions-set*
               *is-superuser?*
-              *is-manager?*]]
+              *is-manager?*
+              *is-pulse-user?*]]
             [metabase.core.initialization-status :as init-status]
             [metabase.models
              [session :refer [Session]]
@@ -177,6 +178,7 @@
               *is-superuser?*                (:is-superuser? request)
               *current-user*                 (delay (find-user current-user-id))
               *is-manager?* (perm-membership/is-manager? current-user-id)
+              *is-pulse-user?*  (or *is-superuser?* (perm-membership/is-pulse-user? current-user-id))
               *current-user-permissions-set* (delay (user/permissions-set current-user-id))]
       (f))
     (f)))

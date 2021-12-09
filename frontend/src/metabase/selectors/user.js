@@ -7,6 +7,11 @@ export const getUserIsAdmin = createSelector(
   user => (user && user.is_superuser) || false,
 );
 
+export const getUserIsPulseUser  = createSelector(
+  [getUser],
+  user => (user && (user.is_superuser || user.is_pulse_user))
+);
+
 export const getUserPersonalCollectionId = createSelector(
   [getUser],
   user => (user && user.personal_collection_id) || null,
