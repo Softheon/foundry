@@ -5,8 +5,10 @@
              [core :as t]
              [format :as time]]
             [clojure.string :as str])
-  (:import [org.apache.log4j Appender AppenderSkeleton Logger]
-           org.apache.log4j.spi.LoggingEvent))
+  (:import org.apache.commons.lang3.exception.ExceptionUtils
+           [org.apache.logging.log4j.core Appender LogEvent LoggerContext]
+           org.apache.logging.log4j.core.config.LoggerConfig
+           org.apache.logging.log4j.LogManager))
 
 (def ^:private ^:const max-log-entries 2500)
 
@@ -19,33 +21,44 @@
 
 (defonce ^:private formatter (time/formatter "MMM dd HH:mm:ss" (t/default-time-zone)))
 
-(defn- event->log-string [^LoggingEvent event]
+(defn- event->log-string [^LogEvent event]
   ;; for messages that include an Exception, include the string representation of it (i.e., its stacktrace)
   ;; separated by newlines
   (str/join
    "\n"
    (cons
-    (let [ts    (time/unparse formatter (coerce/from-long (.getTimeStamp event)))
+    (let [ts    (time/unparse (time/formatter :date-time)
+                              (coerce/from-long (.getTimeMillis event)))
           level (.getLevel event)
           fqns  (.getLoggerName event)
           msg   (.getMessage event)]
       (format "%s \033[1m%s %s\033[0m :: %s" ts level fqns msg))
-    (seq (.getThrowableStrRep event)))))
+    (when-let [throwable (.getThrown event)]
+      (ExceptionUtils/getStackFrames throwable)))))
 
 
 (defn- metabase-appender ^Appender []
-  (proxy [AppenderSkeleton] []
-    (append [event]
-      (swap! messages* conj (event->log-string event))
-      nil)
-    (close []
-      nil)
-    (requiresLayout []
-      false)))
+  (let [^org.apache.logging.log4j.core.Filter filter                   nil
+        ^org.apache.logging.log4j.core.Layout layout                   nil
+        ^"[Lorg.apache.logging.log4j.core.config.Property;" properties nil]
+    (proxy [org.apache.logging.log4j.core.appender.AbstractAppender]
+           ["metabase-appender" filter layout false properties]
+      (append [event]
+        (swap! messages* conj (event->log-string event))
+        nil))))
 
 (defonce ^:private has-added-appender? (atom false))
 
 (when-not *compile-files*
   (when-not @has-added-appender?
     (reset! has-added-appender? true)
-    (.addAppender (Logger/getRootLogger) (metabase-appender))))
+    (let [^LoggerContext ctx                           (LogManager/getContext false)
+          config                                       (.getConfiguration ctx)
+          appender                                     (metabase-appender)
+          ^org.apache.logging.log4j.Level level        nil
+          ^org.apache.logging.log4j.core.Filter filter nil]
+      (.start appender)
+      (.addAppender config appender)
+      (doseq [[_ ^LoggerConfig logger-config] (.getLoggers config)]
+        (.addAppender logger-config appender level filter))
+      (.updateLoggers ctx))))
