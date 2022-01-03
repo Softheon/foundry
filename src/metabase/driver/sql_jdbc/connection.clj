@@ -35,7 +35,7 @@
    "minPoolSize"                  1
    "initialPoolSize"              1
    "maxPoolSize"                  50
- ;  "unreturnedConnectionTimeout"  (* 15 60)
+   "unreturnedConnectionTimeout"  (* 20 60)
    "debugUnreturnedConnectionStackTraces" true
    ;; prevent broken connections closed by dbs by testing them every 3 mins
    "idleConnectionTestPeriod"     (* 3 60)
