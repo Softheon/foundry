@@ -115,13 +115,15 @@
   [{:parser #(= % "today")
     :range  (fn [_ dt]
               {:start dt
-               :end   dt})
+               :end   (t/minus
+                       (t/plus dt (t/days 1))
+                       (t/millis 1))})
     :filter (fn [_ field] [:= [:datetime-field field :day] [:relative-datetime :current]])}
 
    {:parser #(= % "yesterday")
     :range  (fn [_ dt]
               {:start (t/minus dt (t/days 1))
-               :end   (t/minus dt (t/days 1))})
+               :end (t/minus dt (t/millis 1))})
     :filter (fn [_ field] [:= [:datetime-field field :day] [:relative-datetime -1 :day]])}
 
    ;; adding a tilde (~) at the end of a past<n><unit> filter means we should include the current day/etc.
@@ -130,7 +132,9 @@
    {:parser (regex->parser #"past([0-9]+)(day|week|month|year)s(~?)", [:int-value :unit :include-current?])
     :range  (fn [{:keys [unit int-value unit-range to-period include-current?]} dt]
               (unit-range (t/minus dt (to-period int-value))
-                          (t/minus dt (to-period (if (seq include-current?) 0 1)))))
+                          (t/minus
+                           (t/plus  (t/minus dt (to-period (if (seq include-current?) 0 1))) (t/days 1))
+                           (t/millis 1))))
     :filter (fn [{:keys [unit int-value include-current?]} field]
               [:time-interval field (- int-value) (keyword unit) {:include-current (boolean (seq include-current?))}])}
 
@@ -144,13 +148,16 @@
    {:parser (regex->parser #"last(day|week|month|year)" [:unit])
     :range  (fn [{:keys [unit-range to-period]} dt]
               (let [last-unit (t/minus dt (to-period 1))]
-                (unit-range last-unit last-unit)))
+                (unit-range last-unit
+                            (t/minus
+                             (t/plus last-unit (t/days 1))
+                             (t/millis 1)))))
     :filter (fn [{:keys [unit]} field]
               [:time-interval field :last (keyword unit)])}
 
    {:parser (regex->parser #"this(day|week|month|year)" [:unit])
     :range  (fn [{:keys [unit-range]} dt]
-              (unit-range dt dt))
+              (unit-range dt (t/minus (t/plus dt (t/days 1)) (t/millis 1))))
     :filter (fn [{:keys [unit]} field]
               [:time-interval field :current (keyword unit)])}
    {:parser (regex->parser #"last([0-9]+)(minute)s", [:int-value :unit])
