@@ -138,7 +138,10 @@
   [card-id  skip-if-empty connection]
   (fn [stmt rset data]
     (when (and (true? skip-if-empty) (<= (count data) 1))
-      (log/info "skip empty card")
+      (log/info "skip empty card" card-id)
+      (close-quietly rset)
+      (close-quietly stmt)
+      (close-quietly (:connection connection))
       (throw (ex-info (str "skip empty result") {:card-id card-id})))
     (let [finished-chan (a/promise-chan)
           file (create-export-file card-id ".csv")
@@ -162,17 +165,10 @@
                                               "\"")
                                          {:rollback e})))
                        (finally
-                         (try
-                           (close-quietly rset)
-                           (close-quietly stmt)
-                           (close-quietly conn)
-                           (catch Throwable e
-                             (log/error e)
-                             (throw (ex-info (str "failed to close db connection properly \""
-                                                  (.getMessage e)
-                                                  "\"")
-                                             {:connection e}))))))
-                     (log/info "all db resources associated with exporting a report are released."))))]
+                         (close-quietly rset)
+                         (close-quietly stmt)
+                         (close-quietly conn)
+                         (log/info "all db resources assoicated with exporting a csv file are closed."))))))]
       (log/info "exporting report file", (.getAbsolutePath file))
       (.submit (thread-pool) ^Runnable task)
       (a/<!! finished-chan))))
@@ -203,17 +199,11 @@
                                               "\"")
                                          {:rollback e})))
                        (finally
-                         (try
-                           (close-quietly rset)
-                           (close-quietly stmt)
-                           (close-quietly conn)
-                           (log/info "all csv stream db resources are closed")
-                           (catch Throwable e
-                             (log/error e)
-                             (throw (ex-info (str "failed to close db connection properly \""
-                                                  (.getMessage e)
-                                                  "\"")
-                                             {:connection e})))))))))]
+                         (close-quietly rset)
+                         (close-quietly stmt)
+                         (close-quietly conn)
+                         (log/info "all db resources for streaming a csv file are closed")
+                         )))))]
       (.connect input output)
       (.submit (thread-pool) ^Runnable task)
       input)))
@@ -223,7 +213,10 @@
   [card-id skip-if-empty connection]
   (fn [stmt rset data]
     (when (and (true? skip-if-empty) (<= (count data) 1))
-      (log/info "skip empty card")
+      (log/info "skip empty card" card-id)
+      (close-quietly rset)
+      (close-quietly stmt)
+      (close-quietly (:connection connection))
       (throw (ex-info (str "skip empty result") {:card-id card-id})))
     (let [finished-chan (a/promise-chan)
           file (create-export-file card-id ".xlsx")
@@ -251,17 +244,10 @@
                                               "\"")
                                          {:rollback e})))
                        (finally
-                         (try
-                           (close-quietly rset)
-                           (close-quietly stmt)
-                           (close-quietly conn)
-                           (catch Throwable e
-                             (log/error e)
-                             (throw (ex-info (str "failed to close db connection properly \""
-                                                  (.getMessage e)
-                                                  "\"")
-                                             {:connection e}))))))
-                     (log/info "all db resources associated with exporting a report are released."))))]
+                         (close-quietly rset)
+                         (close-quietly stmt)
+                         (close-quietly conn)
+                         (log/info "all db resources associated with exporting an excel report are released."))))))]
       (log/info "exporting report file", (.getAbsolutePath file))
       (.submit (thread-pool) ^Runnable task)
       (a/<!! finished-chan))))
@@ -271,7 +257,11 @@
   (fn [card-id skip-if-empty connection]
     (fn [stmt rset data]
       (if (and  (true? skip-if-empty) (<= (count data) 1))
-        (log/info "skipping generating printable excel file because the result is empty for the card id " card-id)
+        (do
+          (log/info "skipping generating printable excel file because the result is empty for the card id " card-id)
+          (close-quietly rset)
+          (close-quietly stmt)
+          (close-quietly (:connection connection)))
         (let [finished-chan (a/promise-chan)
               file (create-export-file card-id ".xlsx")
               conn (:connection connection)
@@ -297,7 +287,7 @@
                              (close-quietly rset)
                              (close-quietly stmt)
                              (close-quietly conn)
-                             (log/info "all db resources are closed."))))))]
+                             (log/info "all db resources associated with exporting printable excel are closed."))))))]
           (.submit (thread-pool) ^Runnable task)
           (a/<!! finished-chan))))))
 
@@ -318,32 +308,22 @@
                          (a/close! transfering-chan)
                          (excel/dispose-workbook workbook))))
                    (catch Throwable e
-                     (log/error e)
-                     (log/error e (trs "Casught unexpected Exception during steaming response.")))
+                     (log/error e (trs "unexpected Exception during steaming excel response.")))
                    (finally
                      (try
                        (.flush output)
                        (.close output)
                        (.rollback conn)
                        (catch Throwable e
-                         (log/info "failed to close reousrces properly")
-                         (log/info e)
                          (throw (ex-info (str "failed to export to excel because Rollback failed handling \""
                                               (.getMessage e)
                                               "\"")
                                          {:rollback e})))
                        (finally
-                         (try
-                           (close-quietly rset)
-                           (close-quietly stmt)
-                           (close-quietly conn)
-                           (log/info "all xlsx-stream db resources are closed")
-                           (catch Throwable e
-                             (log/error e)
-                             (throw (ex-info (str "failed to close db connection properly \""
-                                                  (.getMessage e)
-                                                  "\"")
-                                             {:connection e})))))))))]
+                         (close-quietly rset)
+                         (close-quietly stmt)
+                         (close-quietly conn)
+                         (log/info "all db resource associated with streaming excel file are closed."))))))]
       (.connect input output)
       (.submit (thread-pool) ^Runnable task)
       (a/<!! transfering-chan)
@@ -374,7 +354,8 @@
                        (close-quietly output)
                        (close-quietly rset)
                        (close-quietly stmt)
-                       (close-quietly conn))))]
+                       (close-quietly conn)
+                       (log/info "all db resources associated with streaming printable excel are closed."))))]
         (.connect input output)
         (.submit (thread-pool) ^Runnable task)
         (a/<!! transfering-chan)
