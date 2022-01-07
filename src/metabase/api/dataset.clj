@@ -24,6 +24,37 @@
             [metabase.public-settings :as public-settings])
   (:import clojure.core.async.impl.channels.ManyToManyChannel))
 
+(defn append-database-name
+  [name database-id]
+  (try
+    (str name " - " (:name (Database database-id) "Unknown Environment"))
+    (catch Throwable e
+      (log/error e))))
+
+(defn append-db-name-if-needed-given-card-id
+  "Append a card's source database name to the given name if the setting `enable-appending-env-name-to-regular-report-file` 
+   is true."
+  [name id]
+  (try
+    (let [card (Card id)]
+      (if (public-settings/enable-appending-env-name-to-regular-report-file)
+        (append-database-name name (:database_id card))
+        name))
+    (catch Throwable _
+      (log/error _)
+      name)))
+
+(defn append-db-name-if-needed-given-database-id
+  "Append  source database name to the given name if the setting `enable-appending-env-name-to-regular-report-file` 
+   is true."
+  [name id]
+  (try
+    (if (public-settings/enable-appending-env-name-to-regular-report-file)
+      (append-database-name name id)
+      name)
+    (catch Throwable _
+      (log/error _)
+      name)))
 ;;; -------------------------------------------- Running a Query Normally --------------------------------------------
 
 (defn- query->source-card-id
@@ -224,13 +255,13 @@
   (let [{:keys [database] :as query} (json/parse-string query keyword)]
     (when-not (= database database/virtual-id)
       (api/read-check Database database))
-    (as-format-async-file name export-format respond raise
-                          (qp.async/process-query-and-stream-file!
-                           (-> query
-                               (dissoc :constraints)
-                               (m/dissoc-in [:middleware :add-default-userland-constraints?])
-                               (assoc-in [:middleware :skip-results-metadata?] true)
-                               (assoc-in [:middleware :export-fn] (:export-fn (ex/export-formats export-format))))
-                           {:executed-by api/*current-user-id*, :context (export-format->context export-format)}))))
+    (as-format-async-file (append-db-name-if-needed-given-database-id name database) export-format respond raise
+                           (qp.async/process-query-and-stream-file!
+                            (-> query
+                                (dissoc :constraints)
+                                (m/dissoc-in [:middleware :add-default-userland-constraints?])
+                                (assoc-in [:middleware :skip-results-metadata?] true)
+                                (assoc-in [:middleware :export-fn] (:export-fn (ex/export-formats export-format))))
+                            {:executed-by api/*current-user-id*, :context (export-format->context export-format)}))))
 
 (api/define-routes)

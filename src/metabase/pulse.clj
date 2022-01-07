@@ -12,6 +12,7 @@
             [metabase.integrations.slack :as slack]
             [metabase.models
              [card :refer [Card]]
+             [database :refer [Database]]
              [pulse :refer [Pulse]]
              [setting :as setting]]
             [metabase.pulse.render :as render]
@@ -272,7 +273,9 @@
                                               :params (report-default-parameters card)}))
     export/export-to-excel-file))
 
-(defn- report-name-to-display
+(defn- use-special-pulse-file-name-if-needed
+  "Use speical file name for a given pulse name when the setting `enable-printable-pulse-excel`
+   is true."
   [name]
   (if (setting/get :enable-printable-pulse-excel)
     (str (.format (java.text.SimpleDateFormat. "yyyyMMdd") (java.util.Date.))
@@ -280,6 +283,21 @@
          name
          " by SoftheonPulse")
     name))
+
+(defn- append-env-name-to-file-name-if-needed
+  "Append database name to the given name if the setting `enable-appending-env-name-to-pulse-report-file` is true."
+  [name database-id]
+  (try
+    (if (setting/get :enable-appending-env-name-to-pulse-report-file)
+      (str name " - " (:name (Database database-id)))
+      name)
+    (catch Throwable e
+      (log/error e)
+      name)))
+
+(defn- report-name-to-display
+  [name]
+  (use-special-pulse-file-name-if-needed name))
 
 (defn execute-and-export-card
   [pulse-id pulse-card skip-if-empty]
@@ -326,9 +344,11 @@
                                        [:<= :created_at expired-date]]})))
               (-> latest-file
                   (assoc :name
-                         (if (:include_xls pulse-card)
-                           (report-name-to-display (:name card))
-                           (:name card)))
+                         (append-env-name-to-file-name-if-needed
+                          (if (:include_xls pulse-card)
+                            (report-name-to-display (:name card))
+                            (:name card))
+                          (:database_id card)))
                   (assoc :download
                          (str site-url "/question/" card-id "/download/"
                               (str (:pulse_id latest-file) "_" (:id latest-file)))))))))

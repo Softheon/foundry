@@ -232,6 +232,16 @@
   :type :boolean
   :default false)
 
+(defsetting enable-appending-env-name-to-pulse-report-file
+  (tru "Append environment name to pulse report file name")
+  :type :boolean
+  :default false)
+
+(defsetting enable-appending-env-name-to-regular-report-file
+  (tru "Append environment name to regular report file name")
+  :type :boolean
+  :default false)
+
 (defn remove-public-uuid-if-public-sharing-is-disabled
   "If public sharing is *disabled* and OBJECT has a `:public_uuid`, remove it so people don't try to use it (since it
    won't work). Intended for use as part of a `post-select` implementation for Cards and Dashboards."

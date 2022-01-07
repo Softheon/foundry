@@ -512,6 +512,16 @@ const SECTIONS = [
         key:  "enable-printable-pulse-excel-column-auto-sizing",
         display_name: t`Auto size column width to fit when print-friendly excel is created by pulse`,
         type: "boolean"
+      },
+      {
+        key: "enable-appending-env-name-to-pulse-report-file",
+        display_name: t`Append environment name to pulse reports`,
+        type: "boolean"       
+      },
+      {
+        key: "enable-appending-env-name-to-regular-report-file",
+        display_name: t`Append environment name to downloaded reports`,
+        type: "boolean" 
       }
     ]
   },

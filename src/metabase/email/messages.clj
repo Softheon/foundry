@@ -278,8 +278,6 @@
   (remove nil?
           (apply concat
                  (let [{:keys [cards]} pulse]
-                   (log/info "pulse cards")
-                   (log/info (identity cards))
                    (for [card cards
                          :let [result (export-fn pulse card)]]
 

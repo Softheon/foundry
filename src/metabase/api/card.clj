@@ -741,7 +741,8 @@ Exception if preconditions (such as read perms) are not met before returning a c
     (api/check-supported-export-format export-format)
     (let [user (db/select-one [User :id :first_name :last_name]
                               :id api/*current-user-id*)]
-      (dataset-api/as-format-async-file (get-file-name name export-format user) export-format respond raise
+      (dataset-api/as-format-async-file (dataset-api/append-db-name-if-needed-given-card-id (get-file-name name export-format user) (Integer/parseUnsignedInt card-id))
+                                        export-format respond raise
                                         (run-query-for-card-async-file (Integer/parseUnsignedInt card-id)
                                                                        :parameters  (json/parse-string parameters keyword)
                                                                        :constraints nil
@@ -770,11 +771,7 @@ Exception if preconditions (such as read perms) are not met before returning a c
 (defn- pulse-file-detail
   [card-id  token]
   (when-let [[_ pulse-id file-token] (re-matches #"(^\d+)_(.+$)" token)]
-    (when-let [pulse-file  (pulse/retrieve-notification (Integer/parseInt pulse-id))
-              ;;  (if api/*is-superuser?*
-              ;;               (pulse/retrieve-notification (Integer/parseInt pulse-id))
-              ;;               (pulse/pulse-file api/*current-user-id* card-id pulse-id))
-               ]
+    (when-let [pulse-file  (pulse/retrieve-notification (Integer/parseInt pulse-id))]
       (let [card  (first
                    (filter (fn [card] (= card-id (:id card))) (:cards pulse-file)))
             file  (db/select-one-field :location PulseCardFile :id file-token)]
@@ -802,18 +799,36 @@ Exception if preconditions (such as read perms) are not met before returning a c
       java.nio.file.attribute.BasicFileAttributes
       (into-array java.nio.file.LinkOption [])))))
 
-(defn- pulse-file-name
-  [name file export-format user]
-  (let [sanitized-report-name (.replaceAll name "[\\\\/:*?\"<>|]"  "_")
-        current-user-name (str (:first_name user) " " (:last_name user))]
+(defn- use-printable-file-name-formatting-if-needed
+  [report-name user export-format file]
+  (let [current-user-name (str (:first_name user) " " (:last_name user))]
     (if (and (= export-format "xlsx")
              (setting/get :enable-printable-pulse-excel))
       (str (.format (java.text.SimpleDateFormat. "yyyyMMdd") (.toMillis (file-creation-time file)))
            " "
-           sanitized-report-name
+           report-name
            " by "
            current-user-name)
-      sanitized-report-name)))
+      report-name)))
+
+(defn- append-source-db-name-if-needed
+  [name card-id]
+  (if (setting/get :enable-appending-env-name-to-pulse-report-file)
+    (try
+      (let [card (Card card-id)
+            database (Database (:database_id card))]
+        (str name " - " (:name database)))
+      (catch Throwable _
+        name))
+    name))
+
+(defn- pulse-file-name
+  [name file export-format user card-id]
+  (let [sanitized-report-name (.replaceAll name "[\\\\/:*?\"<>|]"  "_")]
+    (append-source-db-name-if-needed
+     (use-printable-file-name-formatting-if-needed sanitized-report-name user export-format file)
+     card-id)))
+
 
 
 (api/defendpoint-async POST "/:card-id/download"
@@ -823,8 +838,7 @@ Exception if preconditions (such as read perms) are not met before returning a c
   (api/let-404 [pulse-file (pulse-file-detail (Integer/parseInt card-id) token)]
                (a/go
                  (try
-                   (let [{:keys [card-id name file ext]}
-                         pulse-file]
+                   (let [{:keys [card-id name file ext]} pulse-file]
                      (respond
                       {:status 200
                        :body (ring-io/piped-input-stream
@@ -833,7 +847,7 @@ Exception if preconditions (such as read perms) are not met before returning a c
                        {"Content-Type" "application/octet-stream"
                         "Content-Disposition" (str "attachment; filename=\""
                                                    (pulse-file-name name file ext {:first_name "SoftheonPulse"
-                                                                               :last_name ""})
+                                                                                   :last_name ""} card-id)
                                                    "." ext "\"")}}))
 
                    (catch Throwable e
