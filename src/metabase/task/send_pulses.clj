@@ -113,6 +113,7 @@
                  (jobs/with-identity (jobs/key send-pulses-job-key)))
         trigger (triggers/build
                  (triggers/with-identity (triggers/key send-pulses-trigger-key))
+                 (triggers/with-priority 1)
                  (triggers/start-now)
                  (triggers/with-schedule
                    (cron/schedule
