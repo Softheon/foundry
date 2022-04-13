@@ -97,6 +97,11 @@ const SECTIONS = [
         key: "enable-email-login",
         display_name: t`Enable email login method`,
         type: "boolean"
+      },
+      {
+        key: "session-timeout-period",
+        display_name: t`Session timeout period`,
+        type: "number"
       }
     ],
   },

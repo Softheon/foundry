@@ -139,6 +139,8 @@ const MetabaseSettings = {
     settingListeners[setting] = settingListeners[setting] || [];
     settingListeners[setting].push(callback);
   },
+
+  sessionTimeout: () => mb_settings.session_timeout_period || 30
 };
 
 export default MetabaseSettings;

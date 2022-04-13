@@ -242,6 +242,21 @@
   :type :boolean
   :default false)
 
+(defsetting session-timeout-period
+  (tru "How long to wait, in minutes, before ending a user session due to inactivity.")
+  :type :double
+  :setter (fn [new-value]
+            (when (and new-value
+                       (< (cond-> new-value
+                            (string? new-value) Integer/parseInt)
+                          0))
+              (throw (IllegalArgumentException.
+                      (str
+                       (tru "Failed setting `session-timeout-period` to {0}." new-value)
+                       (tru "Values less than 0 are not allowed.")))))
+            (setting/set-double! :session-timeout-period new-value))
+  :default 30.0)
+
 (defn remove-public-uuid-if-public-sharing-is-disabled
   "If public sharing is *disabled* and OBJECT has a `:public_uuid`, remove it so people don't try to use it (since it
    won't work). Intended for use as part of a `post-select` implementation for Cards and Dashboards."
@@ -250,7 +265,6 @@
            (not (enable-public-sharing)))
     (assoc object :public_uuid nil)
     object))
-
 
 (defn- short-timezone-name*
   "Get a short display name (e.g. `PST`) for `report-timezone`, or fall back to the System default if it's not set."
@@ -312,4 +326,5 @@
    :unsaved-question-max-results (unsaved-question-max-results)
    :ids_auth_client_id (setting/get :ids-auth-client-id)
    :ids_auth_authorize_api (setting/get :ids-auth-authorize-api)
-   :ids_auth_client_redirect_url (setting/get :ids-auth-client-redirect-url)})
+   :ids_auth_client_redirect_url (setting/get :ids-auth-client-redirect-url)
+   :session_timeout_period (setting/get :session-timeout-period)})

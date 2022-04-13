@@ -6,6 +6,7 @@ import moment from "moment";
 import Modal from "metabase/components/Modal.jsx";
 import IdleTimer from "react-idle-timer";
 import Button from "metabase/components/Button.jsx";
+import Settings from "metabase/lib/settings";
 
 import {
   logout,
@@ -52,7 +53,8 @@ export default class TimeoutModal extends React.Component {
     super(props);
     this.idleTimer = null;
     this.state = {
-      timeout: false
+      timeout: false,
+      sessionTimeoutPeriod: Settings.sessionTimeout()
     };
   }
 
@@ -75,18 +77,11 @@ export default class TimeoutModal extends React.Component {
   }
 
   handleOnAction = event => {
-    if (this.isUserInActive() || this.activitySessionExpired()) {
-      this.timeoutUser();
-    }
-    else {
-      this.renewActivitySession();
-    }
+    this.renewActivitySession();
   }
 
   handleOnIdle = event => {
-    if (this.activitySessionExpired()) {
-      this.timeoutUser();
-    }
+    this.timeoutUser();
   }
 
   isUserInActive = () => {
@@ -103,27 +98,24 @@ export default class TimeoutModal extends React.Component {
   }
 
   timeoutUser = () => {
-    console.log("timing out user");
-    window.localStorage.inactive = 0;
+    window.localStorage.inactive = 1;
     this.saveUnsavedCard();
     this.props.idleSessionTimeout();
     this.setState({ timeout: true });
   }
 
   renewActivitySession = () => {
-    window.localStorage.idle_end_time = moment().add(30, 'm').format();
+    window.localStorage.idle_end_time = moment().add(this.state.sessionTimeoutPeriod, 'm').format();
     this.setState({ timeout: false });
   }
 
   onSessionTimeout = event => {
-    if (this.isUserInActive()) {
-       window.localStorage.clear();
-    }
+    window.localStorage.clear();
     window.location.reload();   
   }
 
   render() {
-    const { timeout } = this.state;
+    const { timeout, sessionTimeoutPeriod } = this.state;
     if (timeout) {
       return (
         <Modal
@@ -142,7 +134,7 @@ export default class TimeoutModal extends React.Component {
       return (
         <IdleTimer
           ref={ref => { this.idleTimer = ref }}
-          timeout={1000 * 60 * 25}
+          timeout={1000 * 60 * sessionTimeoutPeriod }
           onAction={this.handleOnAction}
           onIdle={this.handleOnIdle}
           onActive={this.hanldeOnActive}
