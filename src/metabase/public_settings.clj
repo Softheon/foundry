@@ -247,13 +247,13 @@
   :type :double
   :setter (fn [new-value]
             (when (and new-value
-                       (< (cond-> new-value
+                       (<= (cond-> new-value
                             (string? new-value) Integer/parseInt)
                           0))
               (throw (IllegalArgumentException.
                       (str
                        (tru "Failed setting `session-timeout-period` to {0}." new-value)
-                       (tru "Values less than 0 are not allowed.")))))
+                       (tru "Values less than or equal to 0 are not allowed.")))))
             (setting/set-double! :session-timeout-period new-value))
   :default 30.0)
 
