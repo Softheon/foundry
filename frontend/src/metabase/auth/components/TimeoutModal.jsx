@@ -81,7 +81,11 @@ export default class TimeoutModal extends React.Component {
   }
 
   handleOnIdle = event => {
-    this.timeoutUser();
+    this.saveUnsavedCard();
+    this.props.idleSessionTimeout();
+    window.localStorage.clear();
+    window.location.reload();
+    window.location.reload(); 
   }
 
   isUserInActive = () => {
@@ -116,31 +120,13 @@ export default class TimeoutModal extends React.Component {
 
   render() {
     const { timeout, sessionTimeoutPeriod } = this.state;
-    if (timeout) {
-      return (
-        <Modal
-          small
-          form
-          title={t`Session timeout`}
-          footer={[
-            <Button primary onClick={this.onSessionTimeout}>{t`Okay`}</Button>,
-          ]}
-          onClose={this.onSessionTimeout}
-        >
-          <p className="text-paragraph pb2">{t`Your Session has timeout out. Please login again.`}</p>
-        </Modal>
-      );
-    } else {
-      return (
-        <IdleTimer
-          ref={ref => { this.idleTimer = ref }}
-          timeout={1000 * 60 * sessionTimeoutPeriod }
-          onAction={this.handleOnAction}
-          onIdle={this.handleOnIdle}
-          onActive={this.hanldeOnActive}
-          debounce={250}
-        />
-      );
-    }
+    return  (<IdleTimer
+    ref={ref => { this.idleTimer = ref }}
+    timeout={1000 * 60 * sessionTimeoutPeriod }
+    onAction={this.handleOnAction}
+    onIdle={this.handleOnIdle}
+    onActive={this.hanldeOnActive}
+    debounce={250}
+  />);
   }
 }
