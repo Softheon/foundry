@@ -89,3 +89,10 @@ default, this is `false`, but enable it when adding or deleting users"}
 (defn is-pulse-user?
   [user-id]
   (db/exists? PermissionsGroupMembership :user_id user-id :group_id (:id (group/pulse-users))))
+
+(defn user-group-ids
+  [user-id]
+  (if user-id
+   (db/select [PermissionsGroupMembership :group_id]
+              {:where [:= :user_id user-id]})
+    []))

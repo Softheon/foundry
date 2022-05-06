@@ -17,14 +17,19 @@
             [metabase.models
              [session :refer [Session]]
              [setting :refer [defsetting]]
-             [user :as user :refer [User]]]
+             [user :as user :refer [User]]
+             [permissions-group :as permissions-group]
+             [permissions-group-membership :as membership]]
             [metabase.util
              [i18n :as ui18n :refer [trs tru]]
              [password :as pass]
              [schema :as su]]
             [schema.core :as s]
             [throttle.core :as throttle]
-            [metabase.toucan.db :as db])
+            [metabase.toucan.db :as db]
+            [clojure
+             [data :as data]
+             [set :as set]])
   (:import com.unboundid.util.LDAPSDKException
            java.util.UUID))
 
@@ -328,6 +333,42 @@ couldn't be autenticated."
                                                   :email email}))]
     (create-session! user)))
 
+(defn- maybe-set-user-permissions-groups-based-ids-roles!
+  [user-id roles]
+  (let [user-defined-groups
+        (reduce (fn [result group]
+                  (let [k (:id group)
+                        v (:name group)]
+                    (assoc result k v)))
+                {}
+                (permissions-group/user-defined-groups))
+        user-defined-group-name-set (set (vals user-defined-groups))
+        current-user-group-ids (set (map (fn [m] (:group_id m)) (membership/user-group-ids user-id)))
+        default-group-ids   (map (fn [g] (:id g)) permissions-group/internal-groups)
+        [_ _ current-user-default-group-id] (data/diff (set default-group-ids) current-user-group-ids)
+        new-groups-names (set (filter (fn [name] (contains? user-defined-group-name-set name)) roles))
+        new-group-ids (reduce (fn [result [k v]]
+                                (if (contains? new-groups-names v)
+                                  (conj result k)
+                                  result))  [] user-defined-groups)]
+    (user/set-permissions-groups!
+     user-id
+     (set
+      (filter (fn [x] x)
+              (concat current-user-default-group-id new-group-ids))))))
+
+
+(defn- softheon-auth-fetch-or-create-user!
+  [first-name last-name email roles]
+  (let [user (or (db/select-one [User :id :last_login] :email email)
+                 (iam-auth-create-new-user! {:first_name first-name
+                                             :last_name last-name
+                                             :email email}))]
+    (when (public-settings/enable-ids-role-based-group-assignment)
+      (maybe-set-user-permissions-groups-based-ids-roles! (u/get-id user) roles))
+    (create-session! user)))
+
+
 (api/defendpoint POST "/iam_auth"
   "Login with IAM Auth."
   [:as {{:keys [id_token, access_token]} :body, remote-address :remote-addr, :as request}]
@@ -335,9 +376,9 @@ couldn't be autenticated."
    access_token su/NonBlankString}
  ;; (throttle-check (login-throttlers :ip-address) remote-address)
 ;; Verify it is a valid Softheon access token
-  (let [{:keys [given_name family_name email] :as body} (iam-auth-token-info access_token)]
+  (let [{:keys [given_name family_name email role] :as body} (iam-auth-token-info access_token)]
     (log/info (trs "Successfully authenticated Softheon Autn token for: {0} {1}" given_name family_name))
-    (let [session-id (api/check-500 (softheon-auth-fetch-or-create-user! given_name family_name email))
+    (let [session-id (api/check-500 (softheon-auth-fetch-or-create-user! given_name family_name email  role))
           response {:id session-id}]
       (mw.session/set-session-cookie request response session-id))))
 

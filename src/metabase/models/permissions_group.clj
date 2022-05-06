@@ -82,6 +82,14 @@
 
 (def admin-only-group-ids-set
   (admin-only-group-ids))
+
+(def internal-groups
+  ((memoize (fn []
+              (for [group [(admin) (metabot) (ids-users) (pulse-users) (manager)
+                           (external-users) (softheon-users) (all-users)]]
+
+                group)))))
+
 ;;; --------------------------------------------------- Validation ---------------------------------------------------
 
 (defn exists-with-name?
@@ -158,3 +166,9 @@
                          [:= :pgm.group_id (u/get-id group-or-id)]]
              :order-by  [[:%lower.user.first_name :asc]
                          [:%lower.user.last_name :asc]]}))
+
+(defn user-defined-groups
+  []
+  (db/select PermissionsGroup
+             {:where [:not [:in :id
+                            (map (fn [g] (:id g)) internal-groups)]]}))

@@ -102,6 +102,11 @@ const SECTIONS = [
         key: "session-timeout-period",
         display_name: t`Session timeout period`,
         type: "number"
+      },
+      {
+        key: "enable-ids-role-based-group-assignment",
+        display_name: t`Enable role-based group assignment`,
+        type: "boolean"
       }
     ],
   },

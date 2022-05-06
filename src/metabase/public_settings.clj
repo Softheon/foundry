@@ -257,6 +257,13 @@
             (setting/set-double! :session-timeout-period new-value))
   :default 30.0)
 
+(defsetting enable-ids-role-based-group-assignment
+  (tru "Automatically assignment users to groups based on their IDS roles. When enabled, direct group assginment from 
+        Foundry is not enforced. Instead, IDS roles determine which groups users should belong to. Note that
+        users are assigned to groups only when the groups exist and are non-default groups(e.g. All Users).")
+  :type :boolean
+  :default false)
+
 (defn remove-public-uuid-if-public-sharing-is-disabled
   "If public sharing is *disabled* and OBJECT has a `:public_uuid`, remove it so people don't try to use it (since it
    won't work). Intended for use as part of a `post-select` implementation for Cards and Dashboards."
