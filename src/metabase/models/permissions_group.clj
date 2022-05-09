@@ -83,12 +83,21 @@
 (def admin-only-group-ids-set
   (admin-only-group-ids))
 
+(defn- internal-groups-fn
+  []
+  (memoize (fn []
+             (for [group [(admin)
+                          (metabot)
+                          (ids-users)
+                          (pulse-users)
+                          (manager)
+                          (external-users)
+                          (softheon-users)
+                          (all-users)]]
+               group))))
+  
 (def internal-groups
-  ((memoize (fn []
-              (for [group [(admin) (metabot) (ids-users) (pulse-users) (manager)
-                           (external-users) (softheon-users) (all-users)]]
-
-                group)))))
+  (internal-groups-fn))
 
 ;;; --------------------------------------------------- Validation ---------------------------------------------------
 
