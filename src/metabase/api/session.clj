@@ -344,7 +344,7 @@ couldn't be autenticated."
                 (permissions-group/user-defined-groups))
         user-defined-group-name-set (set (vals user-defined-groups))
         current-user-group-ids (set (map (fn [m] (:group_id m)) (membership/user-group-ids user-id)))
-        default-group-ids   (map (fn [g] (:id g)) permissions-group/internal-groups)
+        default-group-ids   (map (fn [g] (:id g)) (permissions-group/internal-groups))
         [_ _ current-user-default-group-id] (data/diff (set default-group-ids) current-user-group-ids)
         new-groups-names (set (filter (fn [name] (contains? user-defined-group-name-set name)) roles))
         new-group-ids (reduce (fn [result [k v]]

@@ -95,7 +95,7 @@
                           (softheon-users)
                           (all-users)]]
                group))))
-  
+
 (def internal-groups
   (internal-groups-fn))
 
@@ -180,4 +180,4 @@
   []
   (db/select PermissionsGroup
              {:where [:not [:in :id
-                            (map (fn [g] (:id g)) internal-groups)]]}))
+                            (map (fn [g] (:id g)) (internal-groups))]]}))
