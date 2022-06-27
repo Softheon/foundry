@@ -378,7 +378,8 @@ couldn't be autenticated."
 ;; Verify it is a valid Softheon access token
   (let [{:keys [given_name family_name email role] :as body} (iam-auth-token-info access_token)]
     (log/info (trs "Successfully authenticated Softheon Autn token for: {0} {1}" given_name family_name))
-    (let [session-id (api/check-500 (softheon-auth-fetch-or-create-user! given_name family_name email  role))
+    (let [session-id (api/check-500 (softheon-auth-fetch-or-create-user! given_name family_name email  
+      (if (vector? role) role (conj [] role)))) 
           response {:id session-id}]
       (mw.session/set-session-cookie request response session-id))))
 
