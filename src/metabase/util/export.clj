@@ -4,8 +4,8 @@
             [metabase.csv.csv :as csv]
            ;; [dk.ative.docjure.spreadsheet :as spreadsheet]
             [clojure.java.io :as io]
-            [ring.util.io :as ring-io]
             [clojure.tools.logging :as log]
+            [clojure.string :as str]
             [metabase.util
              [xlsx :as excel]
              [i18n :refer [trs]]]
@@ -117,6 +117,84 @@
   ^ThreadPoolExecutor []
   @thread-pool*)
 
+(defn compile-formatter
+  [format column]
+  (let [operator (:operator format)
+        type (:type format)
+        value (:value format)
+        color (:color format)
+        highlight-row (:highlight-row format)
+        isNumericalValue (number? value)
+        isStringValue (string? value)
+        color-fn  (if (= type "single")
+                    (case operator
+                      "<" (fn [v] (if (and isNumericalValue (< v value))
+                                    {:color color :highlight-row highlight-row}
+                                    nil))
+                      "<=" (fn [v] (if (and isNumericalValue (<= v value))
+                                     {:color color :highlight-row highlight-row}
+                                     nil))
+                      ">=" (fn [v] (if (and isNumericalValue (>= v value))
+                                     {:color color :highlight-row highlight-row}
+                                     nil))
+                      ">" (fn [v] (if (and isNumericalValue (> v value))
+                                    {:color color :highlight-row highlight-row}
+                                    nil))
+                      "=" (fn [v] (if (and isNumericalValue (= v value))
+                                    {:color color :highlight-row highlight-row}
+                                    nil))
+                      "!=" (fn [v] (if (and isNumericalValue (not= v value))
+                                     {:color color :highlight-row highlight-row}
+                                     nil))
+                      "is-null" (fn [v] (if (nil? v)
+                                          {:color color :highlight-row highlight-row}
+                                          nil))
+                      "not-null" (fn [v] (if (not (nil? v))
+                                           {:color color :highlight-row highlight-row}
+                                           nil))
+                      "contains" (fn [v] (if (and isStringValue (string? v) (str/includes? v value))
+                                           {:color color :highlight-row highlight-row}
+                                           nil))
+                      "does-not-contain" (fn [v] (if (and isStringValue (string? v) (not (str/includes? v value)))
+                                                   {:color color :highlight-row highlight-row}
+                                                   nil))
+                      "starts-with" (fn [v] (if (and isStringValue (string? v) (str/starts-with? v value))
+                                              {:color color :highlight-row highlight-row}
+                                              nil))
+                      "ends-with" (fn [v] (if (and isStringValue (string? v) (str/ends-with? v value))
+                                            {:color color :highlight-row highlight-row}
+                                            nil))
+                      (fn [v] nil))
+                    (fn [v] nil))]
+    {(keyword column) [color-fn]}))
+
+(defn compile-column-formatters
+  [formats]
+  (let [formatters (map (fn [format]
+                          (let [column-formatters
+                                (map (fn [column]
+                                       (let [normalized-column
+                                             (if (keyword? column)
+                                               (str/lower-case (name column))
+                                               (str/lower-case (str column)))]
+                                         (compile-formatter format normalized-column)))
+                                     (:columns format))]
+                            (reduce merge column-formatters))) formats)]
+    (reduce (fn [result value]
+              (merge-with (fn [old new] (into old new)) result value))
+            formatters)))
+
+(defn column-formatters
+  [headers formatters]
+  (into []  (map (fn [header]
+                   (let [key (keyword (str/lower-case header))]
+                     (key formatters)))
+                 headers)))
+
+;=====================================================================================================================
+;; report export functions used by pulse
+;=====================================================================================================================
+
 (defn- create-export-file
   [card-id, suffix]
   (let [file-name (format "foundry_report_%d_%s" card-id (str (UUID/randomUUID)))]
@@ -135,7 +213,7 @@
         .deleteOnExit))))
 
 (defn export-to-csv-file
-  [card-id  skip-if-empty connection]
+  [card-id  skip-if-empty connection settings]
   (fn [stmt rset data]
     (when (and (true? skip-if-empty) (<= (count data) 1))
       (log/info "skip empty card" card-id)
@@ -173,8 +251,62 @@
       (.submit (thread-pool) ^Runnable task)
       (a/<!! finished-chan))))
 
+(defn export-to-excel-file
+  [card-id skip-if-empty connection settings]
+  (fn [stmt rset data]
+    (when (and (true? skip-if-empty) (<= (count data) 1))
+      (log/info "skip empty card" card-id)
+      (close-quietly rset)
+      (close-quietly stmt)
+      (close-quietly (:connection connection))
+      (throw (ex-info (str "skip empty result") {:card-id card-id})))
+    (let [finished-chan (a/promise-chan)
+          file (create-export-file card-id ".xlsx")
+          conn (:connection connection)
+          enable-excel-conditional-formatting (:enable-excel-conditional-formatting settings)
+          formats (get (:visualization-settings settings) (keyword "table.column-formatting"))
+          formatters (if formats (compile-column-formatters formats) {})
+          task (bound-fn []
+                 (try
+                   (let [workbook  (if enable-excel-conditional-formatting
+                                     (excel/create-workbook-with-colulm-formatting
+                                      "Report Result" data
+                                      (column-formatters (first data) formatters))
+                                     (excel/create-workbook "Report Result" data))]
+                     (with-open [output-stream (FileOutputStream. file)]
+                       (try
+                         (excel/save-workbook! output-stream workbook)
+                         (finally
+                           (excel/dispose-workbook workbook)))))
+                   (a/>!! finished-chan file)
+                   (catch Throwable e
+                     (a/>!! finished-chan e))
+                   (finally
+                     (try
+                       (a/close! finished-chan)
+                       (.rollback conn)
+                       (catch Throwable e
+                         (log/info "excel: failed to close reousrces properly")
+                         (log/info e)
+                         (throw (ex-info (str "failed to export to excel because Rollback failed handling \""
+                                              (.getMessage e)
+                                              "\"")
+                                         {:rollback e})))
+                       (finally
+                         (close-quietly rset)
+                         (close-quietly stmt)
+                         (close-quietly conn)
+                         (log/info "all db resources associated with exporting an excel report are released."))))))]
+      (log/info "exporting report file", (.getAbsolutePath file))
+      (.submit (thread-pool) ^Runnable task)
+      (a/<!! finished-chan))))
+
+;=====================================================================================================================
+;; generating and streaming csv and xlsx files
+;=====================================================================================================================
+
 (defn export-to-csv-stream
-  [connection]
+  [connection, settings]
   (fn [stmt rset data]
     (let [input (PipedInputStream.)
           output (PipedOutputStream.)
@@ -208,37 +340,38 @@
       (.submit (thread-pool) ^Runnable task)
       input)))
 
-
-(defn export-to-excel-file
-  [card-id skip-if-empty connection]
+(defn export-to-xlsx-stream
+  [connection, settings]
   (fn [stmt rset data]
-    (when (and (true? skip-if-empty) (<= (count data) 1))
-      (log/info "skip empty card" card-id)
-      (close-quietly rset)
-      (close-quietly stmt)
-      (close-quietly (:connection connection))
-      (throw (ex-info (str "skip empty result") {:card-id card-id})))
-    (let [finished-chan (a/promise-chan)
-          file (create-export-file card-id ".xlsx")
+    (let [input (PipedInputStream.)
+          output (PipedOutputStream.)
+          transfering-chan (a/promise-chan)
+          enable-excel-conditional-formatting (:enable-excel-conditional-formatting settings)
+          formats (get (:visualization-settings settings) (keyword "table.column-formatting"))
+          formatters (if formats (compile-column-formatters formats) {})
           conn (:connection connection)
           task (bound-fn []
                  (try
-                   (let [workbook (excel/create-workbook "Report Result" data)]
-                     (with-open [output-stream (FileOutputStream. file)]
-                       (try
-                         (excel/save-workbook! output-stream workbook)
-                         (finally
-                           (excel/dispose-workbook workbook)))))
-                   (a/>!! finished-chan file)
+                   (let [workbook
+                         (if enable-excel-conditional-formatting
+                           (excel/create-workbook-with-colulm-formatting
+                            "Report Result" data
+                            (column-formatters (first data) formatters))
+                           (excel/create-workbook "Report Result" data))]
+                     (try
+                       (a/>!! transfering-chan :start)
+                       (excel/save-workbook! output workbook)
+                       (finally
+                         (a/close! transfering-chan)
+                         (excel/dispose-workbook workbook))))
                    (catch Throwable e
-                     (a/>!! finished-chan e))
+                     (log/error e (trs "unexpected Exception during steaming excel response.")))
                    (finally
                      (try
-                       (a/close! finished-chan)
+                       (.flush output)
+                       (.close output)
                        (.rollback conn)
                        (catch Throwable e
-                         (log/info "excel: failed to close reousrces properly")
-                         (log/info e)
                          (throw (ex-info (str "failed to export to excel because Rollback failed handling \""
                                               (.getMessage e)
                                               "\"")
@@ -247,11 +380,15 @@
                          (close-quietly rset)
                          (close-quietly stmt)
                          (close-quietly conn)
-                         (log/info "all db resources associated with exporting an excel report are released."))))))]
-      (log/info "exporting report file", (.getAbsolutePath file))
+                         (log/info "all db resource associated with streaming excel file are closed."))))))]
+      (.connect input output)
       (.submit (thread-pool) ^Runnable task)
-      (a/<!! finished-chan))))
+      (a/<!! transfering-chan)
+      input)))
 
+;=====================================================================================================================
+;; printable excel
+;=====================================================================================================================
 (defn export-to-printable-excel-file
   [setting]
   (fn [card-id skip-if-empty connection]
@@ -291,47 +428,9 @@
           (.submit (thread-pool) ^Runnable task)
           (a/<!! finished-chan))))))
 
-(defn export-to-xlsx-stream
-  [connection]
-  (fn [stmt rset data]
-    (let [input (PipedInputStream.)
-          output (PipedOutputStream.)
-          transfering-chan (a/promise-chan)
-          conn (:connection connection)
-          task (bound-fn []
-                 (try
-                   (let [workbook (excel/create-workbook "Report Result" data)]
-                     (try
-                       (a/>!! transfering-chan :start)
-                       (excel/save-workbook! output workbook)
-                       (finally
-                         (a/close! transfering-chan)
-                         (excel/dispose-workbook workbook))))
-                   (catch Throwable e
-                     (log/error e (trs "unexpected Exception during steaming excel response.")))
-                   (finally
-                     (try
-                       (.flush output)
-                       (.close output)
-                       (.rollback conn)
-                       (catch Throwable e
-                         (throw (ex-info (str "failed to export to excel because Rollback failed handling \""
-                                              (.getMessage e)
-                                              "\"")
-                                         {:rollback e})))
-                       (finally
-                         (close-quietly rset)
-                         (close-quietly stmt)
-                         (close-quietly conn)
-                         (log/info "all db resource associated with streaming excel file are closed."))))))]
-      (.connect input output)
-      (.submit (thread-pool) ^Runnable task)
-      (a/<!! transfering-chan)
-      input)))
-
 (defn export-printable-xlsx-stream
   [settings]
-  (fn [connection]
+  (fn [connection _]
     (fn [stmt rset data]
       (let [input (PipedInputStream.)
             output (PipedOutputStream.)

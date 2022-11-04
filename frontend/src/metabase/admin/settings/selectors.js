@@ -527,6 +527,11 @@ const SECTIONS = [
         key: "enable-appending-env-name-to-regular-report-file",
         display_name: t`Append environment name to downloaded reports`,
         type: "boolean" 
+      },
+      {
+        key: 'enable-excel-conditional-formatting',
+        display_name : t`Enable Excel conditional formatting`,
+        type: 'boolean'
       }
     ]
   },

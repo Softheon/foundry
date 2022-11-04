@@ -312,6 +312,8 @@
               query (-> dataset_query
                         (assoc :async? false)
                         (assoc
+                         :visualization-settings (:visualization_settings card),
+                         :enable-excel-conditional-formatting (setting/get :enable-excel-conditional-formatting)
                          :constraints nil
                          :middleware {:skip-results-metadata? true
                                       :export-fn (partial export-fn card-id skip-if-empty)}))

@@ -603,12 +603,14 @@
                   (u/emoji "💾"))
         ttl-seconds))))
 
-(defn- query-for-card [{query :dataset_query :as card} parameters constraints middleware]
+(defn- query-for-card [{query :dataset_query  visualization_settings :visualization_settings :as card} parameters constraints middleware]
   (let [query (-> query
                   (m/dissoc-in [:middleware :add-default-userland-constraint?])
                   (assoc :constraints constraints
                          :parameters  parameters
-                         :middleware  middleware))
+                         :middleware  middleware
+                         :visualization_settings visualization_settings
+                         :enable-excel-conditional-formatting (setting/get :enable-excel-conditional-formatting)))
         ttl   (when (public-settings/enable-query-caching)
                 (or (:cache_ttl card)
                     (query-magic-ttl query)))]

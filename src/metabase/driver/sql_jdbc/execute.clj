@@ -157,7 +157,6 @@
   (if-let [conn (jdbc/db-find-connection db)]
     (f conn)
     (with-open [conn (jdbc/get-connection db)]
-      (log/info "do-with-ensure-connection is getting new connection")
       (f conn))))
 
 (defn- close-quietly
@@ -422,7 +421,7 @@ before finishing)."
 
 (defn- query-stream
   "Run the query itself."
-  [driver {sql :query, :keys [params remark max-rows]}, ^TimeZone timezone, export-fn, connection]
+  [driver {sql :query, :keys [params remark max-rows]}, ^TimeZone timezone, settings, export-fn, connection]
   (let [sql              (str "-- " remark "\n" (hx/unescape-dots sql))
         stream (cancellable-run-query-for-download
                 connection sql params
@@ -430,7 +429,7 @@ before finishing)."
                  :as-arrays?     true
                  :read-columns   (read-columns driver (some-> timezone Calendar/getInstance))
                  :set-parameters (set-parameters-with-timezone timezone)
-                 :result-set-fn (export-fn connection)
+                 :result-set-fn (export-fn connection settings)
                  :timeout 600
                            ;:concurrency :read-only
                  :keywordize? false})]
@@ -440,15 +439,25 @@ before finishing)."
   (f-jdbc/with-db-transaction-without-auto-close [transaction-connection connection {:isolation :read-uncommitted}]
     (do-with-auto-commit-disabled-for-exporting transaction-connection (partial f transaction-connection))))
 
-(defn- run-query-without-timezone-stream [driver _ connection query export-fn]
-  (do-in-transaction-stream connection (partial query-stream driver query nil export-fn)))
+(defn- run-query-without-timezone-stream [driver settings connection query export-fn]
+  (do-in-transaction-stream connection (partial query-stream driver query nil settings export-fn)))
 
 (defn stream-query
   "Process and run a native (raw SQL) QUERY,and returns a result stream."
-  [driver {settings :settings, query :native, {:keys [export-fn]} :middleware, :as outer-query}]
+  [driver
+   {settings :settings,
+    query :native,
+    {:keys [export-fn]} :middleware,
+    visualization-settings :visualization-settings,
+    enable-excel-conditional-formatting :enable-excel-conditional-formatting
+    :as outer-query}]
   (let [query query]
     (do-with-try-catch
      (fn []
        (let [db-connection (sql-jdbc.conn/db->pooled-connection-spec (qp.store/database))
              canceled-chan (:canceled-chan outer-query)]
-         (run-query-without-timezone-stream driver settings db-connection (assoc query :canceled-chan canceled-chan) export-fn))))))
+         (run-query-without-timezone-stream driver
+                                            (assoc settings
+                                                   :visualization-settings visualization-settings
+                                                   :enable-excel-conditional-formatting enable-excel-conditional-formatting)
+                                            db-connection (assoc query :canceled-chan canceled-chan) export-fn))))))

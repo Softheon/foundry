@@ -1,11 +1,14 @@
 (ns metabase.util.xlsx
   (:import
    (java.io File FileOutputStream OutputStream)
+   (java.awt Color)
    (java.util Date Calendar)
    (org.apache.poi.xssf.streaming SXSSFWorkbook)
    (org.apache.poi.ss.util CellRangeAddress)
-   (org.apache.poi.ss.usermodel Workbook Sheet Cell Row CellType PageOrder BorderStyle IndexedColors))
-  (:require [clojure.string :as string]))
+   (org.apache.poi.xssf.usermodel XSSFColor)
+   (org.apache.poi.ss.usermodel Workbook Sheet Cell Row CellType FillPatternType PageOrder BorderStyle IndexedColors))
+  (:require [clojure.string :as string]
+            [clojure.tools.logging :as log]))
 
 
 (defn ^:dynamic create-date-format
@@ -82,7 +85,6 @@
         (dispose-workbook workbook)
         (throw e)))
     workbook))
-
 
 (defn save-workbook-into-stream!
   [stream workbook]
@@ -244,9 +246,9 @@
     footer))
 
 (defn- apply-printable-sheet-styles
-  [sheet {:keys [header footer column-width enable-column-auto-sizing] 
+  [sheet {:keys [header footer column-width enable-column-auto-sizing]
           :or {column-width 12
-               enable-column-auto-sizing false} 
+               enable-column-auto-sizing false}
           :as style}]
   (.createFreezePane sheet 0 1)
   (when enable-column-auto-sizing
@@ -315,8 +317,8 @@
 
 
 (defn- add-printable-sheet
-  [wb {:keys [sheet-name data author title params styles enable-column-auto-sizing] 
-       :or {params {} styles {} enable-column-auto-sizing false} 
+  [wb {:keys [sheet-name data author title params styles enable-column-auto-sizing]
+       :or {params {} styles {} enable-column-auto-sizing false}
        :as report-detail}]
   (let [column-headers (first data)
         records (rest data)
@@ -390,3 +392,83 @@
       path
       (finally
         (dispose-workbook workbook)))))
+
+;=====================================================================================================================
+;; excel file with conditional formatting
+;=====================================================================================================================
+
+(defn add-header
+  [sheet header-names]
+  (let [row (.createRow sheet 0)]
+    (doseq [[column-index value] (map-indexed #(list %1 %2) header-names)]
+      (set-cell! (.createCell row column-index) value))))
+
+(defn get-cell-color
+  [formatters value]
+  (some (fn [current-formatter]
+          (current-formatter value)) formatters))
+
+(defn get-highlighted-cell-value
+  [formatters data]
+  (loop [index 0]
+    (if (>= index (count formatters))
+      nil
+      (let [cell-formatters (get formatters index)
+            column-value (get data index)
+            color (some (fn [cell-formatter]
+                          (let [result (cell-formatter column-value)]
+                            (and result (:highlight-row result) result)))
+                        cell-formatters)]
+        (if color
+          color
+          (recur (inc index)))))))
+
+(defn update-cell-color
+  [cell cell-style color-hex-code brighter]
+  (let [color (Color/decode color-hex-code)
+        cell-color (if brighter (.brighter color) color)
+        xssf-color (XSSFColor. cell-color)]
+    (.setFillForegroundColor cell-style (XSSFColor/toXSSFColor xssf-color))
+    (.setFillPattern cell-style  FillPatternType/SOLID_FOREGROUND)
+    (.setCellStyle cell cell-style)))
+
+(defn add-formatted-data-row
+  [sheet data formatters]
+  (let [row-num (if (= 0 (.getPhysicalNumberOfRows sheet))
+                  0
+                  (inc (.getLastRowNum sheet)))
+        row (.createRow sheet row-num)
+        workbook (.getWorkbook sheet)]
+    (doseq [[col-idx val] (map-indexed #(list %1 %2) data)]
+      (let [new-cell (.createCell row col-idx)
+            column-formatters (get formatters col-idx)
+            default-color (get-highlighted-cell-value formatters data)]
+        (if column-formatters
+          (let [cell-color (get-cell-color column-formatters val)]
+            (if (:color cell-color)
+              (update-cell-color new-cell (.createCellStyle workbook) (:color cell-color) false)
+              (when default-color
+                (update-cell-color new-cell (.createCellStyle workbook) (:color default-color) true))))
+          (when default-color
+            (update-cell-color new-cell (.createCellStyle workbook) (:color default-color) true)))
+
+        (set-cell! new-cell val)))
+    row))
+
+(defn create-workbook-with-colulm-formatting
+  [sheet-name data column-formatters]
+  (let [workbook (SXSSFWorkbook. 500)
+        xsff-wb (.getXSSFWorkbook workbook)
+        sheet (add-sheet! workbook sheet-name)]
+    (-> xsff-wb
+        (.getProperties)
+        (.getCoreProperties)
+        (.setCreator "Foundry"))
+    (try
+      (add-header sheet (first data))
+      (doseq [row (rest data)]
+        (add-formatted-data-row sheet row column-formatters))
+      (catch Throwable e
+        (dispose-workbook workbook)
+        (throw e)))
+    workbook))
