@@ -79,7 +79,12 @@
 (defn- import-csv
   [connection file table-name]
   (with-open [reader (clojure.java.io/reader file)]
-    (import-spreadsheet connection  table-name (csv/read-csv reader))))
+    (let [rows (csv/read-csv reader)
+          headers (first rows)
+          data (rest rows)
+          table-ddl (table-ddl table-name headers)]
+      (jdbc/db-do-commands connection table-ddl)
+      (jdbc/insert-multi! connection (keyword table-name) headers data {:multi? true}))))
 
 (defn- import-xlsx
   [connection file table-name]
