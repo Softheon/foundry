@@ -258,7 +258,7 @@
   :default 30.0)
 
 (defsetting enable-excel-conditional-formatting
-  (tru "Enable Excel conditional formatting. If enable-printable-pulse-excel is also enabled, this setting does not take effect.")
+  (tru "Enable Excel conditional formatting. If enable-printable-excel is also enabled, this setting does not take effect.")
   :type :boolean
   :default false)
 
