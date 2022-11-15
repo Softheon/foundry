@@ -257,6 +257,11 @@
             (setting/set-double! :session-timeout-period new-value))
   :default 30.0)
 
+(defsetting enable-excel-conditional-formatting
+  (tru "Enable Excel conditional formatting. If enable-printable-excel is also enabled, this setting does not take effect.")
+  :type :boolean
+  :default false)
+
 (defn remove-public-uuid-if-public-sharing-is-disabled
   "If public sharing is *disabled* and OBJECT has a `:public_uuid`, remove it so people don't try to use it (since it
    won't work). Intended for use as part of a `post-select` implementation for Cards and Dashboards."
