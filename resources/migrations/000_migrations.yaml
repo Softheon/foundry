@@ -5497,4 +5497,14 @@ databaseChangeLog:
               name: is_completed
               type: boolean
               defaultValueBoolean: false
-
+  - changeSet:
+      id: 107
+      author: hxia
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: QRTZ_TRIGGERS  
+      changes:
+        - sql:
+            sql: UPDATE  [SFTNFNDRY].[dbo].[QRTZ_TRIGGERS] SET PRIORITY = 1 WHERE TRIGGER_NAME = 'metabase.task.send-pulses.trigger'
+ 
