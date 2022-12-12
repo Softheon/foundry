@@ -123,5 +123,5 @@
                      ;; worker threads being busy), attempt to fire the triggers again ASAP. This article does a good
                      ;; job explaining what this means:
                      ;; https://www.nurkiewicz.com/2012/04/quartz-scheduler-misfire-instructions.html
-                    (cron/with-misfire-handling-instruction-ignore-misfires))))]
+                    (cron/with-misfire-handling-instruction-do-nothing))))]
     (task/schedule-task! job trigger)))
