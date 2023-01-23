@@ -459,5 +459,6 @@ before finishing)."
          (run-query-without-timezone-stream driver
                                             (assoc settings
                                                    :visualization-settings visualization-settings
-                                                   :enable-excel-conditional-formatting enable-excel-conditional-formatting)
+                                                   :enable-excel-conditional-formatting enable-excel-conditional-formatting
+                                                   :csv-buffer-size (:csv-buffer-size outer-query))
                                             db-connection (assoc query :canceled-chan canceled-chan) export-fn))))))

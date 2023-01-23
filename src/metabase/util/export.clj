@@ -308,9 +308,11 @@
 (defn export-to-csv-stream
   [connection, settings]
   (fn [stmt rset data]
-    (let [input (PipedInputStream.)
+    (let [buffer-size (:csv-buffer-size settings 1024)
+          input (PipedInputStream. buffer-size)
           output (PipedOutputStream.)
           conn (:connection connection)
+
           task (bound-fn []
                  (try
                    (let [out (io/make-writer output {})]
@@ -334,8 +336,7 @@
                          (close-quietly rset)
                          (close-quietly stmt)
                          (close-quietly conn)
-                         (log/info "all db resources for streaming a csv file are closed")
-                         )))))]
+                         (log/info "all db resources for streaming a csv file are closed"))))))]
       (.connect input output)
       (.submit (thread-pool) ^Runnable task)
       input)))

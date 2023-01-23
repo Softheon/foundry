@@ -499,6 +499,11 @@ const SECTIONS = [
         allowValueCollection: false
       },
       {
+        key: "csv-buffer-size",
+        display_name: t`CSV buffer size`,
+        type: "number"
+      },
+      {
         key: "enable-printable-excel",
         display_name: t`Enable printable excel download`,
         type: "boolean"

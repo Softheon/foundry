@@ -257,6 +257,21 @@
             (setting/set-double! :session-timeout-period new-value))
   :default 30.0)
 
+(defsetting csv-buffer-size
+  (tru "The size of circular buffer into which incoming csv data is placed ")
+  :type :integer
+  :setter (fn [new-value]
+            (when (and new-value
+                       (< (cond-> new-value
+                            (string? new-value) Integer/parseInt)
+                          0))
+              (throw (IllegalArgumentException.
+                      (str
+                       (tru "Failed setting `csv-buffer-size` to {0}." new-value)
+                       (tru "Values less than {1} are not allowed." 0)))))
+            (setting/set-integer! :csv-buffer-size new-value))
+  :default 1024)
+
 (defsetting enable-excel-conditional-formatting
   (tru "Enable Excel conditional formatting. If enable-printable-excel is also enabled, this setting does not take effect.")
   :type :boolean

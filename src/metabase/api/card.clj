@@ -610,7 +610,8 @@
                          :parameters  parameters
                          :middleware  middleware
                          :visualization_settings visualization_settings
-                         :enable-excel-conditional-formatting (setting/get :enable-excel-conditional-formatting)))
+                         :enable-excel-conditional-formatting (setting/get :enable-excel-conditional-formatting)
+                         :csv-buffer-size (setting/get :csv-buffer-size)))
         ttl   (when (public-settings/enable-query-caching)
                 (or (:cache_ttl card)
                     (query-magic-ttl query)))]
