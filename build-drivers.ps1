@@ -220,6 +220,8 @@ function Strip-Compress () {
         # strip out any classes found in the core Metabase uberjar
         $LeinCmd = "lein strip-and-compress $TargetJar"
         Write-Host "executing  $LeinCmd"
+        $childItems = Get-ChildItem ".\target" -Recurse -Include "*"
+        Write-Host "$childItems"
         lein strip-and-compress $TargetJar
         #Invoke-Expression -Command $LeinCmd -ErrorAction Stop
 
