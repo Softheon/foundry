@@ -121,7 +121,7 @@ function Build-MetabaseJar() {
     )
     if (!(Test-Path $MetabaseUberjar)) {
         Write-Host "Building Metabase uberjar..."
-        lein uberjar
+        lein with-profile +uberjar uberjar
         return $true
     }
     else {
