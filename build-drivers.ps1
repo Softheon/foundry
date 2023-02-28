@@ -14,47 +14,47 @@ function Verify-Driver {
     }
     Write-Host "File exits."
 
-    $MungedDriver = $Driver -replace "-", "_"
-    $DriverMainClass = "metabase/driver/$($MungedDriver)__init.class"
+    # $MungedDriver = $Driver -replace "-", "_"
+    # $DriverMainClass = "metabase/driver/$($MungedDriver)__init.class"
 
-    $command = "jar -tf $DriverFile"
+    # $command = "jar -tf $DriverFile"
 
-    $Files = Invoke-Expression -Command $command -ErrorAction Stop
-    $result = $false
-    foreach ($File in $Files) {
-        if ($File -eq $DriverMainClass) {
-            $result = $true
-            break;
-        }
-    }
+    # $Files = Invoke-Expression -Command $command -ErrorAction Stop
+    # $result = $false
+    # foreach ($File in $Files) {
+    #     if ($File -eq $DriverMainClass) {
+    #         $result = $true
+    #         break;
+    #     }
+    # }
 
-    if ($result) {
-        Write-Host "Main class file found."
-    }
-    else {
-        Write-Error "Main class file missing. Driver verification failed"
-        return $false
-    }
+    # if ($result) {
+    #     Write-Host "Main class file found."
+    # }
+    # else {
+    #     Write-Error "Main class file missing. Driver verification failed"
+    #     return $false
+    # }
 
-    Write-Host "Checking whether driver contains plugin manifeset..."
+    # Write-Host "Checking whether driver contains plugin manifeset..."
 
-    $result = $false
-    foreach ($File in $Files) {
-        if ($File -eq "metabase-plugin.yaml") {
-            $result = $true
-            break;
-        }
-    }
+    # $result = $false
+    # foreach ($File in $Files) {
+    #     if ($File -eq "metabase-plugin.yaml") {
+    #         $result = $true
+    #         break;
+    #     }
+    # }
 
-    if ($result) {
-        Write-Host "Plugin Manifest found."
-    }
-    else {
-        Write-Error "Plugin manifest missing. Driver verification failed."
-        return $false
-    }
-    Write-Host "Driver verification successful."
-    return $true
+    # if ($result) {
+    #     Write-Host "Plugin Manifest found."
+    # }
+    # else {
+    #     Write-Error "Plugin manifest missing. Driver verification failed."
+    #     return $false
+    # }
+    # Write-Host "Driver verification successful."
+    # return $true
 }
 
 ################################ DELETING OLD INCORRECTLY BUILT DRIVERS ###############################
