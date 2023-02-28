@@ -80,7 +80,7 @@ function Delete-OldDrivers() {
         $DriverJar,
         $DestLocation
     )
-    Write-Host "Deleting old versions of $Driver driver..."
+    Write-Host "Deleting old versions of $DriverJar driver from $DestLocation..."
     Remove-Item -Force -Path "plugins\$DriverJar" -ErrorAction Ignore
     Remove-Item -Force -Path $DestLocation -ErrorAction Ignore
     return $true
@@ -93,7 +93,7 @@ function Install-MetabaseCore() {
     try {
         $Result = Get-ChildItem -Path "$UserDir\.m2\repository\metabase-core\metabase-core" -Include '*.jar' -Recurse -ErrorAction Stop
         if (!$Result -or $Result.length -eq 0) {
-            Write-Host "Building and installing jar locally"
+            Write-Host "Building and installing  MetabaseCore jar locally"
             lein clean
             lein install-for-building-drivers
             return $true;
@@ -104,7 +104,7 @@ function Install-MetabaseCore() {
         }
     }
     catch {
-        Write-Host "Building and installing jar locally"
+        Write-Host "Building and installing  MetabaseCore jar locally"
         lein clean
         lein install-for-building-drivers
         return $true;
@@ -322,6 +322,9 @@ function Checksum-IsSame() {
             }
         }
     }
+    else {
+        Write-Host "$Driver checksum file doesn't exist"
+    }
     return $false
 }
 
@@ -345,22 +348,23 @@ function Build-DriverPipeline () {
         $ProjectRoot
     )
     try {
-        #$Result = $true
-        Verify-ExistingBuild -Driver $Driver -ChecksumFile $ChecksumFile
-        $Result = $true -and (Delete-OldDrivers -Driver $Driver -DriverJar $DriverJar -DestLocation $DestLocation)
-        $Result = $Result -and (Install-MetabaseCore)
-        $Result = $Result -and (Build-MetabaseJar -MetabaseUberjar $MetabaseUberJar)
+        Delete-OldDrivers -Driver $Driver -DriverJar $DriverJar -DestLocation $DestLocation
+        Install-MetabaseCore
+        Build-MetabaseJar -MetabaseUberjar $MetabaseUberJar
         $Parents = Build-Parents -ProjectRoot $ProjectRoot -DriverProjectDir $DriverProjectDir
-        $Result = $Result -and (Build-DriverUberJar -ProjectRoot $ProjectRoot -Driver $Driver -DriverProjectDir $DriverProjectDir -TargetJar $TargetJar)
-        $Result = $Result -and (Strip-Compress -Parents $Parents -TargetJar $TargetJar)
-        $Result = $Result -and (CopyTargetTo-Dest -TargetJar $TargetJar -DestLocation $DestLocation)
-        $Result = $Result -and (Verify-Build -Driver $Driver -ChecksumFile $ChecksumFile -TargetJar $TargetJar -DestLocation $DestLocation)
-        $Result = $Result -and (Save-Checksum -DriverProjectDir $DriverProjectDir -ChecksumFile $ChecksumFile)
-        Write-Host $Result
+        Write-Host "$Driver depends on the following parent drivers: $Parents "
+        Build-DriverUberJar -ProjectRoot $ProjectRoot -Driver $Driver -DriverProjectDir $DriverProjectDir -TargetJar $TargetJar
+        Strip-Compress -Parents $Parents -TargetJar $TargetJar
+        CopyTargetTo-Dest -TargetJar $TargetJar -DestLocation $DestLocation
+        Verify-Build -Driver $Driver -ChecksumFile $ChecksumFile -TargetJar $TargetJar -DestLocation $DestLocation
+        Save-Checksum -DriverProjectDir $DriverProjectDir -ChecksumFile $ChecksumFile
+        #Write-Host $Result
+        #Verify-ExistingBuild -Driver $Driver -ChecksumFile $ChecksumFile
         return $Result
     }
     catch {
-        return @($false, $false)
+        Write-Output $_
+        throw $_
     }
 }
 function Build-Driver () {
@@ -376,15 +380,11 @@ function Build-Driver () {
     $Parents = ""
     $ChecksumFile = "$DriverProjectDir\target\checksum.txt"
 
+    Write-Host "building driver $Driver from $DriverProjectDir"
+
     if (!(Checksum-IsSame -DriverProjectDir $DriverProjectDir -ChecksumFile $ChecksumFile -TargetJar $TargetJar -Driver $Driver )) {
         Write-Host "Checksum has changed."
-        $Result = Build-DriverPipeline -DriverProjectDir $DriverProjectDir -Driver $Driver -ProjectRoot $ProjectRoot -DriverJar $DriverJar -DestLocation $DestLocation -MetabaseUberJar $MetabaseUberjar -TargetJar $TargetJar -ChecksumFile $ChecksumFile
-        if (!$Result[0]) {
-            return Retry -Driver $Driver -ProjectRoot $ProjectRoot -DriverJar $DriverJar -Destination $DestLocation -MetabaseUberJar $MetabaseUberjar -TargetJar $TargetJar -ChecksumFile $ChecksumFile
-        }
-        else {
-            return $Result[0]
-        }
+        Build-DriverPipeline -DriverProjectDir $DriverProjectDir -Driver $Driver -ProjectRoot $ProjectRoot -DriverJar $DriverJar -DestLocation $DestLocation -MetabaseUberJar $MetabaseUberjar -TargetJar $TargetJar -ChecksumFile $ChecksumFile     
     }
     else {
         Write-Host "checksum is unchanged"
@@ -395,7 +395,7 @@ function Build-Driver () {
             return Retry -DriverProjectDir $DriverProjectDir -Driver $Driver -ProjectRoot $ProjectRoot -DriverJar $DriverJar -Destination $DestLocation -MetabaseUberJar $MetabaseUberjar -TargetJar $TargetJar -ChecksumFile $ChecksumFile
         }
         else {
-            return $result
+            return $false
         }
     }
 }
@@ -413,8 +413,7 @@ function Retry() {
     )
     Write-Host "Building without cleaning failed. Retrying clean build..."
     Clean-LocalRepo
-    $Result = Build-DriverPipeline -DriverProjectDir $DriverProjectDir -Driver $Driver -ProjectRoot $ProjectRoot -DriverJar $DriverJar -Destination $DestLocation -MetabaseUberJar $MetabaseUberjar -TargetJar $TargetJar -ChecksumFile $ChecksumFile
-    return $Result[0]
+    Build-DriverPipeline -DriverProjectDir $DriverProjectDir -Driver $Driver -ProjectRoot $ProjectRoot -DriverJar $DriverJar -Destination $DestLocation -MetabaseUberJar $MetabaseUberjar -TargetJar $TargetJar -ChecksumFile $ChecksumFile
 }
 
 mkdir -Path "resources\modules" -ErrorAction Ignore
