@@ -186,9 +186,8 @@ function Build-DriverUberJar {
     )
     Write-Host "Building $Driver"
 
-    Set-Location $DriverProjectDir
 
-    Remove-Item -Path ".\target" -Force -Recurse -ErrorAction Ignore
+    Set-Location $DriverProjectDir
 
     lein clean
     $env:DEBUG = "1"
@@ -196,12 +195,16 @@ function Build-DriverUberJar {
     lein uberjar
 
     Set-Location $ProjectRoot
+    $childItems = Get-ChildItem "$DriverProjectDir" -Recurse -Include "*"
+    Write-Host "$childItems"
+    Write-Host "Check if the file exists $TargetJar"
 
     if (!(Test-Path -Path $TargetJar)) {
         Write-Error "Error: could not find $TargetJar. Build failed."
         return $false
     }
     else {
+        Write-Host "$TargetJar exists"
         return $true
     }
     return $false
