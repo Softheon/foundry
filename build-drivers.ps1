@@ -418,6 +418,7 @@ $Drivers = Get-ChildItem -Directory  -Path "modules\drivers"  -Name
 $DriversToBuild = @{
     "google"          = 1;
     "googleanalytics" = 1;
+    "sqlite" = 1;
     "sqlserver"       = 1;
 };
 Clean-LocalRepo
