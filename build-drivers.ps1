@@ -192,7 +192,7 @@ function Build-DriverUberJar {
     lein clean
     $env:DEBUG = "1"
     $env:LEIN_SNAPSHOTS_IN_RELEASE = "true"
-    lein uberjar
+    lein with-profile +uberjar uberjar
 
     Set-Location $ProjectRoot
     $childItems = Get-ChildItem "$DriverProjectDir" -Recurse -Include "*"
