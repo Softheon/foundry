@@ -216,7 +216,9 @@ function Strip-Compress () {
     try {
         # strip out any classes found in the core Metabase uberjar
         $LeinCmd = "lein strip-and-compress $TargetJar"
-        Invoke-Expression -Command $LeinCmd -ErrorAction Stop
+        Write-Host "executing  $LeinCmd"
+        lein strip-and-compress $TargetJar
+        #Invoke-Expression -Command $LeinCmd -ErrorAction Stop
 
         # Next, remove any classes found in any of the parent jar
 
@@ -228,6 +230,7 @@ function Strip-Compress () {
         return $true
     }
     catch {
+        Write-Output $_
         return $false
     }
 }
@@ -244,6 +247,7 @@ function CopyTargetTo-Dest () {
         return $true
     }
     catch {
+        Write-Output $_
         return $false
     }
 }
