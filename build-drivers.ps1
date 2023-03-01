@@ -363,9 +363,9 @@ function Build-DriverPipeline () {
         CopyTargetTo-Dest -TargetJar $TargetJar -DestLocation $DestLocation
         Verify-Build -Driver $Driver -ChecksumFile $ChecksumFile -TargetJar $TargetJar -DestLocation $DestLocation
         Save-Checksum -DriverProjectDir $DriverProjectDir -ChecksumFile $ChecksumFile
-        #Write-Host $Result
-        #Verify-ExistingBuild -Driver $Driver -ChecksumFile $ChecksumFile
-        return $Result
+       
+      
+     
     }
     catch {
         Write-Output $_
@@ -390,6 +390,7 @@ function Build-Driver () {
     if (!(Checksum-IsSame -DriverProjectDir $DriverProjectDir -ChecksumFile $ChecksumFile -TargetJar $TargetJar -Driver $Driver )) {
         Write-Host "Checksum has changed."
         Build-DriverPipeline -DriverProjectDir $DriverProjectDir -Driver $Driver -ProjectRoot $ProjectRoot -DriverJar $DriverJar -DestLocation $DestLocation -MetabaseUberJar $MetabaseUberjar -TargetJar $TargetJar -ChecksumFile $ChecksumFile     
+    
     }
     else {
         Write-Host "checksum is unchanged"
@@ -403,6 +404,8 @@ function Build-Driver () {
             return $false
         }
     }
+    $childItems = Get-ChildItem "$ProjectRoot\resources\modules" -Recurse -Include "*"
+    Write-Host "$childItems"
 }
 
 function Retry() {
