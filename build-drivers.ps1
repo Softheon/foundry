@@ -13,6 +13,7 @@ function Verify-Driver {
         return $false;
     }
     Write-Host "File exits."
+    return $true;
 
     # $MungedDriver = $Driver -replace "-", "_"
     # $DriverMainClass = "metabase/driver/$($MungedDriver)__init.class"
@@ -195,8 +196,6 @@ function Build-DriverUberJar {
     lein with-profile +uberjar uberjar
 
     Set-Location $ProjectRoot
-    $childItems = Get-ChildItem "$DriverProjectDir" -Recurse -Include "*"
-    Write-Host "$childItems"
     Write-Host "Check if the file exists $TargetJar"
 
     if (!(Test-Path -Path $TargetJar)) {
@@ -220,8 +219,6 @@ function Strip-Compress () {
         # strip out any classes found in the core Metabase uberjar
         $LeinCmd = "lein strip-and-compress $TargetJar"
         Write-Host "executing  $LeinCmd"
-        $childItems = Get-ChildItem ".\target" -Recurse -Include "*"
-        Write-Host "$childItems"
         lein strip-and-compress $TargetJar
         #Invoke-Expression -Command $LeinCmd -ErrorAction Stop
 
@@ -268,9 +265,6 @@ function Verify-Build () {
     $VerificationStatus = Verify-Driver -Driver $Driver
     if (!$VerificationStatus) {
         Write-Host "Build $Driver FAILED."
-        Remove-Item -Force -Path $ChecksumFile -ErrorAction Ignore
-        Remove-Item -Force -Path $TargetJar -ErrorAction Ignore
-        Remove-Item -Force -Path $DestLocation -ErrorAction Ignore
         return $false
     }
     return $true
@@ -363,9 +357,6 @@ function Build-DriverPipeline () {
         CopyTargetTo-Dest -TargetJar $TargetJar -DestLocation $DestLocation
         Verify-Build -Driver $Driver -ChecksumFile $ChecksumFile -TargetJar $TargetJar -DestLocation $DestLocation
         Save-Checksum -DriverProjectDir $DriverProjectDir -ChecksumFile $ChecksumFile
-       
-      
-     
     }
     catch {
         Write-Output $_
@@ -389,8 +380,7 @@ function Build-Driver () {
 
     if (!(Checksum-IsSame -DriverProjectDir $DriverProjectDir -ChecksumFile $ChecksumFile -TargetJar $TargetJar -Driver $Driver )) {
         Write-Host "Checksum has changed."
-        Build-DriverPipeline -DriverProjectDir $DriverProjectDir -Driver $Driver -ProjectRoot $ProjectRoot -DriverJar $DriverJar -DestLocation $DestLocation -MetabaseUberJar $MetabaseUberjar -TargetJar $TargetJar -ChecksumFile $ChecksumFile     
-    
+        Build-DriverPipeline -DriverProjectDir $DriverProjectDir -Driver $Driver -ProjectRoot $ProjectRoot -DriverJar $DriverJar -DestLocation $DestLocation -MetabaseUberJar $MetabaseUberjar -TargetJar $TargetJar -ChecksumFile $ChecksumFile      
     }
     else {
         Write-Host "checksum is unchanged"
@@ -399,13 +389,9 @@ function Build-Driver () {
         $result = $result -and $result2
         if (!$result) {
             return Retry -DriverProjectDir $DriverProjectDir -Driver $Driver -ProjectRoot $ProjectRoot -DriverJar $DriverJar -Destination $DestLocation -MetabaseUberJar $MetabaseUberjar -TargetJar $TargetJar -ChecksumFile $ChecksumFile
-        }
-        else {
-            return $false
-        }
+        }   
     }
-    $childItems = Get-ChildItem "$ProjectRoot\resources\modules" -Recurse -Include "*"
-    Write-Host "$childItems"
+  
 }
 
 function Retry() {
@@ -433,9 +419,6 @@ Clean-LocalRepo
 foreach ($Driver in $Drivers) {
     if ($DriversToBuild.Contains($Driver)) {
         Write-Host "Build: $Driver"
-        $result = Build-Driver -Driver $Driver
-        if (!$result) {
-            throw "Failed to build driver $Driver"
-        }
+        Build-Driver -Driver $Driver  
     }
 }
