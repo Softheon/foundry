@@ -21,7 +21,8 @@
              [i18n :refer [trs tru]]
              [schema :as su]]
             [schema.core :as s]
-            [metabase.public-settings :as public-settings])
+            [metabase.public-settings :as public-settings]
+            [metabase.models.setting :as setting])
   (:import clojure.core.async.impl.channels.ManyToManyChannel))
 
 (defn append-database-name
@@ -259,6 +260,8 @@
                            (qp.async/process-query-and-stream-file!
                             (-> query
                                 (dissoc :constraints)
+                                (assoc :enable-excel-conditional-formatting false
+                                       :csv-buffer-size (setting/get :csv-buffer-size))
                                 (m/dissoc-in [:middleware :add-default-userland-constraints?])
                                 (assoc-in [:middleware :skip-results-metadata?] true)
                                 (assoc-in [:middleware :export-fn] (:export-fn (ex/export-formats export-format))))
