@@ -19,7 +19,7 @@
              [honeysql-extensions :as hx]
              [i18n :refer [tru]]]
             [metabase.java.jdbc :as f-jdbc]
-            [metabase.util.export :as export])
+            [metabase.models.setting :as setting])
   (:import [java.sql PreparedStatement ResultSet ResultSetMetaData SQLException Types]
            [java.util Calendar Date TimeZone]))
 
@@ -233,7 +233,7 @@ before finishing)."
         [columns & rows] (cancelable-run-query
                           connection sql params
                           {:identifiers    identity
-                           :timeout (* 20 60)
+                           :timeout (setting/get :query-timeout)
                            :as-arrays?     true
                            :limited max-rows
                            :read-columns   (read-columns driver (some-> timezone Calendar/getInstance))
@@ -430,7 +430,7 @@ before finishing)."
                  :read-columns   (read-columns driver (some-> timezone Calendar/getInstance))
                  :set-parameters (set-parameters-with-timezone timezone)
                  :result-set-fn (export-fn connection settings)
-                 :timeout 600
+                 :timeout (setting/get :query-timeout)
                            ;:concurrency :read-only
                  :keywordize? false})]
     stream))

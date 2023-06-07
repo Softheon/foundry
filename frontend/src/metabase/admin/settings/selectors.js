@@ -102,6 +102,11 @@ const SECTIONS = [
         key: "session-timeout-period",
         display_name: t`Session timeout period`,
         type: "number"
+      },
+      {
+        key: "query-timeout",
+        display_name: t`Query timeout`,
+        type: "number"
       }
     ],
   },

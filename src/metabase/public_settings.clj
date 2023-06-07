@@ -13,7 +13,8 @@
             [metabase.util
              [i18n :refer [available-locales-with-names set-locale trs tru]]
              [password :as password]]
-            [metabase.toucan.db :as db])
+            [metabase.toucan.db :as db]
+            [metabase.models.setting :as setting])
   (:import [java.util TimeZone UUID]))
 
 (defsetting check-for-updates
@@ -256,6 +257,20 @@
                        (tru "Values less than or equal to 0 are not allowed.")))))
             (setting/set-double! :session-timeout-period new-value))
   :default 30.0)
+
+(defsetting query-timeout
+  (tru "How long to wait, in seconds, before canceling a query.")
+  :type :integer
+  :setter (fn [new-value]
+            (when (and new-value
+                       (< (cond-> new-value (string? new-value) Integer/parseInt)
+                          0))
+              (throw (IllegalArgumentException.
+                      (str
+                       (tru "Failed setting `query-timeout` to {0}." new-value)
+                       (tru "Values less than {1} are not allowed." 0)))))
+            (setting/set-integer! :query-timeout new-value))
+  :default 1800)
 
 (defsetting csv-buffer-size
   (tru "The size of circular buffer into which incoming csv data is placed ")
