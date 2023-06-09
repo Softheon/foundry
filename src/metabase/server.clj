@@ -63,7 +63,7 @@
                   ;;
                   ;; TODO - I suppose the default value should be moved to the `metabase.config` namespace?
       (or (config/config-int :mb-jetty-async-response-timeout)
-          (* 10 60 1000))))))
+          (* 30 60 1000))))))
 
 (defn start-web-server!
   "Start the embedded Jetty web server. Returns `:started` if a new server was started; `nil` if there was already a
