@@ -69,7 +69,8 @@ export const saveSpreadsheet = spreadsheet => async (dispatch, getState) => {
     const formData = new FormData();
     formData.append("type", spreadsheet.type);
     Object.keys(spreadsheet.details).map(key => formData.append(key, spreadsheet.details[key]));
-    fetch("/api/spreadsheet", {
+    const basename = window.MetabaseRoot.replace(/\/+$/, "");
+    fetch(basename + "/api/spreadsheet", {
         method: 'POST',
         body: formData
     }).then(

@@ -577,7 +577,8 @@ export const NormalItem = ({
       onDownload={
         collection.can_write && item.model === "card"
           ? () => {
-            const API=`/api/card/${item.id}/json/download`
+            const basename = window.MetabaseRoot.replace(/\/+$/, "");
+            const API=`${basename}/api/card/${item.id}/json/download`
             const link =  document.createElement("a");
             link.href = API;
             link.style ="display: none;";
