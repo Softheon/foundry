@@ -18,7 +18,7 @@ import {
 } from "metabase/visualizations/lib/settings/utils";
 import { columnSettings } from "metabase/visualizations/lib/settings/column";
 
-import { formatValue } from "metabase/lib/formatting";
+import { formatValue, numberFormatterForOptions } from "metabase/lib/formatting";
 
 import colors, { getColorsForValues } from "metabase/lib/colors";
 
@@ -274,8 +274,8 @@ export default class PieChart extends Component {
         jsx,
         majorWidth: 0,
       });
-    const formatPercent = (percent, jsx = true) =>
-      formatValue(percent, {
+    const formatPercent = (percent, jsx = true) => {
+      const formatter = numberFormatterForOptions({
         ...settings.column(cols[metricIndex]),
         jsx,
         majorWidth: 0,
@@ -283,6 +283,9 @@ export default class PieChart extends Component {
         minimumSignificantDigits: 3,
         maximumSignificantDigits: 3,
       });
+      return formatter.format(percent);
+    }
+  
 
     const showPercentInTooltip =
       !PERCENT_REGEX.test(cols[metricIndex].name) &&
