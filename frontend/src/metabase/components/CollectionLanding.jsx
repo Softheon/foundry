@@ -588,7 +588,8 @@ export const NormalItem = ({
             }
           : collection.can_write && item.model === "dashboard" 
           ? () => {
-              const API = `/api/dashboard/${item.id}/json/download`
+              const basename = window.MetabaseRoot.replace(/\/+$/, "");
+              const API = `${basename}/api/dashboard/${item.id}/json/download`
               const link = document.createElement("a");
               link.href = API;
               link.style = "display:none;";
