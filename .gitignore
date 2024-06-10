@@ -68,3 +68,7 @@ target/checksum.txt
 .lsp/sqlite.db
 .lsp/.cache/data.mdb
 .lsp/.cache/lock.mdb
+.classpath
+.project
+.settings/
+.lsp/

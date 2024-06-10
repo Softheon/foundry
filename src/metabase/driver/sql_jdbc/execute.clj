@@ -219,7 +219,8 @@ before finishing)."
         (catch Exception e
           (try
             (log/warn (tru "Client closed connection, canceling query"))
-          ;; This is what does the real work of canceling the query. We aren't checking the result of
+            (log/error e)
+            ;; This is what does the real work of canceling the query. We aren't checking the result of
           ;; `query-future` but this will cause an exception to be thrown, saying the query has been cancelled.
             (.cancel stmt)
             (.rollback conn)
@@ -300,6 +301,7 @@ before finishing)."
 
 (defn- do-in-transaction [connection f]
   (jdbc/with-db-transaction [transaction-connection connection {:isolation :read-uncommitted}]
+    (log/info "running query within the transaction.")
     (do-with-auto-commit-disabled transaction-connection (partial f transaction-connection))))
 
 
@@ -317,16 +319,24 @@ before finishing)."
     (jdbc/db-do-prepared connection [sql])))
 
 (defn- run-query-without-timezone [driver _ connection query]
-  (do-in-transaction connection (partial run-query driver query nil)))
+  (if (:run-query-within-transaction query)
+    (do-in-transaction connection (partial run-query driver query nil))
+    (run-query driver query nil connection)))
 
-(defn- run-query-with-timezone [driver {:keys [^String report-timezone] :as settings} connection query]
+(defn- run-query-with-timezone [driver {:keys [^String report-timezone] :as settings} connection query] 
   (try
-    (do-in-transaction connection (fn [transaction-connection]
-                                    (set-timezone! driver settings transaction-connection)
-                                    (run-query driver
-                                               query
-                                               (some-> report-timezone TimeZone/getTimeZone)
-                                               transaction-connection)))
+    (if (:run-query-within-transaction query)
+      (do-in-transaction connection (fn [transaction-connection]
+                                      (set-timezone! driver settings transaction-connection)
+                                      (run-query driver
+                                                 query
+                                                 (some-> report-timezone TimeZone/getTimeZone)
+                                                 transaction-connection)))
+      (run-query driver
+                 query
+                 (some-> report-timezone TimeZone/getTimeZone)
+                 connection))
+
     (catch SQLException e
       (log/error (tru "Failed to set timezone:") "\n" (with-out-str (jdbc/print-sql-exception-chain e)))
       (run-query-without-timezone driver settings connection query))
@@ -339,10 +349,11 @@ before finishing)."
 
 (defn execute-query
   "Process and run a native (raw SQL) QUERY."
-  [driver {settings :settings, query :native, :as outer-query}]
+  [driver {settings :settings, query :native, info :info, :as outer-query}]
   (let [query (assoc query
                      :remark   (qputil/query->remark outer-query)
-                     :max-rows (or (mbql.u/query->max-rows-limit outer-query) qp.i/absolute-max-results))
+                     :max-rows (or (mbql.u/query->max-rows-limit outer-query) qp.i/absolute-max-results)
+                     :run-query-within-transaction (get-in info [:run-query-within-transaction] true))
         canceled-chan (:canceled-chan outer-query)]
     (do-with-try-catch
      (fn []
@@ -437,6 +448,7 @@ before finishing)."
 
 (defn- do-in-transaction-stream [connection f]
   (f-jdbc/with-db-transaction-without-auto-close [transaction-connection connection {:isolation :read-uncommitted}]
+    (log/info "running query within the transaction.")
     (do-with-auto-commit-disabled-for-exporting transaction-connection (partial f transaction-connection))))
 
 (defn- run-query-without-timezone-stream [driver settings connection query export-fn]
@@ -450,15 +462,19 @@ before finishing)."
     {:keys [export-fn]} :middleware,
     visualization-settings :visualization-settings,
     enable-excel-conditional-formatting :enable-excel-conditional-formatting
+    info :info
     :as outer-query}]
   (let [query query]
     (do-with-try-catch
      (fn []
        (let [db-connection (sql-jdbc.conn/db->pooled-connection-spec (qp.store/database))
-             canceled-chan (:canceled-chan outer-query)]
-         (run-query-without-timezone-stream driver
-                                            (assoc settings
-                                                   :visualization-settings visualization-settings
-                                                   :enable-excel-conditional-formatting enable-excel-conditional-formatting
-                                                   :csv-buffer-size (:csv-buffer-size outer-query))
-                                            db-connection (assoc query :canceled-chan canceled-chan) export-fn))))))
+             canceled-chan (:canceled-chan outer-query)
+             run-query-within-transaction (get-in info [:run-query-within-transaction] true)]
+         (if run-query-within-transaction
+           (run-query-without-timezone-stream driver
+                                              (assoc settings
+                                                     :visualization-settings visualization-settings
+                                                     :enable-excel-conditional-formatting enable-excel-conditional-formatting
+                                                     :csv-buffer-size (:csv-buffer-size outer-query))
+                                              db-connection (assoc query :canceled-chan canceled-chan) export-fn)
+           (query-stream driver query nil settings export-fn db-connection)))))))

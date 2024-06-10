@@ -107,6 +107,11 @@ const SECTIONS = [
         key: "query-timeout",
         display_name: t`Query timeout`,
         type: "number"
+      },
+      {
+        key: "run-query-within-transaction",
+        display_name: t`Run query within transaction`,
+        type: "boolean"
       }
     ],
   },

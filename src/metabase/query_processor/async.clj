@@ -8,6 +8,7 @@
              [util :as u]]
             [metabase.api.common :as api]
             [metabase.async.util :as async.u]
+            [metabase.models.setting :as setting]
             [metabase.query-processor
              [interface :as qpi]
              [util :as qputil]]
@@ -27,14 +28,18 @@
   a `core.async` channel that can be used to fetch the results once the query finishes running. Closing the channel
   will cancel the query."
   [query options]
-  (qp/process-query-and-save-execution! (assoc query :async? true) options))
+  (qp/process-query-and-save-execution!
+   (assoc query :async? true)
+   (assoc options :run-query-within-transaction (setting/get :run-query-within-transaction))))
 
 (s/defn process-query-and-save-with-max-results-constraints! :- async.u/PromiseChan
   "Async version of `metabase.query-processor/process-query-and-save-with-max-results-constraints!`. Runs query
   asynchronously, and returns a `core.async` channel that can be used to fetch the results once the query finishes
   running. Closing the channel will cancel the query."
   [query options]
-  (qp/process-query-and-save-with-max-results-constraints! (assoc query :async? true) options))
+  (qp/process-query-and-save-with-max-results-constraints!
+   (assoc query :async? true)
+   (assoc options :run-query-within-transaction (setting/get :run-query-within-transaction))))
 
 
 ;;; ------------------------------------------------ Result Metadata -------------------------------------------------
@@ -79,4 +84,6 @@
     a `core.async` channel that can be used to fetch the results once the query finishes running. Closing the channel
     will cancel the query."
     [query options]
-    (qp/process-query-and-stream-file! (assoc query :async? true) options))
+    (qp/process-query-and-stream-file!
+     (assoc query :async? true)
+     (assoc options :run-query-within-transaction (setting/get :run-query-within-transaction))))

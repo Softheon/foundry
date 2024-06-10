@@ -243,6 +243,11 @@
   :type :boolean
   :default false)
 
+(defsetting run-query-within-transaction
+  (tru "Run queries within transaction")
+  :type :boolean
+  :default true)
+
 (defsetting session-timeout-period
   (tru "How long to wait, in minutes, before ending a user session due to inactivity.")
   :type :double
