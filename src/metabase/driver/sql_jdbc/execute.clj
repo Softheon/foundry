@@ -229,12 +229,13 @@ before finishing)."
 
 (defn- run-query
   "Run the query itself."
-  [driver {sql :query, :keys [params remark max-rows canceled-chan]}, ^TimeZone timezone, connection]
+  [driver {sql :query, :keys [params remark max-rows canceled-chan]}, ^TimeZone timezone, connection] 
+  (log/info "current time out" (setting/get-integer :query-timeout))
   (let [sql              (str "-- " remark "\n" (hx/unescape-dots sql))
         [columns & rows] (cancelable-run-query
                           connection sql params
                           {:identifiers    identity
-                           :timeout (setting/get :query-timeout)
+                           :timeout (setting/get-integer :query-timeout)
                            :as-arrays?     true
                            :limited max-rows
                            :read-columns   (read-columns driver (some-> timezone Calendar/getInstance))
@@ -441,7 +442,7 @@ before finishing)."
                  :read-columns   (read-columns driver (some-> timezone Calendar/getInstance))
                  :set-parameters (set-parameters-with-timezone timezone)
                  :result-set-fn (export-fn connection settings)
-                 :timeout (setting/get :query-timeout)
+                 :timeout (setting/get-integer :query-timeout)
                            ;:concurrency :read-only
                  :keywordize? false})]
     stream))
