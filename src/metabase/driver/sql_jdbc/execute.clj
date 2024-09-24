@@ -181,8 +181,10 @@
 
       (let [run-query-chan (a/go
                              (try
+                               (log/info "query option" opts)
                                (f-jdbc/query-with-limited-resultset conn (into [stmt] params) opts)
                                (catch Throwable e
+                                 (log/error e)
                                  e)))
             [value port] (a/alts! [run-query-chan canceled-chan])]
         (if (= port canceled-chan)
