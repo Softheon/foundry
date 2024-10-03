@@ -37,7 +37,7 @@ export const login = createThunkAction(LOGIN, function (
 
     try {
       // let newSession = await SessionApi.create(credentials);
-      window.localStorage.clear();
+      window.localStorage.removeItem("idle_end_time");
       await SessionApi.create(credentials);
       // since we succeeded, lets set the session cookie
       //MetabaseCookies.setSessionCookie(newSession.id);
@@ -91,7 +91,7 @@ export const loginIAM = createThunkAction(LOGIN_IAM, function (
 ) {
   return async function (dispatch, getState) {
     try {
-      window.localStorage.clear();
+      window.localStorage.removeItem("idle_end_time");
       await SessionApi.createWithIamAuth({
         id_token: iam.id_token,
         access_token: iam.access_token,
@@ -134,7 +134,7 @@ export const logout = createThunkAction(LOGOUT, function () {
     //await clearGoogleAuthCredentials();
     MetabaseAnalytics.trackEvent("Auth", "Logout");
     // clear local storage
-    window.localStorage.clear();
+    window.localStorage.removeItem("idle_end_time");
     dispatch(push("/auth/login"));
    
     // refresh to ensure all application state is cleared

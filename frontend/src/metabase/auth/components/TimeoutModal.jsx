@@ -83,7 +83,7 @@ export default class TimeoutModal extends React.Component {
   handleOnIdle = event => {
     this.saveUnsavedCard();
     this.props.idleSessionTimeout();
-    window.localStorage.clear();
+    window.localStorage.removeItem("idle_end_time");
     window.location.reload();
     window.location.reload(); 
   }
@@ -114,7 +114,7 @@ export default class TimeoutModal extends React.Component {
   }
 
   onSessionTimeout = event => {
-    window.localStorage.clear();
+    window.localStorage.removeItem("idle_end_time");
     window.location.reload();   
   }
 
