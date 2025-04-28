@@ -125,8 +125,8 @@
                      :host (config/config-str :mb-db-host)
                      :port (config/config-int :mb-db-port)
                      :dbname (config/config-str :mb-db-dbname)
-                     ;:user (config/config-str :mb-db-user)
-                     ;:password (config/config-str :mb-db-pass)
+                     :user (config/config-str :mb-db-user)
+                     :password (config/config-str :mb-db-pass)
                      }))))
 
 (defn jdbc-details
