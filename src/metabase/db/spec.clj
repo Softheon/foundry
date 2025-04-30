@@ -57,13 +57,14 @@
 (defn mssql
   "Create a database specification for a mssql database. Opts should include keys
   for :db, :user, and :password. You can also optionally set host and port."
-  [{:keys [host port db]
+  [{:keys [host port db user password]
     :or {host "localhost", port 1433, db ""}
     :as opts}]
   (merge {:classname "com.microsoft.sqlserver.jdbc.SQLServerDriver"
           :subprotocol "sqlserver"
-          :subname (str "//" host ":" port ";integratedSecurity=true;databaseName=" db ";")}
-         (dissoc opts :host :port :db)))
+          :subname (str "//" host ":" port ";integratedSecurity=false;trustServerCertificate=true;databaseName=" db 
+                        ";user=" user ";password=" password ";")}
+         (dissoc opts :host :port :db :user :password)))
 
 ;; !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ;; !!                                                                                                               !!
