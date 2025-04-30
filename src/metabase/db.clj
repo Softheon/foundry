@@ -125,8 +125,9 @@
                      :host (config/config-str :mb-db-host)
                      :port (config/config-int :mb-db-port)
                      :dbname (config/config-str :mb-db-dbname)
-                     ;:user (config/config-str :mb-db-user)
-                     ;:password (config/config-str :mb-db-pass)
+                     :user (config/config-str :mb-db-user)
+                     :password (config/config-str :mb-db-pass)
+                     :integrated-security (config/config-bool :mb-db-integrated-security)
                      }))))
 
 (defn jdbc-details
@@ -409,14 +410,16 @@ By default, this is 5 seconds. You can configure this value by setting the env v
 (or (config/config-int :mb-db-connection-timeout-ms)
     5000))
 
-(defn- can-connect-with-windows-authentication?
+(defn- can-connect-to-sqlserver?
 [driver db-spec]
 (try
   (u/with-timeout can-connect-timeout-ms
     (let [[first-row] (jdbc/query db-spec ["SELECT 1"])
           [result] (vals first-row)]
+      (log/info (trs "Successfully connected to SQL Server"))
       (= 1 result)))
   (catch Throwable e
+    (log/error (trs "Error connecting to SQL Server:") (.getMessage e))
     (throw (Exception. (.getMessage e) e)))))
 
 (defn- verify-db-connection
@@ -426,8 +429,15 @@ By default, this is 5 seconds. You can configure this value by setting the env v
   ([driver details]
    {:pre [(keyword? driver) (map? details)]}
    (log/info (u/format-color 'cyan (trs "Verifying {0} Database Connection ..." (name driver))))
+   
+   ;; Log connection details (masking password)
+   (let [masked-details (if (:password details)
+                          (assoc details :password "******")
+                          details)]
+     (log/info (trs "Connection details:") (pr-str masked-details)))
+   
    (assert (if (= :sqlserver driver)
-             (can-connect-with-windows-authentication? driver (jdbc-details details))
+             (can-connect-to-sqlserver? driver (jdbc-details details))
              (binding [*allow-potentailly-unsafe-connections* true]
                (require 'metabase.driver.util)
                ((resolve 'metabase.driver.util/can-connect-with-details?) driver details :throw-exceptions)))
