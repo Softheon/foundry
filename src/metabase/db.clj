@@ -127,6 +127,7 @@
                      :dbname (config/config-str :mb-db-dbname)
                      :user (config/config-str :mb-db-user)
                      :password (config/config-str :mb-db-pass)
+                     :integrated-security (config/config-bool :mb-db-integrated-security)
                      }))))
 
 (defn jdbc-details
@@ -412,11 +413,6 @@ By default, this is 5 seconds. You can configure this value by setting the env v
 (defn- can-connect-to-sqlserver?
 [driver db-spec]
 (try
-  ;; Log connection information (masking password)
-  (let [masked-spec (if (:password db-spec)
-                      (assoc db-spec :password "******")
-                      db-spec)]
-    (log/info (trs "Attempting to connect to SQL Server with connection details:") (pr-str masked-spec)))
   (u/with-timeout can-connect-timeout-ms
     (let [[first-row] (jdbc/query db-spec ["SELECT 1"])
           [result] (vals first-row)]
