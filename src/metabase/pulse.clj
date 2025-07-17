@@ -387,6 +387,4 @@
 (defn send-pulse!
   [{:keys [cards] :as pulse} & {:keys [channel-ids]}]
   {:pre [(map? pulse) (every? map? cards) (every? :id cards)]}
-  (if (public-settings/disable-native-pulse-scheduling)
-    (log/info (trs "Native pulse scheduling is disabled. Skipping pulse execution for pulse {0}" (:id pulse)))
-    (send-notifications! (pulse->email-notifications (merge pulse (when channel-ids {:channel-ids channel-ids}))))))
+  (send-notifications! (pulse->email-notifications (merge pulse (when channel-ids {:channel-ids channel-ids})))))
