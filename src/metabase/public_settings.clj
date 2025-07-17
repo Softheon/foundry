@@ -297,6 +297,11 @@
   :type :boolean
   :default false)
 
+(defsetting disable-native-pulse-scheduling
+  (tru "Disable the built-in Foundry pulse scheduling system. Enable this when using an external Foundry Pulse Monitor Agent to prevent duplicate pulse deliveries.")
+  :type    :boolean
+  :default false)
+
 (defn remove-public-uuid-if-public-sharing-is-disabled
   "If public sharing is *disabled* and OBJECT has a `:public_uuid`, remove it so people don't try to use it (since it
    won't work). Intended for use as part of a `post-select` implementation for Cards and Dashboards."
@@ -367,4 +372,5 @@
    :ids_auth_client_id (setting/get :ids-auth-client-id)
    :ids_auth_authorize_api (setting/get :ids-auth-authorize-api)
    :ids_auth_client_redirect_url (setting/get :ids-auth-client-redirect-url)
-   :session_timeout_period (setting/get :session-timeout-period)})
+   :session_timeout_period (setting/get :session-timeout-period)
+   :disable_native_pulse_scheduling (disable-native-pulse-scheduling)})

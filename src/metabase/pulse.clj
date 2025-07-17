@@ -225,9 +225,11 @@
     ;; do a try-catch around each notification so if one fails, we'll still send the other ones for example, an Alert
     ;; set up to send over both Slack & email: if Slack fails, we still want to send the email (#7409)
     (try
-      (send-notification! notification)
+      (when notification
+        (log/debug (trs "Sending notification: {0}" (pr-str (select-keys notification [:subject :recipients :message-type]))))
+        (send-notification! notification))
       (catch Throwable e
-        (log/error e (trs "Error sending notification!"))))))
+        (log/error e (trs "Error sending notification! Notification data: {0}" (pr-str notification)))))))
 
 (defn- pulse->notifications [{:keys [cards channel-ids], :as pulse}]
   (let [results     (for [card  cards
@@ -361,12 +363,13 @@
 (defn- create-email-notification
   [{:keys [id name] :as pulse} results {:keys [recipients] :as channel}]
   (log/debug (format "Sending Pulse (%d: %s) via Channel :email" id name))
-  (let [email-subject (str "Report: " name)
-        email-recipients (filterv u/email? (map :email recipients))]
-    {:subject email-subject
-     :recipients email-recipients
-     :message-type :html
-     :message (messages/render-report-email pulse results)}))
+  (let [email-subject (str "Report: " (or name "Unnamed Pulse"))
+        email-recipients (filterv u/email? (map :email (or recipients [])))]
+    (when (seq email-recipients)
+      {:subject email-subject
+       :recipients email-recipients
+       :message-type :html
+       :message (messages/render-report-email pulse results)})))
 
 (defn- pulse->email-notifications
   [{:keys [cards channel-ids] :as pulse}]
@@ -377,10 +380,13 @@
         channel-ids (or channel-ids (mapv :id (:channels pulse)))]
     (when (> (count results) 0)
       (for [channel-id channel-ids
-            :let [channel (some #(when (= channel-id (:id %)) %) (:channels pulse))]]
+            :let [channel (some #(when (= channel-id (:id %)) %) (:channels pulse))]
+            :when channel] ; Ensure channel exists
         (create-email-notification pulse results channel)))))
 
 (defn send-pulse!
   [{:keys [cards] :as pulse} & {:keys [channel-ids]}]
   {:pre [(map? pulse) (every? map? cards) (every? :id cards)]}
-  (send-notifications! (pulse->email-notifications (merge pulse (when channel-ids {:channel-ids channel-ids})))))
+  (if (public-settings/disable-native-pulse-scheduling)
+    (log/info (trs "Native pulse scheduling is disabled. Skipping pulse execution for pulse {0}" (:id pulse)))
+    (send-notifications! (pulse->email-notifications (merge pulse (when channel-ids {:channel-ids channel-ids}))))))
