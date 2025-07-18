@@ -275,24 +275,23 @@
    Only returns executions that match the pulse's actual schedule (ignoring manual sends).
    Assumes a single enabled email channel per pulse."
   [pulse-id]
-  (let [pulse-id-int pulse-id
-
-        ;; Fetch the enabled email channel for this pulse
+  (let [;; Fetch the enabled email channel for this pulse
         email-channel (db/select-one PulseChannel
-                         {:pulse_id pulse-id-int
-                          :enabled true
-                          :channel_type "email"})
+                         :pulse_id pulse-id
+                         :enabled true
+                         :channel_type "email")
 
         ;; Get all executions in reverse-chronological order
         executions (db/select [PulseCardFile :created_at]
-                              {:pulse_id pulse-id-int}
+                              :pulse_id pulse-id
                               {:order-by [[:created_at :desc]]})
 
         ;; Find first execution that matches the schedule
         last-scheduled-execution (when email-channel
                                    (some #(when (matches-pulse-schedule? (:created_at %) email-channel) %)
                                          executions))]
-    {:pulse_id pulse-id-int
+    
+    {:pulse_id pulse-id
      :last_scheduled_execution (:created_at last-scheduled-execution)
      :schedule_info (if email-channel
                       [(select-keys email-channel [:schedule_type :schedule_hour :schedule_day :schedule_frame])]
