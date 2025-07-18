@@ -301,6 +301,7 @@
 (api/defendpoint GET "/:id/last-execution"
   "Get last scheduled execution info for a pulse based on pulse_card_file entries."
   [id]
+  (api/check-pulse-permission)
   (api/read-check Pulse id)
   (get-pulse-last-scheduled-execution id))
 
