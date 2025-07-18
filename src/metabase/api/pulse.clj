@@ -16,7 +16,8 @@
              [collection :as collection]
              [interface :as mi]
              [pulse :as pulse :refer [Pulse]]
-             [pulse-channel :refer [channel-types]]]
+             [pulse-card-file :refer [PulseCardFile]]
+             [pulse-channel :refer [channel-types PulseChannel]]]
             [metabase.pulse.render :as render]
             [metabase.util
              [i18n :refer [tru]]
@@ -210,5 +211,98 @@
   (p/send-pulse! body)
   {:ok true})
 
+(defn- safe-parse-int
+  "Safely parse a value to integer, returning default if parsing fails"
+  [val default]
+  (try
+    (cond
+      (integer? val) val
+      (string? val) (Integer/parseInt val)
+      (keyword? val) (Integer/parseInt (name val))
+      :else default)
+    (catch Exception e
+      (log/warn "Failed to parse integer:" val e)
+      default)))
+
+(defn- matches-pulse-schedule?
+  "Check if execution time matches pulse schedule.
+   Focuses on date, hour, and minute - ignoring seconds and milliseconds."
+  [execution-time channel]
+  (when execution-time
+    (try
+      (let [exec-time (if (instance? java.sql.Timestamp execution-time)
+                        (.toLocalDateTime execution-time)
+                        execution-time)
+            exec-hour (.getHour exec-time)
+            exec-minute (.getMinute exec-time)
+            exec-day-of-week (-> (.getDayOfWeek exec-time)
+                     str
+                     clojure.string/lower-case
+                     (subs 0 3))
+
+            exec-day-of-month (.getDayOfMonth exec-time)
+            {:keys [schedule_type schedule_hour schedule_day schedule_frame]} channel
+            safe-schedule-hour (safe-parse-int schedule_hour 0)
+            safe-schedule-frame (safe-parse-int schedule_frame 1)
+            schedule-type-keyword (keyword schedule_type)]
+        (and
+         (= exec-minute 0) ;; Enforce top-of-hour execution
+         (case schedule-type-keyword
+           :hourly
+           (if (nil? schedule_hour)
+             true 
+             (= (mod exec-hour safe-schedule-hour) 0))
+
+           :daily
+           (= exec-hour safe-schedule-hour)
+
+           :weekly
+           (and (= exec-hour safe-schedule-hour)
+                (= exec-day-of-week schedule_day))
+
+           :monthly
+           (and (= exec-hour safe-schedule-hour)
+                (= exec-day-of-month safe-schedule-frame))
+
+           false)))
+      (catch Exception e
+        (log/warn "Error matching pulse schedule:" e)
+        false))))
+
+
+(defn- get-pulse-last-scheduled-execution
+  "Get the last scheduled execution time for a pulse by querying pulse_card_file table.
+   Only returns executions that match the pulse's actual schedule (ignoring manual sends).
+   Assumes a single enabled email channel per pulse."
+  [pulse-id]
+  (let [pulse-id-int pulse-id
+
+        ;; Fetch the enabled email channel for this pulse
+        email-channel (db/select-one PulseChannel
+                         {:pulse_id pulse-id-int
+                          :enabled true
+                          :channel_type "email"})
+
+        ;; Get all executions in reverse-chronological order
+        executions (db/select [PulseCardFile :created_at]
+                              {:pulse_id pulse-id-int}
+                              {:order-by [[:created_at :desc]]})
+
+        ;; Find first execution that matches the schedule
+        last-scheduled-execution (when email-channel
+                                   (some #(when (matches-pulse-schedule? (:created_at %) email-channel) %)
+                                         executions))]
+    {:pulse_id pulse-id-int
+     :last_scheduled_execution (:created_at last-scheduled-execution)
+     :schedule_info (if email-channel
+                      [(select-keys email-channel [:schedule_type :schedule_hour :schedule_day :schedule_frame])]
+                      [])}))
+
+
+(api/defendpoint GET "/:id/last-execution"
+  "Get last scheduled execution info for a pulse based on pulse_card_file entries."
+  [id]
+  (api/read-check Pulse id)
+  (get-pulse-last-scheduled-execution id))
 
 (api/define-routes)
