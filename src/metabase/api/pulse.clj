@@ -17,7 +17,7 @@
              [interface :as mi]
              [pulse :as pulse :refer [Pulse]]
              [pulse-card-file :refer [PulseCardFile]]
-             [pulse-channel :refer [channel-types PulseChannel]]]
+             [pulse-channel :refer [channel-types]]]
             [metabase.pulse.render :as render]
             [metabase.util
              [i18n :refer [tru]]
