@@ -16,6 +16,7 @@
              [collection :as collection]
              [interface :as mi]
              [pulse :as pulse :refer [Pulse]]
+             [pulse-card-file :refer [PulseCardFile]]
              [pulse-channel :refer [channel-types]]]
             [metabase.pulse.render :as render]
             [metabase.util
@@ -210,5 +211,24 @@
   (p/send-pulse! body)
   {:ok true})
 
+(defn- get-pulse-last-execution
+  "Get the last execution time for a pulse by querying pulse_card_file table.
+   Returns the most recent execution regardless of whether it was scheduled or manual."
+  [pulse-id]
+  (let [;; Get the most recent execution
+        last-execution (db/select-one [PulseCardFile :created_at]
+                                      :pulse_id pulse-id
+                                      {:order-by [[:created_at :desc]]})]
+    
+    {:pulse_id pulse-id
+     :last_execution (:created_at last-execution)}))
+
+
+(api/defendpoint GET "/:id/last-execution"
+  "Get last execution info for a pulse based on pulse_card_file entries."
+  [id]
+  (api/check-pulse-permission)
+  (api/read-check Pulse id)
+  (get-pulse-last-execution id))
 
 (api/define-routes)
