@@ -60,7 +60,7 @@
 ;; TODO - These names are bad. They should be something like  `int`, `boolean`, and `keyword`, respectively.
 ;; See https://github.com/metabase/metabase/wiki/Foundry-Clojure-Style-Guide#dont-repeat-namespace-alias-in-function-names for discussion
 (defn ^Integer config-int  "Fetch a configuration key and parse it as an integer." [k] (some-> k config-str Integer/parseInt))
-(defn ^Boolean config-bool "Fetch a configuration key and parse it as a boolean."  [k] (some-> k config-str Boolean/parseBoolean))
+(defn ^Boolean config-bool "Fetch a configuration key and parse it as a boolean."  [k] (some-> k config-str str Boolean/parseBoolean))
 (defn ^Keyword config-kw   "Fetch a configuration key and parse it as a keyword."  [k] (some-> k config-str keyword))
 
 (def ^Boolean is-dev?  "Are we running in `dev` mode (i.e. in a REPL or via `lein ring server`)?" (= :dev  (config-kw :mb-run-mode)))
