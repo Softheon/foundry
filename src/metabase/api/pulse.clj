@@ -17,7 +17,8 @@
              [interface :as mi]
              [pulse :as pulse :refer [Pulse]]
              [pulse-card-file :refer [PulseCardFile]]
-             [pulse-channel :refer [channel-types]]]
+             [pulse-channel :refer [channel-types]]
+             [user :as user :refer [User]]]
             [metabase.pulse.render :as render]
             [metabase.util
              [i18n :refer [tru]]
@@ -197,9 +198,30 @@
                  (render/render-pulse-card-to-png (p/defaulted-timezone card) card result))]
     {:status 200, :headers {"Content-Type" "image/png"}, :body (ByteArrayInputStream. ba)}))
 
+(defn- with-impersonated-user
+  "Execute function f with temporarily impersonated user context if X-Impersonate-User header is present.
+   This is specifically for pulse agents that need to access personal collections."
+  [request f]
+  (if-let [impersonate-email (get-in request [:headers "x-impersonate-user"])]
+    ;; Only allow impersonation if current user is a pulse user (service account)
+    (if api/*is-pulse-user?*
+      (if-let [target-user (db/select-one [User :id :is_superuser] :email impersonate-email :is_active true)]
+        ;; Temporarily bind the impersonated user context
+        (binding [api/*current-user-id* (:id target-user)
+                  api/*is-superuser?* (:is_superuser target-user)
+                  api/*current-user* (delay target-user)
+                  api/*current-user-permissions-set* (delay (user/permissions-set (:id target-user)))]
+          (f))
+        ;; Target user not found
+        (api/check-400 false))
+      ;; Not authorized to impersonate
+      (api/check-403 false))
+    ;; No impersonation header, proceed normally
+    (f)))
+
 (api/defendpoint POST "/test"
   "Test send an unsaved pulse."
-  [:as {{:keys [name cards channels skip_if_empty collection_id collection_position] :as body} :body}]
+  [:as {{:keys [name cards channels skip_if_empty collection_id collection_position] :as body} :body, :as request}]
   {name                su/NonBlankString
    cards               (su/non-empty [pulse/CoercibleToCardRef])
    channels            (su/non-empty [su/Map])
@@ -207,8 +229,10 @@
    collection_id       (s/maybe su/IntGreaterThanZero)
    collection_position (s/maybe su/IntGreaterThanZero)}
   (api/check-pulse-permission)
-  (check-card-read-permissions cards)
-  (p/send-pulse! body)
+  (with-impersonated-user request
+    (fn []
+      (check-card-read-permissions cards)
+      (p/send-pulse! body)))
   {:ok true})
 
 (defn- get-pulse-last-execution
