@@ -247,6 +247,25 @@
     {:pulse_id pulse-id
      :last_execution (:created_at last-execution)}))
 
+(defn- get-pulses-last-execution-batch
+  "Get the last execution times for multiple pulses in a single query.
+   Returns a list of maps with pulse_id and last_execution for each pulse."
+  [pulse-ids]
+  (if (empty? pulse-ids)
+    []
+    (let [;; Get the most recent execution for each pulse in a single query
+          executions (db/query
+                     {:select [:pulse_id [:%max.created_at :last_execution]]
+                      :from [:pulse_card_file]
+                      :where [:in :pulse_id pulse-ids]
+                      :group-by [:pulse_id]})
+          ;; Create a map for quick lookup
+          execution-map (into {} (map (juxt :pulse_id :last_execution) executions))]
+      ;; Return results for all requested pulse IDs, with nil for those without executions
+      (map (fn [pulse-id]
+             {:pulse_id pulse-id
+              :last_execution (get execution-map pulse-id)})
+           pulse-ids))))
 
 (api/defendpoint GET "/:id/last-execution"
   "Get last execution info for a pulse based on pulse_card_file entries."
@@ -254,5 +273,17 @@
   (api/check-pulse-permission)
   (api/read-check Pulse id)
   (get-pulse-last-execution id))
+
+(api/defendpoint POST "/last-execution/batch"
+  "Get last execution info for multiple pulses based on pulse_card_file entries.
+   Accepts a JSON body with 'pulse_ids' array and returns an array of execution info."
+  [:as {{:keys [pulse_ids]} :body}]
+  {pulse_ids (su/non-empty [su/IntGreaterThanZero])}
+  (api/check-pulse-permission)
+  ;; Verify that all pulse IDs exist and user has read access
+  (doseq [pulse-id pulse_ids]
+    (api/read-check Pulse pulse-id))
+  ;; Return batch results
+  (get-pulses-last-execution-batch pulse_ids))
 
 (api/define-routes)
