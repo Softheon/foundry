@@ -69,6 +69,11 @@
   "Fetch the `Softheon Users` permissions group, creating it if needed."
   (group-fetch-fn "Softheon Users"))
 
+(def ^{:arglists '([])} ^metabase.models.permissions_group.PermissionsGroupInstance
+  service-accounts
+  "Fetch the `Service Accounts` permissions group, creating it if needed."
+  (group-fetch-fn "Service Accounts"))
+
 (defn- admin-only-group-ids
   "Fetch a set of group ids that only admin has access to."
   []
@@ -77,7 +82,8 @@
                                 (metabot)
                                 (ids-users)
                                 (pulse-users)
-                                (manager)]]
+                                (manager)
+                                (service-accounts)]]
                      (:id group))))))
 
 (def admin-only-group-ids-set

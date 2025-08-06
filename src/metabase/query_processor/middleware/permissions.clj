@@ -10,14 +10,20 @@
              [i18n :refer [tru]]
              [schema :as su]]
             [schema.core :as s]
-            [metabase.toucan.db :as db]))
+            [metabase.toucan.db :as db]
+            [metabase.api.service-accounts :as service-accounts]))
 
 (s/defn ^:private check-card-read-perms
   "Check that the current user has permissions to read Card with `card-id`, or throw an Exception. "
   [card-id :- su/IntGreaterThanZero]
-  (when-not (mi/can-read? (or (db/select-one [Card :collection_id] :id card-id)
-                              (throw (Exception. (str (tru "Card {0} does not exist." card-id))))))
-    (throw (Exception. (str (tru "You do not have permissions to view Card {0}." card-id))))))
+  ;; Use service account read check which bypasses collection restrictions for service accounts
+  (try
+    (service-accounts/service-account-read-check Card card-id)
+    (catch clojure.lang.ExceptionInfo e
+      ;; Re-throw with a more specific message for query processor context
+      (if (= 404 (:status-code (ex-data e)))
+        (throw (Exception. (str (tru "Card {0} does not exist." card-id))))
+        (throw (Exception. (str (tru "You do not have permissions to view Card {0}." card-id))))))))
 
 (s/defn ^:private check-ad-hoc-query-perms
   [outer-query]

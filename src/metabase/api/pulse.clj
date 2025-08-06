@@ -27,7 +27,8 @@
             [schema.core :as s]
             [metabase.toucan
              [db :as db]
-             [hydrate :refer [hydrate]]])
+             [hydrate :refer [hydrate]]]
+            [metabase.api.service-accounts :as service-accounts])
   (:import java.io.ByteArrayInputStream))
 
 (api/defendpoint GET "/"
@@ -35,9 +36,16 @@
   [archived]
   {archived (s/maybe su/BooleanString)}
   (api/check-pulse-permission)
-  (as-> (pulse/retrieve-pulses {:archived? (Boolean/parseBoolean archived)}) <>
-    (filter mi/can-read? <>)
-    (hydrate <> :can_write)))
+  (let [all-pulses (pulse/retrieve-pulses {:archived? (Boolean/parseBoolean archived)})]
+    ;; Service accounts can see all pulses, including those in personal collections
+    ;; Regular users still need to pass the can-read? check
+    (if (service-accounts/is-service-account?)
+      ;; Service accounts see all pulses but can only write to those they have permissions for
+      (hydrate all-pulses :can_write)
+      ;; Regular users see only pulses they can read
+      (as-> all-pulses <>
+        (filter mi/can-read? <>)
+        (hydrate <> :can_write)))))
 
 (defn check-card-read-permissions
   "Users can only create a pulse for `cards` they have access to."
@@ -45,7 +53,7 @@
   (doseq [card cards
           :let [card-id (u/get-id card)]]
     (assert (integer? card-id))
-    (api/read-check Card card-id)))
+    (service-accounts/service-account-read-check Card card-id)))
 
 (api/defendpoint POST "/"
   "Create a new `Pulse`."
@@ -198,30 +206,10 @@
                  (render/render-pulse-card-to-png (p/defaulted-timezone card) card result))]
     {:status 200, :headers {"Content-Type" "image/png"}, :body (ByteArrayInputStream. ba)}))
 
-(defn- with-impersonated-user
-  "Execute function f with temporarily impersonated user context if X-Impersonate-User header is present.
-   This is specifically for pulse agents that need to access personal collections."
-  [request f]
-  (if-let [impersonate-email (get-in request [:headers "x-impersonate-user"])]
-    ;; Only allow impersonation if current user is a pulse user (service account)
-    (if api/*is-pulse-user?*
-      (if-let [target-user (db/select-one [User :id :is_superuser] :email impersonate-email :is_active true)]
-        ;; Temporarily bind the impersonated user context
-        (binding [api/*current-user-id* (:id target-user)
-                  api/*is-superuser?* (:is_superuser target-user)
-                  api/*current-user* (delay target-user)
-                  api/*current-user-permissions-set* (delay (user/permissions-set (:id target-user)))]
-          (f))
-        ;; Target user not found
-        (api/check-400 false))
-      ;; Not authorized to impersonate
-      (api/check-403 false))
-    ;; No impersonation header, proceed normally
-    (f)))
 
 (api/defendpoint POST "/test"
   "Test send an unsaved pulse."
-  [:as {{:keys [name cards channels skip_if_empty collection_id collection_position] :as body} :body, :as request}]
+  [:as {{:keys [name cards channels skip_if_empty collection_id collection_position] :as body} :body}]
   {name                su/NonBlankString
    cards               (su/non-empty [pulse/CoercibleToCardRef])
    channels            (su/non-empty [su/Map])
@@ -229,8 +217,11 @@
    collection_id       (s/maybe su/IntGreaterThanZero)
    collection_position (s/maybe su/IntGreaterThanZero)}
   (api/check-pulse-permission)
-  (with-impersonated-user request
-    (fn []
+  ;; Service accounts can send pulses with cards from any collection without permission checks
+  ;; Regular users need to have read permissions for all cards
+  (if (service-accounts/is-service-account?)
+    (p/send-pulse! body)
+    (do
       (check-card-read-permissions cards)
       (p/send-pulse! body)))
   {:ok true})
@@ -271,7 +262,7 @@
   "Get last execution info for a pulse based on pulse_card_file entries."
   [id]
   (api/check-pulse-permission)
-  (api/read-check Pulse id)
+  (service-accounts/service-account-read-check Pulse id)
   (get-pulse-last-execution id))
 
 (api/defendpoint POST "/last-execution/batch"
@@ -282,7 +273,7 @@
   (api/check-pulse-permission)
   ;; Verify that all pulse IDs exist and user has read access
   (doseq [pulse-id pulse_ids]
-    (api/read-check Pulse pulse-id))
+    (service-accounts/service-account-read-check Pulse pulse-id))
   ;; Return batch results
   (get-pulses-last-execution-batch pulse_ids))
 
