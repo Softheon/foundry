@@ -48,7 +48,8 @@
             [ring.util.io :as ring-io]
             [metabase.toucan
              [db :as db]
-             [hydrate :refer [hydrate]]])
+             [hydrate :refer [hydrate]]]
+            [metabase.api.service-accounts :as service-accounts])
   (:import clojure.core.async.impl.channels.ManyToManyChannel
            java.util.UUID
            metabase.models.card.CardInstance))
@@ -625,7 +626,7 @@
               :or   {constraints constraints/default-query-constraints
                      context     :question}}]
   {:pre [(u/maybe? sequential? parameters)]}
-  (let [card    (api/read-check (Card card-id))
+  (let [card    (service-accounts/service-account-read-check Card card-id)
         query   (query-for-card card parameters constraints middleware)
         options {:executed-by  api/*current-user-id*
                  :context      context
@@ -649,7 +650,7 @@ Exception if preconditions (such as read perms) are not met before returning a c
               :or   {constraints constraints/unlimited-rows-constraints
                      context     :question}}]
   {:pre [(u/maybe? sequential? parameters)]}
-  (let [card    (api/read-check (Card card-id))
+  (let [card    (service-accounts/service-account-read-check Card card-id)
         query   (query-for-card card parameters constraints middleware)
         options {:executed-by  api/*current-user-id*
                  :context      context

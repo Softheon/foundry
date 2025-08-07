@@ -10,6 +10,7 @@
             [clojurewerkz.quartzite.schedule.cron :as cron]
             [metabase
              [pulse :as p]
+             [public-settings :as public-settings]
              [task :as task]]
             [metabase.models
              [pulse :as pulse]
@@ -86,21 +87,23 @@
 ;; triggers the sending of all pulses which are scheduled to run in the current hour
 (jobs/defjob SendPulses [_]
   (try
-    (task-history/with-task-history {:task "send-pulses"}
-      ;; determine what time it is right now (hour-of-day & day-of-week) in reporting timezone
-      (let [reporting-timezone (setting/get :report-timezone)
-            now                (if (empty? reporting-timezone)
-                                 (time/now)
-                                 (time/to-time-zone (time/now) (time/time-zone-for-id reporting-timezone)))
-            curr-hour          (time/hour now)
-            ;; joda time produces values of 1-7 here (Mon -> Sun) and we subtract 1 from it to
-            ;; make the values zero based to correspond to the indexes in pulse-channel/days-of-week
-            curr-weekday       (->> (dec (time/day-of-week now))
-                                    (get pulse-channel/days-of-week)
-                                    :id)
-            curr-monthday      (time/day now)
-            curr-monthweek     (monthweek now)]
-        (send-pulses! curr-hour curr-weekday curr-monthday curr-monthweek)))
+    (if (public-settings/disable-native-pulse-scheduling)
+      (log/info (trs "Native pulse scheduling is disabled. Skipping pulse execution."))
+      (task-history/with-task-history {:task "send-pulses"}
+        ;; determine what time it is right now (hour-of-day & day-of-week) in reporting timezone
+        (let [reporting-timezone (setting/get :report-timezone)
+              now                (if (empty? reporting-timezone)
+                                   (time/now)
+                                   (time/to-time-zone (time/now) (time/time-zone-for-id reporting-timezone)))
+              curr-hour          (time/hour now)
+              ;; joda time produces values of 1-7 here (Mon -> Sun) and we subtract 1 from it to
+              ;; make the values zero based to correspond to the indexes in pulse-channel/days-of-week
+              curr-weekday       (->> (dec (time/day-of-week now))
+                                      (get pulse-channel/days-of-week)
+                                      :id)
+              curr-monthday      (time/day now)
+              curr-monthweek     (monthweek now)]
+          (send-pulses! curr-hour curr-weekday curr-monthday curr-monthweek))))
     (catch Throwable e
       (log/error e (trs "SendPulses task failed")))))
 
@@ -108,20 +111,24 @@
 (def ^:private send-pulses-trigger-key "metabase.task.send-pulses.trigger")
 
 (defmethod task/init! ::SendPulses [_]
-  (let [job     (jobs/build
-                 (jobs/of-type SendPulses)
-                 (jobs/with-identity (jobs/key send-pulses-job-key)))
-        trigger (triggers/build
-                 (triggers/with-identity (triggers/key send-pulses-trigger-key))
-                 (triggers/with-priority 1)
-                 (triggers/start-now)
-                 (triggers/with-schedule
-                   (cron/schedule
-                     ;; run at the top of every hour
-                    (cron/cron-schedule "0 0 * * * ? *")
-                     ;; If a trigger misfires (i.e., Quartz cannot run our job for one reason or another, such as all
-                     ;; worker threads being busy), attempt to fire the triggers again ASAP. This article does a good
-                     ;; job explaining what this means:
-                     ;; https://www.nurkiewicz.com/2012/04/quartz-scheduler-misfire-instructions.html
-                    (cron/with-misfire-handling-instruction-do-nothing))))]
-    (task/schedule-task! job trigger)))
+  (if (public-settings/disable-native-pulse-scheduling)
+    (log/info (trs "Native pulse scheduling is disabled. Skipping pulse scheduler initialization."))
+    (do
+      (log/info (trs "Initializing native pulse scheduling..."))
+      (let [job     (jobs/build
+                     (jobs/of-type SendPulses)
+                     (jobs/with-identity (jobs/key send-pulses-job-key)))
+            trigger (triggers/build
+                     (triggers/with-identity (triggers/key send-pulses-trigger-key))
+                     (triggers/with-priority 1)
+                     (triggers/start-now)
+                     (triggers/with-schedule
+                       (cron/schedule
+                         ;; run at the top of every hour
+                        (cron/cron-schedule "0 0 * * * ? *")
+                         ;; If a trigger misfires (i.e., Quartz cannot run our job for one reason or another, such as all
+                         ;; worker threads being busy), attempt to fire the triggers again ASAP. This article does a good
+                         ;; job explaining what this means:
+                         ;; https://www.nurkiewicz.com/2012/04/quartz-scheduler-misfire-instructions.html
+                        (cron/with-misfire-handling-instruction-do-nothing))))]
+        (task/schedule-task! job trigger)))))

@@ -284,7 +284,7 @@ function Calculate-Checksum {
         $content = Get-Content $_.FullName;
         $content | Out-File -FilePath $TempCombinedFile -Append
     }
-    $checksum = Get-FileHash -Path $TempCombinedFile -Algorithm MD5
+    $checksum = Get-FileHash -Path $TempCombinedFile -Algorithm SHA256
     Remove-Item -Path $TempCombinedFile -Force -ErrorAction Stop
     return $checksum.hash
 }

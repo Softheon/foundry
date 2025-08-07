@@ -112,6 +112,12 @@ const SECTIONS = [
         key: "run-query-within-transaction",
         display_name: t`Run query within transaction`,
         type: "boolean"
+      },
+      {
+        key: "disable-native-pulse-scheduling",
+        display_name: t`Disable Native Foundry Pulse Scheduling`,
+        description: t`Disable the built-in Foundry pulse scheduling system. Enable this when using an external Foundry Pulse Monitor Agent to prevent duplicate pulse deliveries.`,
+        type: "boolean"
       }
     ],
   },
